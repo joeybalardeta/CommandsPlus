@@ -1,0 +1,27 @@
+main: me.Joey.CommandsPlus.Main
+name: Commands_Plus
+version: 3.0
+author: Joey_Balardeta
+
+
+commands:
+  C+help:
+  Reeval:
+  Chunkload:
+  Vanillamode:
+  Top:
+  Launch:
+  Cords:
+  Wild:
+  Waypoint:
+  Claim:
+  Unclaim:
+  Chunkname:
+  Whochunk:
+  Chunkmap:
+  Faction:
+  Level:
+  Dailyxp:
+  Scoreboard:
+  Creator:
+  bonkstick:
