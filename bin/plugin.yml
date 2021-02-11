@@ -1,6 +1,7 @@
 main: me.Joey.CommandsPlus.Main
 name: Commands_Plus
 version: 3.0
+api-version: 1.13
 author: Joey_Balardeta
 
 

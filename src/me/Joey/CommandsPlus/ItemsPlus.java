@@ -36,6 +36,8 @@ public class ItemsPlus {
 	
 	// custom miscellaneous
 	public static ItemStack enchantedZombieFlesh;
+	public static ItemStack bottleOfXP;
+	public static ItemStack slimeBall;
 	
 	
 	// custom admin items
@@ -45,6 +47,9 @@ public class ItemsPlus {
 	// item initializer
 	public static void init() {
 		createBonkStick();
+		createEnchantedZombieFlesh();
+		createBottleOfXP();
+		createSlimeBall();
 	}
 
 	
@@ -88,7 +93,7 @@ public class ItemsPlus {
 		// create crafting recipe
 		
 		// shaped recipe
-		ShapedRecipe SR = new ShapedRecipe(NamespacedKey.minecraft("Enchanted_Zombie_Flesh"), item);
+		ShapedRecipe SR = new ShapedRecipe(NamespacedKey.minecraft("enchanted_zombie_flesh"), item);
 		SR.shape("RRR",
 				 "RRR",
 				 "RRR");
@@ -97,12 +102,61 @@ public class ItemsPlus {
 		Bukkit.getServer().addRecipe(SR);
 		
 		// shapeless recipe
-		ShapelessRecipe SLR = new ShapelessRecipe(NamespacedKey.minecraft("Enchanted_Zombie_Flesh_shapeless"), item);
+		ShapelessRecipe SLR = new ShapelessRecipe(NamespacedKey.minecraft("enchanted_zombie_flesh_shapeless"), item);
 		SLR.addIngredient(9, Material.ROTTEN_FLESH);
 		Bukkit.getServer().addRecipe(SLR);
 		
 		
 		// set ItemStack item to the item that was created in this function
 		enchantedZombieFlesh = item;
+	}
+	
+	public static void createBottleOfXP() {
+		// create item
+		ItemStack item = new ItemStack(Material.EXPERIENCE_BOTTLE, 1);
+		
+		
+		// create crafting recipe
+		
+		// shaped recipe
+		ShapedRecipe SR = new ShapedRecipe(NamespacedKey.minecraft("bottle_of_xp"), item);
+		SR.shape("LLL",
+				 "LBL",
+				 "LLL");
+		
+		SR.setIngredient('L', Material.LAPIS_LAZULI);
+		SR.setIngredient('B', Material.GLASS_BOTTLE);
+		Bukkit.getServer().addRecipe(SR);
+		
+		// shapeless recipe
+		ShapelessRecipe SLR = new ShapelessRecipe(NamespacedKey.minecraft("bottle_of_xp_shapeless"), item);
+		SLR.addIngredient(8, Material.LAPIS_LAZULI);
+		SLR.addIngredient(1, Material.GLASS_BOTTLE);
+		Bukkit.getServer().addRecipe(SLR);
+		
+		
+		// set ItemStack item to the item that was created in this function
+		bottleOfXP = item;
+	}
+	
+	
+	public static void createSlimeBall() {
+		// create item
+		ItemStack item = new ItemStack(Material.SLIME_BALL, 1);
+		
+		
+		// create crafting recipe
+		
+		
+		
+		// shapeless recipe
+		ShapelessRecipe SLR = new ShapelessRecipe(NamespacedKey.minecraft("slime_ball_shapeless"), item);
+		SLR.addIngredient(1, Material.WHEAT);
+		SLR.addIngredient(1, Material.LIME_DYE);
+		Bukkit.getServer().addRecipe(SLR);
+		
+		
+		// set ItemStack item to the item that was created in this function
+		slimeBall = item;
 	}
 }
