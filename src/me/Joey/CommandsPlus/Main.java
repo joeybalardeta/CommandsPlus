@@ -3,7 +3,10 @@ package me.Joey.CommandsPlus;
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
@@ -14,6 +17,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.World.Environment;
+import org.bukkit.block.Block;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
@@ -37,6 +41,8 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerShearEntityEvent;
 import org.bukkit.event.raid.RaidFinishEvent;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.scoreboard.DisplaySlot;
@@ -60,7 +66,7 @@ import me.Joey.CommandsPlus.ItemsPlus;
 // TODO: Faction messaging system
 // TODO: Hashmap for event handlers
 
-
+@SuppressWarnings("deprecation")
 public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 	
 
@@ -68,10 +74,23 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 	private FileConfiguration playerLogsConfig;
 	private int taskID = 0;
 	
+	
+	// timber axe block hashsets
+	public static HashSet<Material>	logMaterials = new HashSet<>();
+	public static HashSet<String> validLogMaterials = new HashSet<>(Arrays.asList("LOG", "LOG_2", "LEGACY_LOG", "LEGACY_LOG_2", "ACACIA_LOG", "BIRCH_LOG", "DARK_OAK_LOG", "JUNGLE_LOG", "OAK_LOG", "SPRUCE_LOG", "CRIMSON_STEM", "WARPED_STEM"));
+	
 	@Override
 	public void onEnable() {
 		// enable itemsPlus
 		ItemsPlus.init();
+		
+		for (Material material : Material.values())
+		{
+			if (validLogMaterials.contains(material.name()))
+			{
+				logMaterials.add(material);
+			}
+		}
 		
 		playerLogs = new File(getDataFolder(), "playerLogs.yml");
 		if (!playerLogs.exists()) { // saves it to your plugin's data folder if it doesn't exist already
@@ -420,6 +439,96 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 		if (canSaveDataHashMap.get(event.getPlayer().getUniqueId().toString())){
 			savePlayerData(event.getPlayer(), false);
 		}
+		
+		if (event.getPlayer() != null) {
+			Player p = event.getPlayer();
+	        PlayerInventory inv = p.getInventory();
+	 
+	        ItemStack timberAxe = new ItemStack (ItemsPlus.timberAxe);
+	        ItemStack redstonePickaxe = new ItemStack (ItemsPlus.redstonePickaxe);
+	        
+
+	 
+	        if (inv.getItemInMainHand().equals(timberAxe) && logMaterials.contains(event.getBlock().getType())) {
+	            Location location = event.getBlock().getLocation();
+	            LinkedList<Block> blocks = new LinkedList<>();
+	            ItemStack handStack = p.getItemInHand();
+	    		for (int i = location.getBlockY(); i < location.getWorld().getHighestBlockYAt(location.getBlockX(), location.getBlockZ());)
+	    		{
+	    			Location l = location.add(0.0D, 1.0D, 0.0D);
+	    			Block block = l.getBlock();
+	    			if (logMaterials.contains(block.getType()))
+	    			{
+	    				blocks.add(l.getBlock());
+	    				l = null;
+	    				i++;
+	    			} else
+	    			{
+	    				break;
+	    			}
+	    		}
+	    		for (Block block : blocks)
+	    		{
+	    			block.breakNaturally(handStack);
+	    		
+	    		}
+	    		blocks = null;
+	            return;
+	        }  
+	        
+	        if (inv.getItemInMainHand().equals(redstonePickaxe)) {
+	        	
+	        	Location location = event.getBlock().getLocation();
+	            LinkedList<Block> blocks = new LinkedList<>();
+	            ItemStack handStack = p.getItemInHand();
+	            location.subtract(2.0D, 0.0D, 1.0D);
+	            
+	            
+	            // if looking down
+	            for (int i = 0; i < 3; i++) {
+	            	
+
+		            for (int j = 0; j < 3; j++) {
+		    			Location l = location.add(1.0D, 0.0D, 0.0D);
+		    			Block block = l.getBlock();
+		    			blocks.add(l.getBlock());
+		    			
+		    			
+		    			
+		    			if (!(block.getType().equals(Material.BEDROCK))) {
+		    				blocks.add(l.getBlock());
+		    				l = null;
+		    			}
+		    			else {
+		    				break;
+		    			}
+		    		}
+		            
+		            location.subtract(3.0D, 0.0D, 0.0D);
+		            location.add(0.0D, 0.0D, 1.0D);
+	            }
+	            
+	            
+	            
+	        	for (Block block : blocks)
+	    		{
+	    			block.breakNaturally(handStack);
+	    		
+	    		}
+	        	blocks = null;
+	        }
+	        
+	        
+	        // if looking straight
+	        
+	        
+	        	// if looking north/south
+	        
+	        
+	        	// if looking east/west
+	        
+	        
+		}
 	}
 	
 	@EventHandler
@@ -483,6 +592,42 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 		}
 	}
 
+	
+	// get the direction the player is facing
+	
+	public void getPlayerDirection(Player player) {
+		double rotation = player.getLocation().getYaw() - 180;
+        if (rotation < 0) {
+            rotation += 360.0;
+        }
+        if (0 <= rotation && rotation < 22.5) {
+            player.sendMessage("North");
+        }
+        if (22.5 <= rotation && rotation < 67.5) {
+            player.sendMessage("North East");
+        }
+        if (67.5 <= rotation && rotation < 112.5) {
+            player.sendMessage("East");
+        }
+        if (112.5 <= rotation && rotation < 157.5) {
+            player.sendMessage("SouthEast");
+        }
+        if (157.5 <= rotation && rotation < 202.5) {
+            player.sendMessage("South");
+        }
+        if (202.5 <= rotation && rotation < 247.5) {
+            player.sendMessage("SouthWest");
+        }
+        if (247.5 <= rotation && rotation < 292.5) {
+            player.sendMessage("West");
+        }
+        if (292.5 <= rotation && rotation < 337.5) {
+            player.sendMessage("NorthWest");
+        }
+        if (337.5 <= rotation && rotation <= 360) {
+            player.sendMessage("North");
+        }
+	}
 	
 	// calculate the player's level
 	public void calculateLevel(HumanEntity humanEntity) {
@@ -592,7 +737,6 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 	
 	
 	public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-		
 		//-----------------------------------------------------------------------------------------------------------------------------------------------
 		// variables that get used a lot
 		if (!(sender instanceof Player)) {
@@ -602,7 +746,6 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 		Player p = (Player) sender;
 		int playerLevel = getConfig().getInt("Users." + p.getUniqueId() + ".stats" + ".level");
 		boolean vanillaMode = getConfig().getBoolean("System." + "settings" + ".vanillaMode");
-		
 		
 		// command to reevaluate some user stats on the server, this is used to prevent cheating (editing the server config files)
 		if (label.equalsIgnoreCase("reeval")) {

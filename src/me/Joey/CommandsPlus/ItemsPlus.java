@@ -24,6 +24,7 @@ public class ItemsPlus {
 	
 	
 	// custom tools
+	public static ItemStack timberAxe;
 	public static ItemStack redstonePickaxe;
 	
 	
@@ -36,6 +37,9 @@ public class ItemsPlus {
 	
 	// custom miscellaneous
 	public static ItemStack enchantedZombieFlesh;
+
+	
+	// custom crafts
 	public static ItemStack bottleOfXP;
 	public static ItemStack slimeBall;
 	
@@ -44,33 +48,127 @@ public class ItemsPlus {
 	public static ItemStack bonkStick;
 	
 	
-	// item initializer
-	public static void init() {
-		createBonkStick();
+	
+	// item initializer (item creation function calls)
+	public static void init() {	
+		// custom weapons
+		
+		
+		// custom tools
+		createTimberAxe();
+		createRestonePickaxe();
+		
+		
+		// custom potions
+
+		
+		
+		// custom talismans
+		
+		
+		// custom miscellaneous
 		createEnchantedZombieFlesh();
+
+		
+		// custom crafts
 		createBottleOfXP();
 		createSlimeBall();
+		
+		
+		// custom admin items
+		createBonkStick();
+		
+		
 	}
 
+	// item creation functions
+	
+	// custom weapons
 	
 	
+	// custom tools
 	
-	public static void createBonkStick() {
-		ItemStack item = new ItemStack(Material.STICK, 1);
-		ItemMeta meta = item.getItemMeta();
-		meta.setDisplayName(ChatColor.RED + "Bonk Stick");
-		List<String> lore = new ArrayList <>();
-		lore.add("B O N K");
-		meta.setLore(lore);
-		meta.addEnchant(Enchantment.KNOCKBACK, 25, true);
-		meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+	public static void createTimberAxe() {
+		// create item
+		ItemStack item = new ItemStack(Material.GOLDEN_AXE, 1);
 		
+		
+		// set item metadata
+		ItemMeta meta = item.getItemMeta();
+		meta.setDisplayName(ChatColor.GOLD + "Timber Axe");
+		List<String> lore = new ArrayList <>();
+		lore.add(ChatColor.WHITE + "This axe can chop down entire");
+		lore.add(ChatColor.WHITE + "trees in just a few swings!");
+		meta.setLore(lore);
+		meta.addEnchant(Enchantment.DIG_SPEED, 5, true);
+		meta.setUnbreakable(true);
+		meta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_UNBREAKABLE);
 		
 		item.setItemMeta(meta);
 		
-		bonkStick = item;
+		
+		// create crafting recipe
+		
+		// shaped recipe
+		ShapedRecipe SR = new ShapedRecipe(NamespacedKey.minecraft("timber_axe"), item);
+		SR.shape("OOO",
+				 "OAO",
+				 "OOO");
+		
+		SR.setIngredient('O', Material.OBSIDIAN);
+		SR.setIngredient('A', Material.WOODEN_AXE);
+		Bukkit.getServer().addRecipe(SR);
+		
+		
+		// set ItemStack item to the item that was created in this function
+		timberAxe = item;
 	}
 	
+	public static void createRestonePickaxe() {
+		// create item
+		ItemStack item = new ItemStack(Material.NETHERITE_PICKAXE, 1);
+		
+		
+		// set item metadata
+		ItemMeta meta = item.getItemMeta();
+		meta.setDisplayName(ChatColor.RED + "Redstone Pickaxe");
+		List<String> lore = new ArrayList <>();
+		lore.add(ChatColor.WHITE + "A redstone powered pickaxe capable");
+		lore.add(ChatColor.WHITE + "of mining mutiple blocks at once!");
+		meta.setLore(lore);
+		meta.addEnchant(Enchantment.DIG_SPEED, 5, true);
+		meta.setUnbreakable(true);
+		meta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_UNBREAKABLE);
+		
+		item.setItemMeta(meta);
+		
+		
+		// create crafting recipe
+		
+		// shaped recipe
+		ShapedRecipe SR = new ShapedRecipe(NamespacedKey.minecraft("redstone_pickaxe"), item);
+		SR.shape("III",
+				 "RSR",
+				 "RSR");
+		
+		SR.setIngredient('I', Material.NETHERITE_INGOT);
+		SR.setIngredient('R', Material.REDSTONE_BLOCK);
+		SR.setIngredient('S', Material.STICK);
+		Bukkit.getServer().addRecipe(SR);
+		
+		
+		// set ItemStack item to the item that was created in this function
+		redstonePickaxe = item;
+	}
+	
+	
+	// custom potions
+	
+	
+	// custom talismans
+	
+	
+	// custom miscellaneous
 	
 	public static void createEnchantedZombieFlesh() {
 		// create item
@@ -111,6 +209,9 @@ public class ItemsPlus {
 		enchantedZombieFlesh = item;
 	}
 	
+	
+	// custom crafts
+	
 	public static void createBottleOfXP() {
 		// create item
 		ItemStack item = new ItemStack(Material.EXPERIENCE_BOTTLE, 1);
@@ -147,8 +248,6 @@ public class ItemsPlus {
 		
 		// create crafting recipe
 		
-		
-		
 		// shapeless recipe
 		ShapelessRecipe SLR = new ShapelessRecipe(NamespacedKey.minecraft("slime_ball_shapeless"), item);
 		SLR.addIngredient(1, Material.WHEAT);
@@ -159,4 +258,24 @@ public class ItemsPlus {
 		// set ItemStack item to the item that was created in this function
 		slimeBall = item;
 	}
+	
+	
+	// custom admin items
+	
+	public static void createBonkStick() {
+		ItemStack item = new ItemStack(Material.STICK, 1);
+		ItemMeta meta = item.getItemMeta();
+		meta.setDisplayName(ChatColor.RED + "Bonk Stick");
+		List<String> lore = new ArrayList <>();
+		lore.add("B O N K");
+		meta.setLore(lore);
+		meta.addEnchant(Enchantment.KNOCKBACK, 25, true);
+		meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+		
+		
+		item.setItemMeta(meta);
+		
+		bonkStick = item;
+	}
+	
 }
