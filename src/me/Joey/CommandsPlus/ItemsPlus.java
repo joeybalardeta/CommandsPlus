@@ -42,6 +42,8 @@ public class ItemsPlus {
 	// custom crafts
 	public static ItemStack bottleOfXP;
 	public static ItemStack slimeBall;
+	public static ItemStack quickPick;
+	public static ItemStack telekinesisBook;
 	
 	
 	// custom admin items
@@ -50,7 +52,10 @@ public class ItemsPlus {
 	
 	
 	// item initializer (item creation function calls)
-	public static void init() {	
+	public static void init() {
+		// register custom enchants
+		EnchantmentsPlus.register();
+		
 		// custom weapons
 		
 		
@@ -73,6 +78,7 @@ public class ItemsPlus {
 		// custom crafts
 		createBottleOfXP();
 		createSlimeBall();
+		createTelekinesisBook();
 		
 		
 		// custom admin items
@@ -147,11 +153,11 @@ public class ItemsPlus {
 		
 		// shaped recipe
 		ShapedRecipe SR = new ShapedRecipe(NamespacedKey.minecraft("redstone_pickaxe"), item);
-		SR.shape("III",
+		SR.shape("BBB",
 				 "RSR",
 				 "RSR");
 		
-		SR.setIngredient('I', Material.NETHERITE_INGOT);
+		SR.setIngredient('B', Material.NETHERITE_BLOCK);
 		SR.setIngredient('R', Material.REDSTONE_BLOCK);
 		SR.setIngredient('S', Material.STICK);
 		Bukkit.getServer().addRecipe(SR);
@@ -178,7 +184,7 @@ public class ItemsPlus {
 		// set item metadata
 		ItemMeta meta = item.getItemMeta();
 		meta.setDisplayName(ChatColor.DARK_PURPLE + "Enchanted Zombie Flesh");
-		List<String> lore = new ArrayList <>();
+		List<String> lore = new ArrayList<String>();
 		lore.add(ChatColor.LIGHT_PURPLE + "This item hums with energy,");
 		lore.add(ChatColor.LIGHT_PURPLE + "what power could it hold?");
 		meta.setLore(lore);
@@ -260,14 +266,53 @@ public class ItemsPlus {
 	}
 	
 	
+	public static void createTelekinesisBook() {
+		// create item
+		ItemStack item = new ItemStack(Material.ENCHANTED_BOOK, 1);
+		
+		
+		// set item metadata
+		ItemMeta meta = item.getItemMeta();
+		List<String> lore = new ArrayList<String>();
+		lore.add(ChatColor.GRAY + "Telekinesis I");
+		meta.setLore(lore);
+		item.setItemMeta(meta);
+		
+		item.addUnsafeEnchantment(EnchantmentsPlus.TELEKINESIS, 1);
+		
+		// set enchantment
+		
+		
+		
+		// create crafting recipe
+		
+		// shaped recipe
+		ShapedRecipe SR = new ShapedRecipe(NamespacedKey.minecraft("telekinesis_book"), item);
+		SR.shape(" S ",
+				 "SBS",
+				 " S ");
+		
+		SR.setIngredient('B', Material.BOOK);
+		SR.setIngredient('S', Material.SLIME_BALL);
+		Bukkit.getServer().addRecipe(SR);
+		
+		
+		 
+		
+		
+		// set ItemStack item to the item that was created in this function
+		telekinesisBook = item;
+	}
+	
+	
 	// custom admin items
 	
 	public static void createBonkStick() {
 		ItemStack item = new ItemStack(Material.STICK, 1);
 		ItemMeta meta = item.getItemMeta();
 		meta.setDisplayName(ChatColor.RED + "Bonk Stick");
-		List<String> lore = new ArrayList <>();
-		lore.add("B O N K");
+		List<String> lore = new ArrayList<String>();
+		lore.add(ChatColor.GRAY + "Knockback XXV");
 		meta.setLore(lore);
 		meta.addEnchant(Enchantment.KNOCKBACK, 25, true);
 		meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);

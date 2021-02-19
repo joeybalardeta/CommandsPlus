@@ -7,14 +7,10 @@ author: Joey_Balardeta
 
 commands:
   C+help:
+  Test:
   Reeval:
-  Chunkload:
   Vanillamode:
-  Top:
-  Launch:
   Cords:
-  Wild:
-  Waypoint:
   Claim:
   Unclaim:
   Chunkname:
@@ -22,7 +18,6 @@ commands:
   Chunkmap:
   Faction:
   Level:
-  Dailyxp:
   Scoreboard:
   Creator:
   bonkstick:
