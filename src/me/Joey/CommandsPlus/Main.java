@@ -5,51 +5,27 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Random;
 import java.util.UUID;
+import java.util.logging.Level;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.World.Environment;
-import org.bukkit.block.Block;
-import org.bukkit.block.Container;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.HumanEntity;
-import org.bukkit.entity.Item;
 import org.bukkit.entity.Phantom;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.Action;
-import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.enchantment.EnchantItemEvent;
-import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
-import org.bukkit.event.entity.EntityDeathEvent;
-import org.bukkit.event.inventory.BrewEvent;
-import org.bukkit.event.inventory.InventoryInteractEvent;
-import org.bukkit.event.player.PlayerFishEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
-import org.bukkit.event.player.PlayerItemConsumeEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.event.player.PlayerShearEntityEvent;
-import org.bukkit.inventory.BrewerInventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.PlayerInventory;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -59,7 +35,6 @@ import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Score;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.ScoreboardManager;
-import org.bukkit.Sound;
 
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.ClickEvent;
@@ -75,12 +50,16 @@ import net.md_5.bungee.api.chat.TextComponent;
 public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 	
 	// initialize plugin data files
-	private File playerLogs;
-	private FileConfiguration playerLogsConfig;
-	private File playerData;
-	private FileConfiguration playerDataConfig;
-	private File chunkClaimData;
-	private FileConfiguration chunkClaimDataConfig;
+	public static File playerLogs;
+	public static FileConfiguration playerLogsConfig;
+	public static File playerData;
+	public static FileConfiguration playerDataConfig;
+	public static File chunkClaimData;
+	public static FileConfiguration chunkClaimDataConfig;
+	public static File factionData;
+	public static FileConfiguration factionDataConfig;
+	
+	
 	
 	
 	// timber axe block hashsets
@@ -94,6 +73,9 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 	
 	@Override
 	public void onEnable() {
+		
+		// load config file
+		loadConfig();
 		
 		// enable ItemsPlus
 		ItemsPlus.init();
@@ -152,15 +134,50 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 	    }
 		chunkClaimDataConfig = YamlConfiguration.loadConfiguration(chunkClaimData);
 		
+		
+		// create/open chunk claim data file
+		factionData = new File(getDataFolder(), "factionData.yml");
+		if (!factionData.exists()) { 
+			factionData.getParentFile().mkdirs();
+	      try {
+	    	  factionData.createNewFile();
+	      } catch (IOException ex) {
+	         ex.printStackTrace();
+	      }
+	    }
+		factionDataConfig = YamlConfiguration.loadConfiguration(factionData);
+		
 		// load chunk arrays - MUST COME AFTER CHUNK FILE IS OPENED
-		loadChunkArrays();
+		try {
+			loadChunkArrays();
+		} catch (Exception e){
+			getLogger().log(Level.INFO, "Failed to load chunk arrays, leaving blank");
+		}
+		
 		
 		boolean hashMapsCreated = false;
 		
-		// config loading
-		loadConfig();
+		for (Player online : Bukkit.getOnlinePlayers()) {
+
+			if (!hashMapsCreated) {
+				
+				miningPointsTracker.put(online.getUniqueId().toString(), 0 + playerDataConfig.getInt("Users." + online.getUniqueId() + ".stats" + ".miningPoints"));
+				combatPointsTracker.put(online.getUniqueId().toString(), 0 + playerDataConfig.getInt("Users." + online.getUniqueId() + ".stats" + ".combatPoints"));
+				farmingPointsTracker.put(online.getUniqueId().toString(), 0 + playerDataConfig.getInt("Users." + online.getUniqueId() + ".stats" + ".farmingPoints"));
+				enchantingPointsTracker.put(online.getUniqueId().toString(), 0 + playerDataConfig.getInt("Users." + online.getUniqueId() + ".stats" + ".enchantingPoints"));
+				alchemyPointsTracker.put(online.getUniqueId().toString(), 0 +playerDataConfig.getInt("Users." + online.getUniqueId() + ".stats" + ".alchemyPoints"));
+				
+				scoreboardHashMap.put(online.getUniqueId().toString(), playerDataConfig.getBoolean("Users." + online.getUniqueId() + ".preferences" + ".scoreboard"));
+				
+				canSaveDataHashMap.put(online.getUniqueId().toString(), false);
+				canTpHashMap.put(online.getUniqueId().toString(), false);
+			}
+			
+		}
+		hashMapsCreated = true;
+
 		
-		// scoreboard initialization and end checker
+		// scoreboard initialization and End checker
 		this.getServer().getPluginManager().registerEvents(this, this);
 		BukkitScheduler scheduler = getServer().getScheduler();
 		
@@ -250,25 +267,6 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
         }, 0L, 12000L);
 		
 		
-		for (Player online : Bukkit.getOnlinePlayers()) {
-
-			if (!hashMapsCreated) {
-				
-				miningPointsTracker.put(online.getUniqueId().toString(), 0 + getConfig().getInt("Users." + online.getUniqueId() + ".stats" + ".miningPoints"));
-				combatPointsTracker.put(online.getUniqueId().toString(), 0 + getConfig().getInt("Users." + online.getUniqueId() + ".stats" + ".combatPoints"));
-				farmingPointsTracker.put(online.getUniqueId().toString(), 0 + getConfig().getInt("Users." + online.getUniqueId() + ".stats" + ".farmingPoints"));
-				enchantingPointsTracker.put(online.getUniqueId().toString(), 0 + getConfig().getInt("Users." + online.getUniqueId() + ".stats" + ".enchantingPoints"));
-				alchemyPointsTracker.put(online.getUniqueId().toString(), 0 + getConfig().getInt("Users." + online.getUniqueId() + ".stats" + ".alchemyPoints"));
-				
-				scoreboardHashMap.put(online.getUniqueId().toString(), getConfig().getBoolean("Users." + online.getUniqueId() + ".preferences" + ".scoreboard"));
-				
-				canSaveDataHashMap.put(online.getUniqueId().toString(), false);
-				canTpHashMap.put(online.getUniqueId().toString(), false);
-			}
-			
-		}
-		hashMapsCreated = true;
-		
 	}
 	
 	@Override
@@ -278,82 +276,10 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 		// plugin reloads
 	}
 	
-	@EventHandler
-	public void onJoin(PlayerJoinEvent event) {
-		Player online = event.getPlayer();
-		
-		
-		if (getConfig().getBoolean("Users." + event.getPlayer().getUniqueId() + "." + "preferences" + ".hasPlayedBefore") != true){
-			getConfig().set("Users." + event.getPlayer().getUniqueId() + "." + "preferences" + ".hasPlayedBefore", true);
-			getConfig().set("Users." + event.getPlayer().getUniqueId() + "." + "preferences" + ".scoreboard", true);
-			getConfig().set("Users." + event.getPlayer().getUniqueId() + "." + "stats" + ".name", event.getPlayer().getName());
-			saveConfig();
-		}
-		if (getConfig().getBoolean("Users." + event.getPlayer().getUniqueId() + "." + "preferences" + ".scoreboard") == false) {
-			;
-		}
-		else {
-			createBoard(event.getPlayer());
-		}
-		
-		// load in player stats to respective HashMaps
-		miningPointsTracker.put(online.getUniqueId().toString(), 0 + getConfig().getInt("Users." + online.getUniqueId() + ".stats" + ".miningPoints"));
-		combatPointsTracker.put(online.getUniqueId().toString(), 0 + getConfig().getInt("Users." + online.getUniqueId() + ".stats" + ".combatPoints"));
-		farmingPointsTracker.put(online.getUniqueId().toString(), 0 + getConfig().getInt("Users." + online.getUniqueId() + ".stats" + ".farmingPoints"));
-		enchantingPointsTracker.put(online.getUniqueId().toString(), 0 + getConfig().getInt("Users." + online.getUniqueId() + ".stats" + ".enchantingPoints"));
-		alchemyPointsTracker.put(online.getUniqueId().toString(), 0 + getConfig().getInt("Users." + online.getUniqueId() + ".stats" + ".alchemyPoints"));
-		
-		scoreboardHashMap.put(online.getUniqueId().toString(), getConfig().getBoolean("Users." + online.getUniqueId() + ".preferences" + ".scoreboard"));
-		
-		canSaveDataHashMap.put(online.getUniqueId().toString(), false);
-		canTpHashMap.put(online.getUniqueId().toString(), false);
-	}
+
 	
-	@EventHandler
-	public void onLeave(PlayerQuitEvent event) {
-		savePlayerData(event.getPlayer(), false);
-	}
 	
-	public void savePlayerData(Player playerSave, boolean isLeaving) {
-		// save mining points
-		getConfig().set("Users." + playerSave.getUniqueId() + ".stats" + ".miningPoints", miningPointsTracker.get(playerSave.getUniqueId().toString()));
-		
-		
-		// save combat points
-		getConfig().set("Users." + playerSave.getUniqueId() + ".stats" + ".combatPoints", combatPointsTracker.get(playerSave.getUniqueId().toString()));
-		
-		
-		// save farming points
-		getConfig().set("Users." + playerSave.getUniqueId() + ".stats" + ".farmingPoints", farmingPointsTracker.get(playerSave.getUniqueId().toString()));
-		
-		// save enchanting points
-		getConfig().set("Users." + playerSave.getUniqueId() + ".stats" + ".enchantingPoints", enchantingPointsTracker.get(playerSave.getUniqueId().toString()));
-		
-		// save alchemy points
-		getConfig().set("Users." + playerSave.getUniqueId() + ".stats" + ".alchemyPoints", alchemyPointsTracker.get(playerSave.getUniqueId().toString()));
-		
-		// set data save cooldown
-		canSaveDataHashMap.put(playerSave.getUniqueId().toString(), false);
-		saveConfig();
-		
-		
-		// removes HashMaps if player is leaving the server 
-		if (isLeaving) {
-			miningPointsTracker.remove(playerSave.getUniqueId().toString());
-			combatPointsTracker.remove(playerSave.getUniqueId().toString());
-			farmingPointsTracker.remove(playerSave.getUniqueId().toString());
-			enchantingPointsTracker.remove(playerSave.getUniqueId().toString());
-			alchemyPointsTracker.remove(playerSave.getUniqueId().toString());
-		}
-		
-		
-		// calculates player's level
-		calculateLevel(playerSave);
-		
-		
-	}
-	
-	public void createBoard(Player player) {
+	public static void createBoard(Player player) {
 		ScoreboardManager manager = Bukkit.getScoreboardManager();
 		Scoreboard board = manager.getNewScoreboard();
 		Objective obj = board.registerNewObjective("Scoreboard", "dummy", ChatColor.translateAlternateColorCodes('&', "&cCommands&4+"));
@@ -388,7 +314,7 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 		
 		score3.setScore(4);
 		
-		Score score4 = obj.getScore("Level: " + ChatColor.AQUA + getConfig().getInt("Users." + player.getUniqueId() + ".stats" + ".level"));
+		Score score4 = obj.getScore("Level: " + ChatColor.AQUA + playerDataConfig.getInt("Users." + player.getUniqueId() + ".stats" + ".level"));
 		score4.setScore(3);
 		
 		Score score5 = obj.getScore("");
@@ -455,7 +381,7 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 			
 			
 			for (int j = -mapSize; j < (mapSize + 1); j++) {
-				String chunkOwnerUUID = getConfig().getString("ClaimedChunks." + ".X: " + (p.getLocation().getChunk().getX() + j) + ", Z: " + (p.getLocation().getChunk().getZ() + i) + ".belongsToUUID");
+				String chunkOwnerUUID = chunkClaimDataConfig.getString("ClaimedChunks." + ".X: " + (p.getLocation().getChunk().getX() + j) + ", Z: " + (p.getLocation().getChunk().getZ() + i) + ".belongsToUUID");
 				if (chunkOwnerUUID == null) {
 					lineMessage += "&f* ";
 				}
@@ -512,13 +438,13 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 	
 	public void loadChunkArrays() {
 		ConfigurationSection claimedChunks = chunkClaimDataConfig.getConfigurationSection("ClaimedChunks");
-		System.out.println("Loading claimed chunks into ram: Location | Chunk Name");
+		getLogger().log(Level.INFO, "Loading claimed chunks into ram: Location | Chunk Name");
 		for (String s : claimedChunks.getKeys(false)) {
 			if (claimedChunks.get(s) != null){
 				String chunkName = claimedChunks.get(s + ".appearsAs").toString();
 				chunkNamesRAM.add(chunkName.toString());
 				chunkLocationsRAM.add(s.toString());
-				System.out.println("Loaded chunk into ram | " + s.toString() + " | " + chunkName.toString());
+				getLogger().log(Level.INFO, "Loaded chunk into ram | " + s.toString() + " | " + chunkName.toString());
 			}
 		}
 		try {
@@ -529,337 +455,8 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 		}
 	}
 	
-	// Minecraft World Events
-	@EventHandler
-	public void playerRightClick(PlayerInteractEvent event) {
-		Player p = event.getPlayer();
-        PlayerInventory inv = p.getInventory();
-	    Action action = event.getAction();
-	    
-	    if (action.equals(Action.RIGHT_CLICK_AIR) || action.equals(Action.RIGHT_CLICK_BLOCK)) {
-	         if (inv.getItemInMainHand() != null && inv.getItemInOffHand().getType() != Material.AIR) {
-	        	 if (inv.getItemInMainHand().equals(ItemsPlus.telekinesisBook)) {
-	        		 inv.getItemInMainHand().setAmount(0); 
-		        	 inv.getItemInOffHand().addUnsafeEnchantment(EnchantmentsPlus.TELEKINESIS, 1);
-		        	 ItemMeta meta = inv.getItemInOffHand().getItemMeta();
-		     		 List<String> lore = new ArrayList<String>();
-		     		 lore.add(ChatColor.GRAY + "Telekinesis I");
-		     		 if (meta.hasLore()) {
-		     			 for (String l : meta.getLore()) {
-		     				 if (!(l.equals("Telekinesis I"))) {
-		     					lore.add(l);
-		     				 }
-		     				 
-		     			 }
-		     		 }
-		     		 meta.setLore(lore);
-		     		 inv.getItemInOffHand().setItemMeta(meta);
-	        	 }
-	         } 
-	    }
-	}
 	
-	@EventHandler
-	public void onPlayerDamage(final EntityDamageEvent e){
-		if(e.getCause() == DamageCause.FALL && e.getEntity() instanceof Player) {
-			// divides fall damage by 3
-			e.setDamage(e.getDamage() / 3);
-		}
-	}
-	
-	@EventHandler
-	public void blockBreak(BlockBreakEvent event) {
-		
-		if (event.getPlayer() != null) {
-			//blocksMinedHashMap.put(event.getPlayer().getUniqueId().toString(), blocksMinedHashMap.get(event.getPlayer().getUniqueId().toString()) + 1);
-			if (canSaveDataHashMap.get(event.getPlayer().getUniqueId().toString())){
-				savePlayerData(event.getPlayer(), false);
-			}
-			
-			Player p = event.getPlayer();
-	        PlayerInventory inv = p.getInventory();
-	 
-	        ItemStack timberAxe = new ItemStack (ItemsPlus.timberAxe);
-	        ItemStack redstonePickaxe = new ItemStack (ItemsPlus.redstonePickaxe);
-	        
 
-	 
-	        if (inv.getItemInMainHand().equals(timberAxe) && logMaterials.contains(event.getBlock().getType())) {
-	            Location location = event.getBlock().getLocation();
-	            LinkedList<Block> blocks = new LinkedList<>();
-	            ItemStack handStack = p.getItemInHand();
-	    		for (int i = location.getBlockY(); i < location.getWorld().getHighestBlockYAt(location.getBlockX(), location.getBlockZ());)
-	    		{
-	    			Location l = location.add(0.0D, 1.0D, 0.0D);
-	    			Block block = l.getBlock();
-	    			if (logMaterials.contains(block.getType()))
-	    			{
-	    				blocks.add(l.getBlock());
-	    				l = null;
-	    				i++;
-	    			} else
-	    			{
-	    				break;
-	    			}
-	    		}
-	    		for (Block block : blocks)
-	    		{
-	    			block.breakNaturally(handStack);
-	    		
-	    		}
-	    		blocks = null;
-	            return;
-	        }  
-	        
-	        if (inv.getItemInMainHand().equals(redstonePickaxe)) {
-	        	
-	        	Location location = event.getBlock().getLocation();
-	            LinkedList<Block> blocks = new LinkedList<>();
-	            ItemStack handStack = p.getItemInHand();
-	            location.subtract(2.0D, 0.0D, 1.0D);
-	            
-	            
-	            // if looking down
-	            for (int i = 0; i < 3; i++) {
-	            	
-
-		            for (int j = 0; j < 3; j++) {
-		    			Location l = location.add(1.0D, 0.0D, 0.0D);
-		    			Block block = l.getBlock();
-		    			blocks.add(l.getBlock());
-		    			
-		    			
-		    			
-		    			if (!(block.getType().equals(Material.BEDROCK))) {
-		    				blocks.add(l.getBlock());
-		    				l = null;
-		    			}
-		    			else {
-		    				break;
-		    			}
-		    		}
-		            
-		            location.subtract(3.0D, 0.0D, 0.0D);
-		            location.add(0.0D, 0.0D, 1.0D);
-	            }
-	            
-	            
-	            
-	        	for (Block block : blocks)
-	    		{
-	    			block.breakNaturally(handStack);
-	    		
-	    		}
-	        	blocks = null;
-	        	
-	        	return;
-	        }
-	        
-	        // checks if player has item in hand
-	        if (inv.getItemInMainHand() != null) {
-		        // checks if item has meta
-		        if (inv.getItemInMainHand().hasItemMeta()){
-			        // checks if item in player's hand has enchantment TELEKINESIS
-			        if (inv.getItemInMainHand().getItemMeta().hasEnchant(EnchantmentsPlus.TELEKINESIS)) {
-			        	// checks if player's inventory is full and if the item being mined is a chest or other block that contains items
-			        	if (inv.firstEmpty() != -1 && !(event.getBlock().getState() instanceof Container)) {
-			        		event.setDropItems(false);
-			        		Collection<ItemStack> drops = event.getBlock().getDrops(inv.getItemInMainHand());
-			        		if (drops.isEmpty()) {
-			        			return;
-			        		}
-			        		inv.addItem(drops.iterator().next());
-			        	}
-			        }
-		        }
-	        }
-
-	        
-	        
-		}
-	}
-	
-	@EventHandler
-	public void inventoryInteractEvent(InventoryInteractEvent event) {
-		if (event.getInventory() instanceof BrewerInventory) {
-			
-		}
-	}
-
-	
-	@EventHandler
-	public void enchantEvent(EnchantItemEvent event) {
-		enchantingPointsTracker.put(event.getEnchanter().getUniqueId().toString(), enchantingPointsTracker.get(event.getEnchanter().getUniqueId().toString()) + 1);
-	}
-	
-	@EventHandler
-	public void mobKillEvent(EntityDeathEvent event) {
-		if (event.getEntity().getKiller() != null) {
-			combatPointsTracker.put(event.getEntity().getKiller().getUniqueId().toString(), combatPointsTracker.get(event.getEntity().getKiller().getUniqueId().toString()) + 1);
-			if (canSaveDataHashMap.get(event.getEntity().getKiller().getUniqueId().toString())){
-				savePlayerData(event.getEntity().getKiller(), false);
-			}
-		}
-	}
-	
-	@EventHandler
-	public void fishEvent(PlayerFishEvent event) {
-	    if(event.getCaught() instanceof Item){
-	    	farmingPointsTracker.put(event.getPlayer().getUniqueId().toString(), farmingPointsTracker.get(event.getPlayer().getUniqueId().toString()) + 1);
-	    }
-		
-	}
-	
-	@EventHandler
-	public void shearEvent(PlayerShearEntityEvent event) {
-		farmingPointsTracker.put(event.getPlayer().getUniqueId().toString(), farmingPointsTracker.get(event.getPlayer().getUniqueId().toString()) + 1);
-	}
-	
-	@EventHandler
-	public void brewEvent(BrewEvent event) {
-		
-	}
-
-	
-	// get the direction the player is facing
-	
-	public void getPlayerDirection(Player player) {
-		double rotation = player.getLocation().getYaw() - 180;
-        if (rotation < 0) {
-            rotation += 360.0;
-        }
-        if (0 <= rotation && rotation < 22.5) {
-            player.sendMessage("North");
-        }
-        if (22.5 <= rotation && rotation < 67.5) {
-            player.sendMessage("North East");
-        }
-        if (67.5 <= rotation && rotation < 112.5) {
-            player.sendMessage("East");
-        }
-        if (112.5 <= rotation && rotation < 157.5) {
-            player.sendMessage("SouthEast");
-        }
-        if (157.5 <= rotation && rotation < 202.5) {
-            player.sendMessage("South");
-        }
-        if (202.5 <= rotation && rotation < 247.5) {
-            player.sendMessage("SouthWest");
-        }
-        if (247.5 <= rotation && rotation < 292.5) {
-            player.sendMessage("West");
-        }
-        if (292.5 <= rotation && rotation < 337.5) {
-            player.sendMessage("NorthWest");
-        }
-        if (337.5 <= rotation && rotation <= 360) {
-            player.sendMessage("North");
-        }
-	}
-	
-	// calculate the player's level
-	public void calculateLevel(HumanEntity humanEntity) {
-		if (getConfig().getBoolean("System." + "settings" + ".vanillaMode")) {
-			;
-		}
-		int playerLevel = getConfig().getInt("Users." + humanEntity.getUniqueId() + ".stats" + ".level");
-		int newLevel;
-		
-		int blocksMined = getConfig().getInt("Users." + humanEntity.getUniqueId() + ".stats" + ".blocksmined");
-		int itemsCrafted = getConfig().getInt("Users." + humanEntity.getUniqueId() + ".stats" + ".itemsCrafted");
-		int itemsEnchanted = getConfig().getInt("Users." + humanEntity.getUniqueId() + ".stats" + ".itemsEnchanted");
-		int mobsKilled = getConfig().getInt("Users." + humanEntity.getUniqueId() + ".stats" + ".mobsKilled");
-		int itemsSmelted = getConfig().getInt("Users." + humanEntity.getUniqueId() + ".stats" + ".itemsSmelted");
-		int itemsConsumed = getConfig().getInt("Users." + humanEntity.getUniqueId() + ".stats" + ".itemsConsumed");
-		int itemsFished = getConfig().getInt("Users." + humanEntity.getUniqueId() + ".stats" + ".itemsFished");
-		int mobsSheared = getConfig().getInt("Users." + humanEntity.getUniqueId() + ".stats" + ".mobsSheared");
-		int raidsCompleted = getConfig().getInt("Users." + humanEntity.getUniqueId() + ".stats" + ".raidsCompleted");
-		
-		int experience = (blocksMined / 100) + (itemsCrafted) + (itemsEnchanted * 10) + (mobsKilled / 5) + (itemsSmelted) + (itemsConsumed / 2) + (itemsFished) + (mobsSheared * 2) + (raidsCompleted * 25);
-		
-		if (humanEntity.getUniqueId().toString().equals("b859c378-5ea4-47f8-b7e4-fc80bfc1b713")){
-			newLevel = 1000;
-		}
-		else if (experience > 68000) {
-			newLevel = ((experience - 68000) / 2000) + 20 + 10 + 5 + 11 + 4;
-		}
-		else if (experience > 33000) {
-			newLevel = ((experience - 33000) / 1750) + 10 + 5 + 11 + 4;
-		}
-		else if (experience > 18000) {
-			newLevel = ((experience - 18000) / 1500) + 5 + 11 + 4;
-		}
-		else if (experience > 11000) {
-			newLevel = ((experience - 11000) / 1400) + 11 + 4;
-		}
-		else if (experience > 2000) {
-			newLevel = (experience / 1000) + 4;
-		}
-		else if (experience > 1300) {
-			newLevel = 5;
-		}
-		else if (experience > 800) {
-			newLevel = 4;	
-		}
-		else if (experience > 500) {
-			newLevel = 3;
-		}
-		else if (experience > 250) {
-			newLevel = 2;
-		}
-		else if (experience > 100){
-			newLevel = 1;
-		}
-		else {
-			newLevel = 0;
-		}
-		
-		
-		getConfig().set("Users." + humanEntity.getUniqueId() + ".stats" + ".level", newLevel);
-		
-		if (playerLevel < newLevel) {
-			// Commands+ System Message
-			humanEntity.getWorld().playSound(humanEntity.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 1.0f);
-			humanEntity.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "Congratulations! You leveled up!");
-			humanEntity.sendMessage("--------------------------------");
-			humanEntity.sendMessage("Unlocks:");
-			if (newLevel < 6) {
-				if (newLevel == 1) {
-					humanEntity.sendMessage("New Commands: " + ChatColor.GREEN + "/claim and /unclaim");
-					humanEntity.sendMessage("New Command Set: " + ChatColor.GREEN + "/faction");
-				}
-				if (newLevel == 2) {
-					humanEntity.sendMessage("New Command: " + ChatColor.GREEN + "/launch");
-				}
-				if (newLevel == 3) {
-					;
-				}
-				if (newLevel == 4) {
-					humanEntity.sendMessage("New Command: " + ChatColor.GREEN + "/top");
-				}
-				if (newLevel == 5) {
-					humanEntity.sendMessage("New Command: " + ChatColor.GREEN + "/chunkname");
-				}
-			}
-			
-			if (newLevel == 10) {
-				humanEntity.sendMessage("New Commands: " + ChatColor.GREEN + "/sethome and /home");
-			}
-			
-			if (newLevel == 15) {
-				humanEntity.sendMessage("New Command: " + ChatColor.GREEN + "/wild");
-			}
-			
-			if (newLevel == 20) {
-				humanEntity.sendMessage("New Command: " + ChatColor.GREEN + "/dailyxp");
-			}
-			
-			humanEntity.sendMessage("Chunk claim slots upped to " + ChatColor.AQUA + (newLevel * 2));
-		}
-			
-		saveConfig();
-		
-	}
 
 	
 	
@@ -872,7 +469,7 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 		}
 		
 		Player p = (Player) sender;
-		int playerLevel = getConfig().getInt("Users." + p.getUniqueId() + ".stats" + ".level");
+		int playerLevel = playerDataConfig.getInt("Users." + p.getUniqueId() + ".stats" + ".level");
 		boolean vanillaMode = getConfig().getBoolean("System." + "settings" + ".vanillaMode");
 		
 		// command to reevaluate some user stats on the server, this is used to prevent cheating (editing the server config files)
@@ -883,8 +480,8 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 			}
 			if ((p.getUniqueId().toString()).equals("b859c378-5ea4-47f8-b7e4-fc80bfc1b713")) {
 				for (Player online : Bukkit.getOnlinePlayers()) {
-					savePlayerData(online, false);
-					getConfig().set("Users." + online.getUniqueId() + "." + "stats" + ".name", online.getName());
+					FunctionsPlus.savePlayerData(online, false);
+					playerDataConfig.set("Users." + online.getUniqueId() + "." + "stats" + ".name", online.getName());
 					p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.BLUE + "Reevaluating level of " + ChatColor.WHITE + online.getName());
 					
 				
@@ -894,22 +491,17 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 					
 		}
 		
-		if (label.equalsIgnoreCase("test")) {
-			for (int i = 0; i < chunkNamesRAM.size(); i++) {
-				p.sendMessage(chunkNamesRAM.get(i));
-			}
-			for (int i = 0; i < chunkLocationsRAM.size(); i++) {
-				p.sendMessage(chunkLocationsRAM.get(i));
-			}
-		}
 		//-----------------------------------------------------------------------------------------------------------------------------------------------
 		
 		//-----------------------------------------------------------------------------------------------------------------------------------------------
 		// System Commands
 		if (label.equalsIgnoreCase("listplayers") && (p.getUniqueId().toString()).equals("b859c378-5ea4-47f8-b7e4-fc80bfc1b713")) {
+			int i = 0;
 			for (Player online : Bukkit.getOnlinePlayers()) {
-				p.sendMessage(online.getUniqueId() + ", ");
+				p.sendMessage(online.getName() + ": " + online.getUniqueId());
+				i++;
 			}
+			p.sendMessage("Total players online: " + i);
 		}
 
 		//-----------------------------------------------------------------------------------------------------------------------------------------------
@@ -937,15 +529,17 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 				return true;
 			}
 			
-			if (args[0].equals("enable")) {
-				getConfig().set("Users." + p.getUniqueId() + "." + "preferences" + ".scoreboard", true);
+			if (playerDataConfig.getBoolean("Users." + p.getUniqueId() + "." + "preferences" + ".scoreboard")) {
+				playerDataConfig.set("Users." + p.getUniqueId() + "." + "preferences" + ".scoreboard", false);
+				scoreboardHashMap.put(p.getUniqueId().toString(), false);
 				
 				// Commands+ System Message
-				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "Enabled scoreboard!");
-			}
-			else if (args[0].equals("disable")) {
-				getConfig().set("Users." + p.getUniqueId() + "." + "preferences" + ".scoreboard", false);
 				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "Disabled scoreboard!");
+			}
+			else {
+				playerDataConfig.set("Users." + p.getUniqueId() + "." + "preferences" + ".scoreboard", true);
+				scoreboardHashMap.put(p.getUniqueId().toString(), true);
+				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "Enabled scoreboard!");
 
 			}
 			saveConfig();
@@ -1099,8 +693,8 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 				String format = "M/d/yyyy";
 				Date date = new Date();
 		        SimpleDateFormat ft = new SimpleDateFormat(format);
-				if ((playerLevel > 19) && !( ( (String) ft.format(date)).equals( (String) (getConfig().getString("Users." + p.getUniqueId() + "." + "stats" + ".dailyXPLastClaimed"))))) {
-					getConfig().set("Users." + p.getUniqueId() + "." + "stats" + ".dailyXPLastClaimed", ft.format(date));
+				if ((playerLevel > 19) && !( ( (String) ft.format(date)).equals( (String) (playerDataConfig.getString("Users." + p.getUniqueId() + "." + "stats" + ".dailyXPLastClaimed"))))) {
+					playerDataConfig.set("Users." + p.getUniqueId() + "." + "stats" + ".dailyXPLastClaimed", ft.format(date));
 					saveConfig();
 					p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "Claimed daily XP");
 					p.giveExpLevels(20);
@@ -1253,13 +847,13 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "Your waypoints:");
 				p.sendMessage("--------------------------------");
 				
-				ConfigurationSection waypoints = getConfig().getConfigurationSection("Users." + p.getUniqueId() + ".waypoints");
+				ConfigurationSection waypoints = playerDataConfig.getConfigurationSection("Users." + p.getUniqueId() + ".waypoints");
 				for (String s : waypoints.getKeys(false)) {
 					String wpName = s;
 					
-					int wpX = getConfig().getInt("Users." + p.getUniqueId() + ".waypoints" + "." + wpName + ".X");
-					int wpY = getConfig().getInt("Users." + p.getUniqueId() + ".waypoints" + "." + wpName + ".Y");
-					int wpZ = getConfig().getInt("Users." + p.getUniqueId() + ".waypoints" + "." + wpName + ".Z");
+					int wpX = playerDataConfig.getInt("Users." + p.getUniqueId() + ".waypoints" + "." + wpName + ".X");
+					int wpY = playerDataConfig.getInt("Users." + p.getUniqueId() + ".waypoints" + "." + wpName + ".Y");
+					int wpZ = playerDataConfig.getInt("Users." + p.getUniqueId() + ".waypoints" + "." + wpName + ".Z");
 					
 					if (!(wpX == 0 && wpY == 0 && wpZ == 0)) {
 						TextComponent wayPointsMessage = new TextComponent(ChatColor.WHITE + ">> " + ChatColor.AQUA + wpName);
@@ -1281,7 +875,7 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 					return true;
 				}
 				
-				if (0 + getConfig().getInt("Users." + p.getUniqueId() + ".stats" + ".numberOfWaypoints") >= ((playerLevel - 10) / 10) + 2) {
+				if (0 + playerDataConfig.getInt("Users." + p.getUniqueId() + ".stats" + ".numberOfWaypoints") >= ((playerLevel - 10) / 10) + 2) {
 					p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "You've reached the max number of waypoints, level up to get more!");
 					return true;
 				}
@@ -1291,12 +885,12 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 					wpName += " " + args[i];
 				}
 				
-				int wpX = getConfig().getInt("Users." + p.getUniqueId() + ".waypoints" + "." + wpName + ".X");
-				int wpY = getConfig().getInt("Users." + p.getUniqueId() + ".waypoints" + "." + wpName + ".Y");
-				int wpZ = getConfig().getInt("Users." + p.getUniqueId() + ".waypoints" + "." + wpName + ".Z");
+				int wpX = playerDataConfig.getInt("Users." + p.getUniqueId() + ".waypoints" + "." + wpName + ".X");
+				int wpY = playerDataConfig.getInt("Users." + p.getUniqueId() + ".waypoints" + "." + wpName + ".Y");
+				int wpZ = playerDataConfig.getInt("Users." + p.getUniqueId() + ".waypoints" + "." + wpName + ".Z");
 				
-				if (0 + getConfig().getInt("Users." + p.getUniqueId() + ".stats" + ".numberOfWaypoints") != 0) {
-					ConfigurationSection waypoints = getConfig().getConfigurationSection("Users." + p.getUniqueId() + ".waypoints");
+				if (0 + playerDataConfig.getInt("Users." + p.getUniqueId() + ".stats" + ".numberOfWaypoints") != 0) {
+					ConfigurationSection waypoints = playerDataConfig.getConfigurationSection("Users." + p.getUniqueId() + ".waypoints");
 					for (String s : waypoints.getKeys(false)) {
 						if (s.equalsIgnoreCase(wpName) && (wpX == 0 && wpY == 0 && wpZ == 0)){
 							p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "You cannot make multiple waypoints of the same name!");
@@ -1307,11 +901,11 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 				
 				
 				// set location in config file
-				getConfig().set("Users." + p.getUniqueId() + ".waypoints" + "." + wpName + ".X", p.getLocation().getBlockX());
-				getConfig().set("Users." + p.getUniqueId() + ".waypoints" + "." + wpName + ".Y", p.getLocation().getBlockY());
-				getConfig().set("Users." + p.getUniqueId() + ".waypoints" + "." + wpName + ".Z", p.getLocation().getBlockZ());
+				playerDataConfig.set("Users." + p.getUniqueId() + ".waypoints" + "." + wpName + ".X", p.getLocation().getBlockX());
+				playerDataConfig.set("Users." + p.getUniqueId() + ".waypoints" + "." + wpName + ".Y", p.getLocation().getBlockY());
+				playerDataConfig.set("Users." + p.getUniqueId() + ".waypoints" + "." + wpName + ".Z", p.getLocation().getBlockZ());
 				
-				getConfig().set("Users." + p.getUniqueId() + ".stats" + ".numberOfWaypoints", 0 + getConfig().getInt("Users." + p.getUniqueId() + ".stats" + ".numberOfWaypoints") + 1);
+				playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".numberOfWaypoints", 0 + playerDataConfig.getInt("Users." + p.getUniqueId() + ".stats" + ".numberOfWaypoints") + 1);
 				
 				saveConfig();
 				
@@ -1333,8 +927,8 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 				
 				boolean waypointExists = false;
 				
-				if (0 + getConfig().getInt("Users." + p.getUniqueId() + ".stats" + ".numberOfWaypoints") != 0) {
-					ConfigurationSection waypoints = getConfig().getConfigurationSection("Users." + p.getUniqueId() + ".waypoints");
+				if (0 + playerDataConfig.getInt("Users." + p.getUniqueId() + ".stats" + ".numberOfWaypoints") != 0) {
+					ConfigurationSection waypoints = playerDataConfig.getConfigurationSection("Users." + p.getUniqueId() + ".waypoints");
 					for (String s : waypoints.getKeys(false)) {
 						if (s.equalsIgnoreCase(wpName)){
 							waypointExists = true;
@@ -1348,11 +942,11 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 				}
 				
 				// set location in config file
-				getConfig().set("Users." + p.getUniqueId() + ".waypoints" + "." + wpName + ".X", 0);
-				getConfig().set("Users." + p.getUniqueId() + ".waypoints" + "." + wpName + ".Y", 0);
-				getConfig().set("Users." + p.getUniqueId() + ".waypoints" + "." + wpName + ".Z", 0);
+				playerDataConfig.set("Users." + p.getUniqueId() + ".waypoints" + "." + wpName + ".X", 0);
+				playerDataConfig.set("Users." + p.getUniqueId() + ".waypoints" + "." + wpName + ".Y", 0);
+				playerDataConfig.set("Users." + p.getUniqueId() + ".waypoints" + "." + wpName + ".Z", 0);
 				
-				getConfig().set("Users." + p.getUniqueId() + ".stats" + ".numberOfWaypoints", 0 + getConfig().getInt("Users." + p.getUniqueId() + ".stats" + ".numberOfWaypoints") - 1);
+				playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".numberOfWaypoints", 0 + playerDataConfig.getInt("Users." + p.getUniqueId() + ".stats" + ".numberOfWaypoints") - 1);
 				
 				saveConfig();
 				
@@ -1371,8 +965,8 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 				
 				boolean waypointExists = false;
 				
-				if (0 + getConfig().getInt("Users." + p.getUniqueId() + ".stats" + ".numberOfWaypoints") != 0) {
-					ConfigurationSection waypoints = getConfig().getConfigurationSection("Users." + p.getUniqueId() + ".waypoints");
+				if (0 + playerDataConfig.getInt("Users." + p.getUniqueId() + ".stats" + ".numberOfWaypoints") != 0) {
+					ConfigurationSection waypoints = playerDataConfig.getConfigurationSection("Users." + p.getUniqueId() + ".waypoints");
 					for (String s : waypoints.getKeys(false)) {
 						if (s.equalsIgnoreCase(wpName)){
 							waypointExists = true;
@@ -1386,9 +980,9 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 				}
 				
 				// set location in config file
-				getConfig().set("Users." + p.getUniqueId() + ".waypoints" + "." + wpName + ".X", p.getLocation().getBlockX());
-				getConfig().set("Users." + p.getUniqueId() + ".waypoints" + "." + wpName + ".Y", p.getLocation().getBlockY());
-				getConfig().set("Users." + p.getUniqueId() + ".waypoints" + "." + wpName + ".Z", p.getLocation().getBlockZ());
+				playerDataConfig.set("Users." + p.getUniqueId() + ".waypoints" + "." + wpName + ".X", p.getLocation().getBlockX());
+				playerDataConfig.set("Users." + p.getUniqueId() + ".waypoints" + "." + wpName + ".Y", p.getLocation().getBlockY());
+				playerDataConfig.set("Users." + p.getUniqueId() + ".waypoints" + "." + wpName + ".Z", p.getLocation().getBlockZ());
 				
 				// Commands+ System Message
 				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "Updated waypoint " + ChatColor.AQUA + wpName + ChatColor.WHITE +"!");
@@ -1407,9 +1001,9 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 				}
 				
 				// get location from config file
-				int wpX = 0 + getConfig().getInt("Users." + p.getUniqueId() + ".waypoints" + "." + wpName + ".X");
-				int wpY = 0 + getConfig().getInt("Users." + p.getUniqueId() + ".waypoints" + "." + wpName + ".Y");
-				int wpZ = 0 + getConfig().getInt("Users." + p.getUniqueId() + ".waypoints" + "." + wpName + ".Z");
+				int wpX = 0 + playerDataConfig.getInt("Users." + p.getUniqueId() + ".waypoints" + "." + wpName + ".X");
+				int wpY = 0 + playerDataConfig.getInt("Users." + p.getUniqueId() + ".waypoints" + "." + wpName + ".Y");
+				int wpZ = 0 + playerDataConfig.getInt("Users." + p.getUniqueId() + ".waypoints" + "." + wpName + ".Z");
 				
 				if (wpX == 0 && wpY == 0 && wpZ == 0) {
 					p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "Waypoint does not exist!");
@@ -1490,9 +1084,9 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 
 				String chunkName = chunkClaimDataConfig.getString("ClaimedChunks." + ".X: " + p.getLocation().getChunk().getX() + ", Z: " + p.getLocation().getChunk().getZ() + ".appearsAs");
 				String name = chunkClaimDataConfig.getString("ClaimedChunks." + ".X: " + p.getLocation().getChunk().getX() + ", Z: " + p.getLocation().getChunk().getZ() + ".belongsToName");
-				String willAppearAs = getConfig().getString("Users." + p.getUniqueId() + "." + "stats" + ".faction");
+				String willAppearAs = playerDataConfig.getString("Users." + p.getUniqueId() + "." + "stats" + ".faction");
 				
-				int chunkClaims = getConfig().getInt("Users." + p.getUniqueId() + ".stats" + ".chunkClaims");
+				int chunkClaims = playerDataConfig.getInt("Users." + p.getUniqueId() + ".stats" + ".chunkClaims");
 				
 				
 				if (UUID == null && (playerLevel * 2) > chunkClaims) {
@@ -1500,12 +1094,15 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 					chunkClaimDataConfig.set("ClaimedChunks." + ".X: " + p.getLocation().getChunk().getX() + ", Z: " + p.getLocation().getChunk().getZ() + ".belongsToName", "" + p.getName());
 					chunkClaimDataConfig.set("ClaimedChunks." + ".X: " + p.getLocation().getChunk().getX() + ", Z: " + p.getLocation().getChunk().getZ() + ".appearsAs", "" + willAppearAs);
 					
+					chunkLocationsRAM.add("X: " + p.getLocation().getChunk().getX() + ", Z: " + p.getLocation().getChunk().getZ());
+					chunkNamesRAM.add(willAppearAs);
+					
 					// this is a safeguard just in case people mess with the server config files
 					if (chunkClaims < 0) {
 						chunkClaims = 0;
 					}
 					chunkClaims++;
-					getConfig().set("Users." + p.getUniqueId() + ".stats" + ".chunkClaims", chunkClaims);
+					playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".chunkClaims", chunkClaims);
 					try {
 						chunkClaimDataConfig.save(chunkClaimData);
 					} catch (IOException e) {
@@ -1561,14 +1158,23 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 					chunkClaimDataConfig.set("ClaimedChunks." + ".X: " + p.getLocation().getChunk().getX() + ", Z: " + p.getLocation().getChunk().getZ() + ".belongsToUUID", null);
 					chunkClaimDataConfig.set("ClaimedChunks." + ".X: " + p.getLocation().getChunk().getX() + ", Z: " + p.getLocation().getChunk().getZ() + ".belongsToName", null);
 					chunkClaimDataConfig.set("ClaimedChunks." + ".X: " + p.getLocation().getChunk().getX() + ", Z: " + p.getLocation().getChunk().getZ() + ".appearsAs", null);
-					int chunkClaims = getConfig().getInt("Users." + p.getUniqueId() + ".stats" + ".chunkClaims");
+					int chunkClaims = playerDataConfig.getInt("Users." + p.getUniqueId() + ".stats" + ".chunkClaims");
 					chunkClaims--;
+					
+					try {
+						int i = chunkLocationsRAM.indexOf("X: " + p.getLocation().getChunk().getX() + ", Z: " + p.getLocation().getChunk().getZ());
+						chunkLocationsRAM.remove(i);
+						chunkNamesRAM.remove(i);
+					} catch (Exception e){
+						getLogger().log(Level.SEVERE, "Chunk to unclaim not found in ArrayList!");
+					}
+					
 					
 					// this is a safeguard just in case people mess with the server config files
 					if (chunkClaims < 0) {
 						chunkClaims = 0;
 					}
-					getConfig().set("Users." + p.getUniqueId() + ".stats" + ".chunkClaims", chunkClaims);
+					playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".chunkClaims", chunkClaims);
 					try {
 						chunkClaimDataConfig.save(chunkClaimData);
 					} catch (IOException e) {
@@ -1637,10 +1243,10 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 			
 			if (args[0].equals("live")) {
 				if (args[1].equals("on")) {
-					getConfig().set("Users." + p.getUniqueId() + "." + "preferences" + ".chunkMapLive", true);
+					playerDataConfig.set("Users." + p.getUniqueId() + "." + "preferences" + ".chunkMapLive", true);
 				}
 				if (args[1].equals("off")) {
-					getConfig().set("Users." + p.getUniqueId() + "." + "preferences" + ".chunkMapLive", false);
+					playerDataConfig.set("Users." + p.getUniqueId() + "." + "preferences" + ".chunkMapLive", false);
 				}
 				saveConfig();
 			}
@@ -1668,7 +1274,7 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 			}
 			
 			// variable grabbing
-			String playerFaction = getConfig().getString("Users." + p.getUniqueId() + ".stats" + ".faction");
+			String playerFaction = playerDataConfig.getString("Users." + p.getUniqueId() + ".stats" + ".faction");
 			
 			
 			// BASE FACTION COMMANDS
@@ -1681,7 +1287,7 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 					factionName += " " + args[i];
 				}
 				
-				if (getConfig().getBoolean("Users." + p.getUniqueId() + ".stats" + ".inFaction")) {
+				if (playerDataConfig.getBoolean("Users." + p.getUniqueId() + ".stats" + ".inFaction")) {
 					// Commands+ System Message
 					p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "You're already in a faction!");
 					
@@ -1696,17 +1302,32 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 					return true;
 				}
 				
-				if (getConfig().getString("Factions." + factionName + ".ownerUUID") == null) {
-					getConfig().set("Factions." + factionName + ".stats" + ".ownerUUID", "" + p.getUniqueId());
-					getConfig().set("Factions." + factionName + ".stats" + ".ownerName", "" + p.getName());
-					getConfig().set("Users." + p.getUniqueId() + ".stats" + ".inFaction", true);
-					getConfig().set("Users." + p.getUniqueId() + ".stats" + ".faction", factionName);
-					getConfig().set("Factions." + factionName + ".stats" + ".memberCount", 1);
-					getConfig().set("Factions." + factionName + ".members." + p.getUniqueId() + ".name", "" + p.getName());
-					getConfig().set("Factions." + factionName + ".members." + p.getUniqueId() + ".rank", "Leader");
-					getConfig().set("Users." + p.getUniqueId() + ".preferences" + ".chunkName", factionName);
+				if (factionDataConfig.getString("Factions." + factionName + ".ownerUUID") == null) {
+					factionDataConfig.set("Factions." + factionName + ".stats" + ".ownerUUID", "" + p.getUniqueId());
+					factionDataConfig.set("Factions." + factionName + ".stats" + ".ownerName", "" + p.getName());
+					playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".inFaction", true);
+					playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".faction", factionName);
+					factionDataConfig.set("Factions." + factionName + ".stats" + ".memberCount", 1);
+					factionDataConfig.set("Factions." + factionName + ".members." + p.getUniqueId() + ".name", "" + p.getName());
+					factionDataConfig.set("Factions." + factionName + ".members." + p.getUniqueId() + ".rank", "Leader");
+					factionDataConfig.set("Users." + p.getUniqueId() + ".preferences" + ".chunkName", factionName);
 					changeChunkName(p, factionName);
-					saveConfig();
+
+					// save files
+					try {
+						playerDataConfig.save(playerData);
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} // this is important to have when editing server files, otherwise nothing gets changed
+					
+					try {
+						factionDataConfig.save(factionData);
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} // this is important to have when editing server files, otherwise nothing gets changed
+
 					
 					// Commands+ System Message
 					p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.WHITE + "Created faction " + factionName);
@@ -1725,7 +1346,7 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 			// invite player to faction
 			if (args[0].equals("invite")) {
 
-				if (getConfig().getString("Factions." + playerFaction + ".stats" + ".ownerUUID").equals(p.getUniqueId().toString())){
+				if (factionDataConfig.getString("Factions." + playerFaction + ".stats" + ".ownerUUID").equals(p.getUniqueId().toString())){
 					String playerName = args[1];
 					for (int i = 2; i < args.length; i++) {
 						playerName += " " + args[i];
@@ -1733,24 +1354,32 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 					
 					Player playerInvited = Bukkit.getServer().getPlayer(playerName);
 					
-					int playerInvitedLevel = getConfig().getInt("Users." + playerInvited.getUniqueId() + ".stats" + ".level");
 					
-					
-					if (playerInvitedLevel > 2 && getConfig().getBoolean("Users." + playerInvited.getUniqueId() + ".stats" + ".inFaction") != true) {
-						getConfig().set("Users." + playerInvited.getUniqueId() + ".stats" + ".invitedToFaction", true);
-						getConfig().set("Factions." + playerFaction + ".members." + playerInvited.getUniqueId() + ".name", "" + playerInvited.getName());
-						getConfig().set("Factions." + playerFaction + ".members." + playerInvited.getUniqueId() + ".rank", "invited");
+					if (playerDataConfig.getBoolean("Users." + playerInvited.getUniqueId() + ".stats" + ".inFaction") != true) {
+						playerDataConfig.set("Users." + playerInvited.getUniqueId() + ".stats" + ".invitedToFaction", true);
+						factionDataConfig.set("Factions." + playerFaction + ".members." + playerInvited.getUniqueId() + ".name", "" + playerInvited.getName());
+						factionDataConfig.set("Factions." + playerFaction + ".members." + playerInvited.getUniqueId() + ".rank", "invited");
 						
-						saveConfig();
+						// save files
+						try {
+							playerDataConfig.save(playerData);
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} // this is important to have when editing server files, otherwise nothing gets changed
+						
+						try {
+							factionDataConfig.save(factionData);
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						} // this is important to have when editing server files, otherwise nothing gets changed
+						
 						
 						// Commands+ System Message
 						playerInvited.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "You've been invited to " + ChatColor.AQUA + playerFaction + ChatColor.WHITE + " by " + p.getName() + "! Type /faction accept to join!");
 						// Commands+ System Message
 						p.sendMessage(ChatColor.WHITE + "[" + ChatColor.AQUA + playerFaction + ChatColor.WHITE + "] " + "Invited " + ChatColor.GREEN + playerInvited.getName() + ChatColor.WHITE + " to " + ChatColor.AQUA + playerFaction + ChatColor.WHITE + "!");
-					}
-					else if (playerInvitedLevel < 3){
-						// Commands+ System Message
-						p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "Player is not level 3 yet!");
 					}
 					else {
 						// Commands+ System Message
@@ -1764,26 +1393,41 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 			// accept faction invite
 			if (args[0].equals("accept")) {
 				String factionName = "";
-				ConfigurationSection factions = getConfig().getConfigurationSection("Factions.");
+				ConfigurationSection factions = factionDataConfig.getConfigurationSection("Factions.");
 				for (String s : factions.getKeys(false)) {
 					if (factions.get(s + ".members." + p.getUniqueId() + ".rank") != null && factions.get(s + ".members." + p.getUniqueId() + ".rank").equals("invited")) {
 						factionName = s;
 					}
 				}
 				if (!factionName.equals("")) {
-					getConfig().set("Factions." + factionName + ".stats" + ".memberCount", getConfig().getInt("Factions." + factionName + ".stats" + ".memberCount") + 1);
+					factionDataConfig.set("Factions." + factionName + ".stats" + ".memberCount", factionDataConfig.getInt("Factions." + factionName + ".stats" + ".memberCount") + 1);
 					
 					
-					getConfig().set("Users." + p.getUniqueId() + ".stats" + ".inFaction", true);
-					getConfig().set("Users." + p.getUniqueId() + ".stats" + ".faction", factionName);
-					getConfig().set("Users." + p.getUniqueId() + ".stats" + ".invitedToFaction", false);
-					getConfig().set("Factions." + factionName + ".members." + p.getUniqueId() + ".rank", "member");
-					saveConfig();
+					playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".inFaction", true);
+					playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".faction", factionName);
+					playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".invitedToFaction", false);
+					factionDataConfig.set("Factions." + factionName + ".members." + p.getUniqueId() + ".rank", "member");
+
+
+					// save files
+					try {
+						playerDataConfig.save(playerData);
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} // this is important to have when editing server files, otherwise nothing gets changed
+					
+					try {
+						factionDataConfig.save(factionData);
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} // this is important to have when editing server files, otherwise nothing gets changed
 					
 					// Commands+ System Message
 					p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "Joined faction " + ChatColor.AQUA + factionName + ChatColor.WHITE + "!");
 					for (Player online : Bukkit.getOnlinePlayers()) {
-						if (getConfig().getBoolean("Users." + online.getUniqueId() + ".stats" + ".inFaction") == true && getConfig().getString("Users." + online.getUniqueId() + ".stats" + ".faction").equals(factionName)) {
+						if (playerDataConfig.getBoolean("Users." + online.getUniqueId() + ".stats" + ".inFaction") == true && playerDataConfig.getString("Users." + online.getUniqueId() + ".stats" + ".faction").equals(factionName)) {
 							online.sendMessage(ChatColor.WHITE + "[" + ChatColor.AQUA + factionName + ChatColor.WHITE + "] " + ChatColor.GREEN + p.getName() + ChatColor.WHITE + " joined the faction!");
 						}
 					}
@@ -1797,7 +1441,20 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 					p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "You haven't been invited to a faction yet!");
 				}
 				
-				saveConfig();
+				// save files
+				try {
+					playerDataConfig.save(playerData);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} // this is important to have when editing server files, otherwise nothing gets changed
+				
+				try {
+					factionDataConfig.save(factionData);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} // this is important to have when editing server files, otherwise nothing gets changed
 				
 				
 			}
@@ -1805,7 +1462,7 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 			// decline faction invite
 			if (args[0].equals("decline")) {
 				String factionName = "";
-				ConfigurationSection factions = getConfig().getConfigurationSection("Factions.");
+				ConfigurationSection factions = factionDataConfig.getConfigurationSection("Factions.");
 				for (String s : factions.getKeys(false)) {
 					if (factions.get(s + ".members." + p.getUniqueId() + ".rank").equals("invited")) {
 						factionName = s;
@@ -1813,8 +1470,8 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 				}
 				
 				if (!factionName.equals("")) {
-					getConfig().set("Users." + p.getUniqueId() + ".stats" + ".invitedToFaction", false);
-					getConfig().set("Factions." + factionName + ".members." + p.getUniqueId() + ".rank", "none");
+					playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".invitedToFaction", false);
+					factionDataConfig.set("Factions." + factionName + ".members." + p.getUniqueId() + ".rank", "none");
 					
 					saveConfig();
 					
@@ -1833,7 +1490,7 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 			
 			// remove player from faction
 			if (args[0].equals("remove")) {
-				if (getConfig().getString("Factions." + playerFaction + ".stats" + ".ownerUUID").equals(p.getUniqueId().toString())) {
+				if (factionDataConfig.getString("Factions." + playerFaction + ".stats" + ".ownerUUID").equals(p.getUniqueId().toString())) {
 					String playerName = args[1];
 					for (int i = 2; i < args.length; i++) {
 						playerName += " " + args[i];
@@ -1843,12 +1500,12 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 					
 					
 					// config stuff
-					getConfig().set("Users." + playerRemoved.getUniqueId() + ".stats" + ".inFaction", false);
-					getConfig().set("Users." + playerRemoved.getUniqueId() + ".stats" + ".invitedToFaction", false);
-					getConfig().set("Users." + playerRemoved.getUniqueId() + ".stats" + ".faction", "");
+					playerDataConfig.set("Users." + playerRemoved.getUniqueId() + ".stats" + ".inFaction", false);
+					playerDataConfig.set("Users." + playerRemoved.getUniqueId() + ".stats" + ".invitedToFaction", false);
+					playerDataConfig.set("Users." + playerRemoved.getUniqueId() + ".stats" + ".faction", "");
 					
-					getConfig().set("Factions." + playerFaction + ".members." + playerRemoved.getUniqueId() + ".rank", "none");
-					getConfig().set("Factions." + playerFaction + ".stats" + ".memberCount", getConfig().getInt("Factions." + playerFaction + ".stats" + ".memberCount") - 1);
+					factionDataConfig.set("Factions." + playerFaction + ".members." + playerRemoved.getUniqueId() + ".rank", "none");
+					factionDataConfig.set("Factions." + playerFaction + ".stats" + ".memberCount", factionDataConfig.getInt("Factions." + playerFaction + ".stats" + ".memberCount") - 1);
 					
 					saveConfig();
 					
@@ -1856,7 +1513,7 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 					// Commands+ System Messages
 					playerRemoved.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "You've been removed from " + ChatColor.AQUA + playerFaction + ChatColor.WHITE + "!");
 					for (Player online : Bukkit.getOnlinePlayers()) {
-						if (getConfig().getBoolean("Users." + online.getUniqueId() + ".stats" + ".inFaction") != false && getConfig().getString("Users." + online.getUniqueId() + ".stats" + ".faction").equals(playerFaction)) {
+						if (playerDataConfig.getBoolean("Users." + online.getUniqueId() + ".stats" + ".inFaction") != false && playerDataConfig.getString("Users." + online.getUniqueId() + ".stats" + ".faction").equals(playerFaction)) {
 							online.sendMessage(ChatColor.WHITE + "[" + ChatColor.AQUA + playerFaction + ChatColor.WHITE + "] " + ChatColor.GREEN + playerName + ChatColor.WHITE + " was kicked from the faction!");
 						}
 					}
@@ -1866,15 +1523,15 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 			
 			// leave faction
 			if (args[0].equals("leave")) {
-				if (getConfig().getBoolean("Users." + p.getUniqueId() + ".stats" + ".inFaction")) {
+				if (playerDataConfig.getBoolean("Users." + p.getUniqueId() + ".stats" + ".inFaction")) {
 					
 					
-					getConfig().set("Users." + p.getUniqueId() + ".stats" + ".inFaction", false);
-					getConfig().set("Users." + p.getUniqueId() + ".stats" + ".faction", "");
-					getConfig().set("Factions." + playerFaction + ".stats" + ".memberCount", getConfig().getInt("Factions." + playerFaction + ".stats" + ".memberCount") - 1);
-					getConfig().set("Factions." + playerFaction + ".members." + p.getUniqueId() + ".rank", "none");
-					getConfig().set("Factions." + playerFaction + ".stats" + ".ownerUUID", null);
-					getConfig().set("Factions." + playerFaction + ".stats" + ".ownerName", null);
+					playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".inFaction", false);
+					playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".faction", "");
+					factionDataConfig.set("Factions." + playerFaction + ".stats" + ".memberCount", factionDataConfig.getInt("Factions." + playerFaction + ".stats" + ".memberCount") - 1);
+					factionDataConfig.set("Factions." + playerFaction + ".members." + p.getUniqueId() + ".rank", "none");
+					factionDataConfig.set("Factions." + playerFaction + ".stats" + ".ownerUUID", null);
+					factionDataConfig.set("Factions." + playerFaction + ".stats" + ".ownerName", null);
 					
 					saveConfig();
 				
@@ -1882,7 +1539,7 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 					p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "You've left " + ChatColor.AQUA + playerFaction + ChatColor.WHITE + "!");
 					
 					for (Player online : Bukkit.getOnlinePlayers()) {
-						if (getConfig().getBoolean("Users." + online.getUniqueId() + ".stats" + ".inFaction") != false && getConfig().getString("Users." + online.getUniqueId() + ".stats" + ".faction").equals(playerFaction)) {
+						if (playerDataConfig.getBoolean("Users." + online.getUniqueId() + ".stats" + ".inFaction") != false && playerDataConfig.getString("Users." + online.getUniqueId() + ".stats" + ".faction").equals(playerFaction)) {
 							online.sendMessage(ChatColor.WHITE + "[" + ChatColor.AQUA + playerFaction + ChatColor.WHITE + "] " + ChatColor.GREEN + p.getName() + ChatColor.WHITE + " has left the faction!");
 						}
 					}
@@ -1896,13 +1553,13 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 			
 			if (args[0].equals("info")) {
 				String factionName = "";
-				if (args.length == 1 && getConfig().getBoolean("Users." + p.getUniqueId() + ".stats" + ".inFaction") != true) {
+				if (args.length == 1 && playerDataConfig.getBoolean("Users." + p.getUniqueId() + ".stats" + ".inFaction") != true) {
 					// Commands+ System Message
 					p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "Type in a faction name to see stats!");
 					return true;
 				}
 				if (args.length == 1) {
-					factionName = getConfig().getString("Users." + p.getUniqueId() + ".stats" + ".faction");
+					factionName = playerDataConfig.getString("Users." + p.getUniqueId() + ".stats" + ".faction");
 				}
 				else {
 					factionName = args[1];
@@ -1912,7 +1569,7 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 				}
 				
 				
-				ConfigurationSection faction = getConfig().getConfigurationSection("Factions." + factionName + ".members");
+				ConfigurationSection faction = factionDataConfig.getConfigurationSection("Factions." + factionName + ".members");
 				String factionMembers = "";
 				
 				for (String s : faction.getKeys(false)) {
