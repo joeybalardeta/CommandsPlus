@@ -16,6 +16,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.World.Environment;
+import org.bukkit.block.Biome;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
@@ -25,6 +26,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Phantom;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionEffect;
@@ -49,6 +51,10 @@ import net.md_5.bungee.api.chat.TextComponent;
 @SuppressWarnings("deprecation")
 public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 	
+	// some variable declarations
+	public static Inventory talentInventory;
+	
+	
 	// initialize plugin data files
 	public static File playerLogs;
 	public static FileConfiguration playerLogsConfig;
@@ -60,6 +66,27 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 	public static FileConfiguration factionDataConfig;
 	
 	
+	
+	// HashMap loader function
+	public static void loadHashMaps(Player online) {
+		// player skill data
+		miningPointsTracker.put(online.getUniqueId().toString(), 0 + playerDataConfig.getInt("Users." + online.getUniqueId() + ".stats" + ".miningPoints"));
+		combatPointsTracker.put(online.getUniqueId().toString(), 0 + playerDataConfig.getInt("Users." + online.getUniqueId() + ".stats" + ".combatPoints"));
+		farmingPointsTracker.put(online.getUniqueId().toString(), 0 + playerDataConfig.getInt("Users." + online.getUniqueId() + ".stats" + ".farmingPoints"));
+		enchantingPointsTracker.put(online.getUniqueId().toString(), 0 + playerDataConfig.getInt("Users." + online.getUniqueId() + ".stats" + ".enchantingPoints"));
+		alchemyPointsTracker.put(online.getUniqueId().toString(), 0 + playerDataConfig.getInt("Users." + online.getUniqueId() + ".stats" + ".alchemyPoints"));
+		
+		// player talent
+		talentHashMap.put(online.getUniqueId().toString(), 0 + playerDataConfig.getString("Users." + online.getUniqueId() + ".stats" + ".talent"));
+		
+		// player cooldowns
+		canTpHashMap.put(online.getUniqueId().toString(), false);
+		canSaveDataHashMap.put(online.getUniqueId().toString(), false);
+		
+		// player settings
+		scoreboardHashMap.put(online.getUniqueId().toString(), playerDataConfig.getBoolean("Users." + online.getUniqueId() + ".preferences" + ".scoreboard"));		
+
+	}
 	
 	
 	// timber axe block hashsets
@@ -84,7 +111,8 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 		EnchantmentsPlus.register();
 		
 		
-		
+		// construct talent inventory
+		FunctionsPlus.createTalentSelectionInventory();
 		
 		
 		// register valid log materials HashSet for Timber Axe
@@ -161,16 +189,7 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 
 			if (!hashMapsCreated) {
 				
-				miningPointsTracker.put(online.getUniqueId().toString(), 0 + playerDataConfig.getInt("Users." + online.getUniqueId() + ".stats" + ".miningPoints"));
-				combatPointsTracker.put(online.getUniqueId().toString(), 0 + playerDataConfig.getInt("Users." + online.getUniqueId() + ".stats" + ".combatPoints"));
-				farmingPointsTracker.put(online.getUniqueId().toString(), 0 + playerDataConfig.getInt("Users." + online.getUniqueId() + ".stats" + ".farmingPoints"));
-				enchantingPointsTracker.put(online.getUniqueId().toString(), 0 + playerDataConfig.getInt("Users." + online.getUniqueId() + ".stats" + ".enchantingPoints"));
-				alchemyPointsTracker.put(online.getUniqueId().toString(), 0 +playerDataConfig.getInt("Users." + online.getUniqueId() + ".stats" + ".alchemyPoints"));
-				
-				scoreboardHashMap.put(online.getUniqueId().toString(), playerDataConfig.getBoolean("Users." + online.getUniqueId() + ".preferences" + ".scoreboard"));
-				
-				canSaveDataHashMap.put(online.getUniqueId().toString(), false);
-				canTpHashMap.put(online.getUniqueId().toString(), false);
+				loadHashMaps(online);
 			}
 			
 		}
@@ -178,7 +197,7 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 
 		
 		// scoreboard initialization and End checker
-		this.getServer().getPluginManager().registerEvents(this, this);
+		this.getServer().getPluginManager().registerEvents(new Events(), this);
 		BukkitScheduler scheduler = getServer().getScheduler();
 		
 		// check every 250ms for potion effects
@@ -191,6 +210,30 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
         				if(online.getInventory().getBoots() != null) {
         						online.addPotionEffect(new PotionEffect(PotionEffectType.DOLPHINS_GRACE, 30, 0));
         					}
+        				String talent = talentHashMap.get(online.getUniqueId().toString()).replaceAll("\\d", "");
+        				if (talent.equals("Pyrokinetic")) {
+        					Material m1 = online.getPlayer().getLocation().getBlock().getType();
+        				    if (m1 == Material.WATER) {
+        				    	online.damage(2);
+        				    }
+        				    else if (online.getWorld().hasStorm()) {
+        				    	if (online.getLocation().getBlock().getBiome() != Biome.DESERT) {
+        				    		Location loc = new Location(online.getWorld(), online.getLocation().getBlockX(), online.getLocation().getWorld().getHighestBlockYAt(online.getLocation()), online.getLocation().getBlockZ());
+        				    		loc.add(0, 1, 0);
+        				    		
+        				    		Material m2 = online.getWorld().getBlockAt(loc).getType();
+        				    		
+                				    if (m2 != Material.SNOW) {
+                				    	int blockLocation = online.getLocation().getWorld().getHighestBlockYAt(online.getLocation());
+                				    	if(blockLocation <= online.getLocation().getY()) {
+                				    		online.damage(1);
+                				    	}
+                				    }
+        				    	}
+        						
+        					}
+        					
+        				}
         			}
             	}
             }
@@ -221,6 +264,8 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
         				if ((FunctionsPlus.getTime(getServer(), online) % 24000) > 12300) {
         					// chance for blood moon
         				}
+        				
+        				
         			}
             	}
             }
@@ -1619,6 +1664,16 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 		}
 		//-----------------------------------------------------------------------------------------------------------------------------------------------
 		
+		
+		//-----------------------------------------------------------------------------------------------------------------------------------------------
+		// Talent Commands
+		if (label.equalsIgnoreCase("talents")){
+			p.openInventory(talentInventory);
+		}
+		
+		//-----------------------------------------------------------------------------------------------------------------------------------------------
+		
+		
 		//-----------------------------------------------------------------------------------------------------------------------------------------------
 		// Custom Item Commands
 		
@@ -1630,6 +1685,26 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 
 		}
 		
+		//-----------------------------------------------------------------------------------------------------------------------------------------------
+		
+		
+		//-----------------------------------------------------------------------------------------------------------------------------------------------
+		// Miscellaneous Commands
+		if (label.equalsIgnoreCase("credits")){
+			p.sendMessage(ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+ " + ChatColor.WHITE + "Credits:");
+			p.sendMessage(ChatColor.WHITE + "Base plugin - huge thanks to everyone who worked");
+			p.sendMessage(ChatColor.WHITE + "in the beta stages of the plugin to work out the kinks!");
+			p.sendMessage(ChatColor.WHITE + "");
+			p.sendMessage(ChatColor.WHITE + "Factions Update - Warlocck, I cannot thank you enough");
+			p.sendMessage(ChatColor.WHITE + "for your patience during the testing of this system.");
+			p.sendMessage(ChatColor.WHITE + "");
+			p.sendMessage(ChatColor.WHITE + "Items+, Enchantments+, and Skills Updates - the biggest");
+			p.sendMessage(ChatColor.WHITE + "inspiration was Hypixel Skyblock, if any of those");
+			p.sendMessage(ChatColor.WHITE + "developers see this, huge thanks to you guys!");
+			p.sendMessage(ChatColor.WHITE + "");
+			p.sendMessage(ChatColor.WHITE + "Talents Update - the Origins mod was a huge inspiration");
+			p.sendMessage(ChatColor.WHITE + "for this project, Apace100, thank you for that awesome mod!");
+		}
 		
 		return false;
 		

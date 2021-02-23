@@ -12,13 +12,17 @@ import org.bukkit.block.Block;
 import org.bukkit.block.Container;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.TNTPrimed;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.enchantment.EnchantItemEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.ExplosionPrimeEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
+import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryInteractEvent;
 import org.bukkit.event.player.PlayerFishEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -35,15 +39,34 @@ import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionType;
 
 import net.md_5.bungee.api.ChatColor;
+
 @SuppressWarnings("deprecation")
-public class Events {
+public class Events implements Listener{
 	
 	@EventHandler
 	public void onJoin(PlayerJoinEvent event) {
 		Player online = event.getPlayer();
 		
+		if (!online.hasPlayedBefore()) {
+			Main.playerDataConfig.set("Users." + event.getPlayer().getUniqueId() + "." + "preferences" + ".hasPlayedBefore", true);
+			Main.playerDataConfig.set("Users." + event.getPlayer().getUniqueId() + "." + "preferences" + ".scoreboard", true);
+			Main.playerDataConfig.set("Users." + event.getPlayer().getUniqueId() + "." + "stats" + ".name", event.getPlayer().getName());
+			Main.playerDataConfig.set("Users." + event.getPlayer().getUniqueId() + "." + "stats" + ".miningPoints", 0);
+			Main.playerDataConfig.set("Users." + event.getPlayer().getUniqueId() + "." + "stats" + ".farmingPoints", 0);
+			Main.playerDataConfig.set("Users." + event.getPlayer().getUniqueId() + "." + "stats" + ".combatPoints", 0);
+			Main.playerDataConfig.set("Users." + event.getPlayer().getUniqueId() + "." + "stats" + ".enchantingPoints", 0);
+			Main.playerDataConfig.set("Users." + event.getPlayer().getUniqueId() + "." + "stats" + ".alchemyPoints", 0);
+			
+			try {
+				Main.playerDataConfig.save(Main.playerData);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} // this is important to have when editing server files, otherwise nothing gets changed
+		}
 		
-		if (Main.playerDataConfig.getBoolean("Users." + event.getPlayer().getUniqueId() + "." + "preferences" + ".hasPlayedBefore") != true){
+		
+		if (!Main.playerDataConfig.getBoolean("Users." + event.getPlayer().getUniqueId() + "." + "preferences" + ".hasPlayedBefore")){
 			Main.playerDataConfig.set("Users." + event.getPlayer().getUniqueId() + "." + "preferences" + ".hasPlayedBefore", true);
 			Main.playerDataConfig.set("Users." + event.getPlayer().getUniqueId() + "." + "preferences" + ".scoreboard", true);
 			Main.playerDataConfig.set("Users." + event.getPlayer().getUniqueId() + "." + "stats" + ".name", event.getPlayer().getName());
@@ -57,16 +80,7 @@ public class Events {
 		
 		
 		// load in player stats to respective HashMaps
-		Main.miningPointsTracker.put(online.getUniqueId().toString(), 0 + Main.playerDataConfig.getInt("Users." + online.getUniqueId() + ".stats" + ".miningPoints"));
-		Main.combatPointsTracker.put(online.getUniqueId().toString(), 0 + Main.playerDataConfig.getInt("Users." + online.getUniqueId() + ".stats" + ".combatPoints"));
-		Main.farmingPointsTracker.put(online.getUniqueId().toString(), 0 + Main.playerDataConfig.getInt("Users." + online.getUniqueId() + ".stats" + ".farmingPoints"));
-		Main.enchantingPointsTracker.put(online.getUniqueId().toString(), 0 + Main.playerDataConfig.getInt("Users." + online.getUniqueId() + ".stats" + ".enchantingPoints"));
-		Main.alchemyPointsTracker.put(online.getUniqueId().toString(), 0 + Main.playerDataConfig.getInt("Users." + online.getUniqueId() + ".stats" + ".alchemyPoints"));
-		
-		Main.scoreboardHashMap.put(online.getUniqueId().toString(), Main.playerDataConfig.getBoolean("Users." + online.getUniqueId() + ".preferences" + ".scoreboard"));
-		
-		Main.canSaveDataHashMap.put(online.getUniqueId().toString(), false);
-		Main.canTpHashMap.put(online.getUniqueId().toString(), false);
+		Main.loadHashMaps(online);
 		
 		
 		if (Main.scoreboardHashMap.get(online.getUniqueId().toString())) {
@@ -79,6 +93,64 @@ public class Events {
 		FunctionsPlus.savePlayerData(event.getPlayer(), false);
 	}
 	
+	
+	// Interaction Events
+	@EventHandler
+	public void onInventoryClick(InventoryClickEvent event) {
+		if (!event.getInventory().equals(Main.talentInventory)) {
+			return;
+		}
+		
+		if (event.getCurrentItem() == null) {
+			return;
+		}
+		
+		if (event.getCurrentItem().getItemMeta() == null) {
+			return;		
+		}
+		
+		if (event.getCurrentItem().getItemMeta().getDisplayName() == null) {
+			return;
+		}
+		
+		event.setCancelled(true);
+		
+		Player p = (Player) event.getWhoClicked();
+		
+		if (event.getSlot() == 26) {
+			p.closeInventory();
+			return;
+		}
+		
+		if (Main.playerDataConfig.contains("Users." + p.getUniqueId() + ".stats" + ".talent") && !p.hasPermission("commandsPlus.tester")) {
+			p.closeInventory();
+			p.sendMessage("You have already picked a talent!");
+			return;
+		}
+		
+		if (event.getSlot() == 0) {
+			p.sendMessage("You chose the Avian talent!");
+			Main.talentHashMap.put(p.getUniqueId().toString(), "Avian");
+			Main.playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".talent", "Avian");
+			p.closeInventory();
+		}
+		
+		if (event.getSlot() == 1) {
+			p.sendMessage("You chose the Pyrokinetic talent!");
+			Main.talentHashMap.put(p.getUniqueId().toString(), "Pyrokinetic");
+			Main.playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".talent", "Pyrokinetic");
+			p.closeInventory();
+		}
+		
+		// save player data file
+		try {
+			Main.playerDataConfig.save(Main.playerData);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} // this is important to have when editing server files, otherwise nothing gets changed
+		
+	}
 	
 	
 	// Minecraft World Events
@@ -114,8 +186,11 @@ public class Events {
 	@EventHandler
 	public void onPlayerDamage(final EntityDamageEvent e){
 		if(e.getCause() == DamageCause.FALL && e.getEntity() instanceof Player) {
-			// divides fall damage by 3
-			e.setDamage(e.getDamage() / 3);
+			Player p = (Player) e.getEntity();
+			Main.talentHashMap.get(p.getUniqueId().toString()).replace("\\d", "");
+			if (Main.talentHashMap.get(p.getUniqueId().toString()).equals("Avian")) {
+				e.setCancelled(true);
+			}
 		}
 	}
 	
@@ -123,7 +198,7 @@ public class Events {
 	public void blockBreak(BlockBreakEvent event) {
 		
 		if (event.getPlayer() != null) {
-			//blocksMinedHashMap.put(event.getPlayer().getUniqueId().toString(), blocksMinedHashMap.get(event.getPlayer().getUniqueId().toString()) + 1);
+			Main.miningPointsTracker.put(event.getPlayer().getUniqueId().toString(), Main.miningPointsTracker.get(event.getPlayer().getUniqueId().toString()) + 1);
 			if (Main.canSaveDataHashMap.get(event.getPlayer().getUniqueId().toString())){
 				FunctionsPlus.savePlayerData(event.getPlayer(), false);
 			}
@@ -241,7 +316,20 @@ public class Events {
 	
 	@EventHandler
 	public void enchantEvent(EnchantItemEvent event) {
-		Main.enchantingPointsTracker.put(event.getEnchanter().getUniqueId().toString(), Main.enchantingPointsTracker.get(event.getEnchanter().getUniqueId().toString()) + 1);
+		int cost = event.getExpLevelCost();
+		
+		
+		if (cost > 29) { // max enchant level
+			Main.enchantingPointsTracker.put(event.getEnchanter().getUniqueId().toString(), Main.enchantingPointsTracker.get(event.getEnchanter().getUniqueId().toString()) + 1);
+		}
+		else if (cost > 9) { // middle enchant level
+			Main.enchantingPointsTracker.put(event.getEnchanter().getUniqueId().toString(), Main.enchantingPointsTracker.get(event.getEnchanter().getUniqueId().toString()) + 1);
+		}
+		else { // lowest enchant level
+			Main.enchantingPointsTracker.put(event.getEnchanter().getUniqueId().toString(), Main.enchantingPointsTracker.get(event.getEnchanter().getUniqueId().toString()) + 1);
+		}
+		
+		
 	}
 	
 	@EventHandler
@@ -269,6 +357,8 @@ public class Events {
 	
 	@EventHandler
     public void onPlayerItemConsumeEvent(PlayerItemConsumeEvent e) {
+		
+		Player p = e.getPlayer();
        
         if (e.getItem() != null && e.getItem().hasItemMeta()) {
             if (e.getItem().getItemMeta() instanceof PotionMeta) {
@@ -276,11 +366,33 @@ public class Events {
        
                 final PotionMeta meta = (PotionMeta) e.getItem().getItemMeta();
                 final PotionData data = meta.getBasePotionData();
-                if(data.getType() == PotionType.MUNDANE && data.getType() == PotionType.AWKWARD) {
+                if(data.getType() == PotionType.MUNDANE || data.getType() == PotionType.AWKWARD) {
+                	Main.alchemyPointsTracker.put(p.getUniqueId().toString(), Main.alchemyPointsTracker.get(p.getUniqueId().toString()) + 1);
+                }
+                else if (data.getType() == PotionType.UNCRAFTABLE) {
+                	Main.alchemyPointsTracker.put(p.getUniqueId().toString(), Main.alchemyPointsTracker.get(p.getUniqueId().toString()) + 10);
+                }
+                else if (data.getType() == PotionType.INVISIBILITY || data.getType() == PotionType.JUMP) {
+                	Main.alchemyPointsTracker.put(p.getUniqueId().toString(), Main.alchemyPointsTracker.get(p.getUniqueId().toString()) + 5);
+                }
+                else {
+                	
+                }
+                
+                
+                if (data.isUpgraded()) {
                 	
                 }
             }
         }
+	}
+	
+	
+	@EventHandler
+    public void explosionEvent(ExplosionPrimeEvent e) {
+		if (e.getEntity() instanceof TNTPrimed) {
+			e.setRadius(e.getRadius() * 20);
+		}
 	}
 
 }
