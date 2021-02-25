@@ -15,9 +15,16 @@ public interface GlobalHashMaps{
 	
 	// player talent
 	HashMap<String, String> talentHashMap = new HashMap<String, String>();
+	
+	// player talent cooldowns
+	HashMap<String, Integer> canCryo = new HashMap<String, Integer>();
+	HashMap<String, Integer> canFreeze = new HashMap<String, Integer>();
+	
+	// custom player effects
+	HashMap<String, Boolean> playerFrozenHashMap = new HashMap<String, Boolean>();
 
 	
-	// player cooldowns
+	// player command cooldowns
 	HashMap<String, Boolean> canTpHashMap = new HashMap<String, Boolean>();
 	HashMap<String, Boolean> canSaveDataHashMap = new HashMap<String, Boolean>();
 	

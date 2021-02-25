@@ -6,21 +6,27 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.World.Environment;
 import org.bukkit.block.Block;
 import org.bukkit.block.Container;
+import org.bukkit.entity.Animals;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
+import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
-import org.bukkit.entity.TNTPrimed;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.enchantment.EnchantItemEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
-import org.bukkit.event.entity.ExplosionPrimeEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryInteractEvent;
@@ -28,6 +34,7 @@ import org.bukkit.event.player.PlayerFishEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerShearEntityEvent;
 import org.bukkit.inventory.BrewerInventory;
@@ -36,7 +43,10 @@ import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.potion.PotionData;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
+import org.bukkit.util.Vector;
 
 import net.md_5.bungee.api.ChatColor;
 
@@ -93,6 +103,13 @@ public class Events implements Listener{
 		FunctionsPlus.savePlayerData(event.getPlayer(), false);
 	}
 	
+	@EventHandler
+	public void onPlayerDeath(PlayerDeathEvent event) {
+		Player p = (Player) event.getEntity();
+		ItemStack item = FunctionsPlus.getPlayerHead(p.getName().toString());
+		p.getWorld().dropItem(p.getLocation(), item);
+	}
+	
 	
 	// Interaction Events
 	@EventHandler
@@ -115,8 +132,20 @@ public class Events implements Listener{
 		
 		event.setCancelled(true);
 		
+		
 		Player p = (Player) event.getWhoClicked();
 		
+		// Instantiate particle data/trails objects for player
+		ParticleData particle = new ParticleData(p.getUniqueId());
+		ParticleEffects trails = new ParticleEffects(p);
+		
+		if (particle.hasID()) {
+			particle.endTask();
+			particle.removeID();
+		}
+		
+		
+		// Close Menu selected
 		if (event.getSlot() == 26) {
 			p.closeInventory();
 			return;
@@ -124,23 +153,60 @@ public class Events implements Listener{
 		
 		if (Main.playerDataConfig.contains("Users." + p.getUniqueId() + ".stats" + ".talent") && !p.hasPermission("commandsPlus.tester")) {
 			p.closeInventory();
-			p.sendMessage("You have already picked a talent!");
+			p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "You have already picked a talent!");
 			return;
 		}
 		
+		// Avian selected
 		if (event.getSlot() == 0) {
-			p.sendMessage("You chose the Avian talent!");
+			p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "You chose the Avian talent!");
 			Main.talentHashMap.put(p.getUniqueId().toString(), "Avian");
 			Main.playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".talent", "Avian");
 			p.closeInventory();
+			p.getInventory().setChestplate(ItemsPlus.avianElytra);
 		}
 		
+		// Pyrokinetic selected
 		if (event.getSlot() == 1) {
-			p.sendMessage("You chose the Pyrokinetic talent!");
+			p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "You chose the Pyrokinetic talent!");
 			Main.talentHashMap.put(p.getUniqueId().toString(), "Pyrokinetic");
 			Main.playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".talent", "Pyrokinetic");
 			p.closeInventory();
+			
+			// Start particle effects
+			trails.startPyrokineticParticles();
 		}
+		
+		// Hydrokinetic selected
+		if (event.getSlot() == 2) {
+			p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "You chose the Hydrokinetic talent!");
+			Main.talentHashMap.put(p.getUniqueId().toString(), "Hydrokinetic");
+			Main.playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".talent", "Hydrokinetic");
+			p.closeInventory();
+		}
+		
+		// Frostbender selected
+		if (event.getSlot() == 3) {
+			p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "You chose the Frostbender talent!");
+			Main.talentHashMap.put(p.getUniqueId().toString(), "Frostbender");
+			Main.playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".talent", "Frostbender");
+			p.closeInventory();
+			
+			// Start particle effects
+			trails.startFrostbenderParticles();
+		}
+		
+		// Cobble Man selected
+		if (event.getSlot() == 18) {
+			p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "OH LAWD HE COMIN!");
+			for (Player online : Bukkit.getOnlinePlayers()) {
+				online.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "COBBLE MAN HAS ARRIVED");
+			}
+			Main.talentHashMap.put(p.getUniqueId().toString(), "COBBLE MAN");
+			Main.playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".talent", "COBBLE MAN");
+			p.closeInventory();
+		}
+		
 		
 		// save player data file
 		try {
@@ -154,6 +220,27 @@ public class Events implements Listener{
 	
 	
 	// Minecraft World Events
+	@EventHandler
+	public void placeBlockEvent(BlockPlaceEvent event) {
+		Player p = (Player) event.getPlayer();
+		if (event.getBlock().getType() == Material.PLAYER_HEAD && !p.isSneaking()) {
+			event.setCancelled(true);
+			
+			String playerName = p.getInventory().getItemInMainHand().getItemMeta().getDisplayName();
+			p.getInventory().setItem(p.getInventory().getHeldItemSlot(), new ItemStack(Material.AIR));
+			playerName = playerName.replace("head", "");
+			playerName = playerName.replace("'s", "");
+			playerName = ChatColor.stripColor(playerName);
+			playerName = playerName.replace(" ", "");
+			
+			Player playerTracked = Bukkit.getServer().getPlayer(playerName);
+			p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + playerTracked.getName() + "'s location is " + playerTracked.getLocation().getBlockX() + ", " + playerTracked.getLocation().getBlockY() + ", " + playerTracked.getLocation().getBlockZ());
+			
+		}
+	}
+	
+	
+	
 	@EventHandler
 	public void playerRightClick(PlayerInteractEvent event) {
 		Player p = event.getPlayer();
@@ -179,17 +266,138 @@ public class Events implements Listener{
 		     		 meta.setLore(lore);
 		     		 inv.getItemInOffHand().setItemMeta(meta);
 	        	 }
-	         } 
+	         }
+	         
+	         if (inv.getItemInMainHand() != null && inv.getItemInMainHand().equals(ItemsPlus.thugnarsGlock)) {
+	        	 p.getWorld().createExplosion(p.getLocation(), 5, true);
+	         }
+	         
+	         if (inv.getItemInMainHand() != null && inv.getItemInMainHand().equals(ItemsPlus.dashSword)) {
+	        	 Location loc = p.getPlayer().getLocation();
+	        	 loc.setY(loc.getY() - 1);
+	        	  
+	        	 Material block = loc.getBlock().getType();
+	        	 if (block == Material.AIR || block == Material.WATER || block == Material.LAVA)
+	        	 {
+	        		 return;
+	        	 }
+	        	 
+	        	 p.setVelocity(p.getLocation().getDirection().multiply(10));
+	        	 Entity victim = null;
+	        	 try {
+	        		 victim = FunctionsPlus.getNearestEntityInSight(p, 10);
+	        	 } catch(Exception e) {
+	        		 return;
+	        	 }
+	        	 
+	        	 if (victim instanceof Animals) {
+	        		 Animals a = null;
+		        	 try {
+		        		 a = (Animals) victim;
+		        		 a.damage(20);
+		        	 } catch(Exception e) {
+		        		 
+		        	 }
+		        	 return;
+	        	 }
+	        	 
+	        	 if (victim instanceof Mob) {
+	        		 Mob m = null;
+		        	 try {
+		        		 m = (Animals) victim;
+		        		 m.damage(20);
+		        	 } catch(Exception e) {
+		        		 
+		        	 }
+		        	 return;
+	        	 }
+	        	 
+	        	 
+	        	 
+	        	 
+	         }
 	    }
 	}
 	
 	@EventHandler
-	public void onPlayerDamage(final EntityDamageEvent e){
-		if(e.getCause() == DamageCause.FALL && e.getEntity() instanceof Player) {
-			Player p = (Player) e.getEntity();
-			Main.talentHashMap.get(p.getUniqueId().toString()).replace("\\d", "");
-			if (Main.talentHashMap.get(p.getUniqueId().toString()).equals("Avian")) {
-				e.setCancelled(true);
+	public void onPlayerDamage(EntityDamageEvent event){
+		if (event.getEntity() instanceof Player) {
+			Player p = (Player) event.getEntity();
+			String talent = Main.talentHashMap.get(p.getUniqueId().toString());
+			if (talent.equals("Avian")) {
+				if(event.getCause() == DamageCause.FALL) {
+					event.setCancelled(true);
+				}
+			}
+			
+			if (talent.equals("Pyrokinetic")) {
+				if(event.getCause() == DamageCause.FIRE || event.getCause() == DamageCause.FIRE_TICK || event.getCause() == DamageCause.HOT_FLOOR || event.getCause() == DamageCause.LAVA || event.getCause() == DamageCause.MELTING) {
+					event.setCancelled(true);
+				}
+				if (p.getWorld().getEnvironment() == Environment.NETHER) {
+					event.setDamage(event.getDamage() * 0.7);
+				}
+			}
+			
+			if (talent.equals("Hydrokinetic") || talent.equals("Frostbender")) {
+				if(event.getCause() == DamageCause.FIRE || event.getCause() == DamageCause.FIRE_TICK || event.getCause() == DamageCause.HOT_FLOOR || event.getCause() == DamageCause.LAVA || event.getCause() == DamageCause.MELTING) {
+					event.setDamage(event.getDamage() * 2);
+				}
+				else {
+					if (p.getWorld().getEnvironment() == Environment.NETHER) {
+						event.setDamage(event.getDamage() * 1.3);
+					}
+				}
+			}
+			
+			if (p.getHealth() - event.getDamage() < 6) {
+				if (talent.equals("Frostbender")) {
+					p.getWorld().getBlockAt(new Location(p.getWorld(), p.getLocation().getBlockX(), p.getLocation().getBlockY() - 1, p.getLocation().getBlockZ())).setType(Material.BLUE_ICE);
+					p.getWorld().getBlockAt(new Location(p.getWorld(), p.getLocation().getBlockX(), p.getLocation().getBlockY() + 2, p.getLocation().getBlockZ())).setType(Material.BLUE_ICE);
+					p.getWorld().getBlockAt(new Location(p.getWorld(), p.getLocation().getBlockX(), p.getLocation().getBlockY(), p.getLocation().getBlockZ())).setType(Material.AIR);
+					p.getWorld().getBlockAt(new Location(p.getWorld(), p.getLocation().getBlockX(), p.getLocation().getBlockY() + 1, p.getLocation().getBlockZ())).setType(Material.AIR);
+					
+					p.getWorld().getBlockAt(new Location(p.getWorld(), p.getLocation().getBlockX() - 1, p.getLocation().getBlockY(), p.getLocation().getBlockZ())).setType(Material.BLUE_ICE);
+					p.getWorld().getBlockAt(new Location(p.getWorld(), p.getLocation().getBlockX() + 1, p.getLocation().getBlockY(), p.getLocation().getBlockZ())).setType(Material.BLUE_ICE);
+					p.getWorld().getBlockAt(new Location(p.getWorld(), p.getLocation().getBlockX(), p.getLocation().getBlockY(), p.getLocation().getBlockZ() - 1)).setType(Material.BLUE_ICE);
+					p.getWorld().getBlockAt(new Location(p.getWorld(), p.getLocation().getBlockX(), p.getLocation().getBlockY(), p.getLocation().getBlockZ() + 1)).setType(Material.BLUE_ICE);
+					
+					p.getWorld().getBlockAt(new Location(p.getWorld(), p.getLocation().getBlockX() - 1, p.getLocation().getBlockY() + 1, p.getLocation().getBlockZ())).setType(Material.BLUE_ICE);
+					p.getWorld().getBlockAt(new Location(p.getWorld(), p.getLocation().getBlockX() + 1, p.getLocation().getBlockY() + 1, p.getLocation().getBlockZ())).setType(Material.BLUE_ICE);
+					p.getWorld().getBlockAt(new Location(p.getWorld(), p.getLocation().getBlockX(), p.getLocation().getBlockY() + 1, p.getLocation().getBlockZ() - 1)).setType(Material.BLUE_ICE);
+					p.getWorld().getBlockAt(new Location(p.getWorld(), p.getLocation().getBlockX(), p.getLocation().getBlockY() + 1, p.getLocation().getBlockZ() + 1)).setType(Material.BLUE_ICE);
+					p.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 100, 4));
+					p.addPotionEffect(new PotionEffect(PotionEffectType.SATURATION, 20, 3));
+				}
+			}
+		}
+		
+	}
+	
+	@EventHandler
+	public void onPlayerDamageByPlayer(EntityDamageByEntityEvent event){
+		if (event.getDamager() instanceof Player) {
+			Player p = (Player) event.getDamager();
+			String talent = Main.talentHashMap.get(p.getUniqueId().toString());
+			if (talent.equals("Avian")) {
+				if (p.isGliding()) {
+					event.setDamage(event.getDamage() * 2);
+				}
+			}
+			
+			if (talent.equals("Pyrokinetic")) {
+				if (event.getDamager().getFireTicks() != 0) {
+					event.setDamage(event.getDamage() * 1.5);
+				}
+			}
+			
+			if (talent.equals("Hydrokinetic")) {
+				Material m1 = p.getLocation().getBlock().getType();
+				Material m2 = p.getLocation().add(0, 1, 0).getBlock().getType();
+				
+			    if (m1 == Material.WATER || m2 == Material.WATER) {
+			    	event.setDamage(event.getDamage() * 1.3);
+			    }
 			}
 		}
 	}
@@ -387,12 +595,14 @@ public class Events implements Listener{
         }
 	}
 	
-	
+	@SuppressWarnings("unused")
 	@EventHandler
-    public void explosionEvent(ExplosionPrimeEvent e) {
-		if (e.getEntity() instanceof TNTPrimed) {
-			e.setRadius(e.getRadius() * 20);
+	public void onPlayerMove(PlayerMoveEvent event) {
+		if (false) {
+			event.getPlayer().setVelocity(new Vector().zero());
 		}
+		// snow walking
+		// event.getPlayer().getWorld().getBlockAt(new Location(event.getPlayer().getWorld(), event.getPlayer().getLocation().getBlockX(), event.getPlayer().getLocation().getBlockY(), event.getPlayer().getLocation().getBlockZ())).setType(Material.SNOW);
 	}
-
+	
 }

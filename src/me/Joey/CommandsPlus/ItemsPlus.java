@@ -21,6 +21,12 @@ public class ItemsPlus {
 	
 	// custom weapons
 	public static ItemStack superTNT;
+	public static ItemStack thugnarsGlock;
+	public static ItemStack dashSword;
+	
+	
+	// custom armor
+	public static ItemStack avianElytra;
 	
 	
 	// custom tools
@@ -57,7 +63,11 @@ public class ItemsPlus {
 		EnchantmentsPlus.register();
 		
 		// custom weapons
+		createThugnarsGlock();
+		createDashSword();
 		
+		// custom armor
+		createAvianElytra();
 		
 		// custom tools
 		createTimberAxe();
@@ -90,6 +100,82 @@ public class ItemsPlus {
 	// item creation functions
 	
 	// custom weapons
+	public static void createThugnarsGlock() {
+		// create item
+		ItemStack item = new ItemStack(Material.LEVER, 1);
+		
+		
+		// set item metadata
+		ItemMeta meta = item.getItemMeta();
+		meta.setDisplayName(ChatColor.GOLD + "" + ChatColor.BOLD + "Thugnar's Glock");
+		
+		item.setItemMeta(meta);
+		
+		// create crafting recipe
+		
+		// shaped recipe
+		ShapedRecipe SR = new ShapedRecipe(NamespacedKey.minecraft("thugnars_glock"), item);
+		SR.shape("NNN",
+				 "NLN",
+				 "NNN");
+		
+		SR.setIngredient('N', Material.NETHERITE_BLOCK);
+		SR.setIngredient('L', Material.LEVER);
+		Bukkit.getServer().addRecipe(SR);
+		
+		
+		// set ItemStack item to the item that was created in this function
+		thugnarsGlock = item;
+	}
+	
+	public static void createDashSword() {
+		// create item
+		ItemStack item = new ItemStack(Material.GOLDEN_SWORD, 1);
+		
+		
+		// set item metadata
+		ItemMeta meta = item.getItemMeta();
+		meta.setDisplayName(ChatColor.DARK_RED + "Dash Sword");
+		
+		item.setItemMeta(meta);
+		
+		// create crafting recipe
+		
+		// shaped recipe
+		ShapedRecipe SR = new ShapedRecipe(NamespacedKey.minecraft("dash_sword"), item);
+		SR.shape("EEE",
+				 "EGE",
+				 "EEE");
+		
+		SR.setIngredient('E', Material.ENDER_PEARL);
+		SR.setIngredient('G', Material.GOLDEN_SWORD);
+		Bukkit.getServer().addRecipe(SR);
+		
+		
+		// set ItemStack item to the item that was created in this function
+		dashSword = item;
+	}
+	
+	
+	// custom armor
+	public static void createAvianElytra() {
+		// create item
+		ItemStack item = new ItemStack(Material.ELYTRA, 1);
+		
+		
+		// set item metadata
+		ItemMeta meta = item.getItemMeta();
+		meta.setUnbreakable(true);
+		meta.addEnchant(Enchantment.BINDING_CURSE, 1, true);
+		meta.addEnchant(Enchantment.VANISHING_CURSE, 1, true);
+		meta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_UNBREAKABLE);
+		
+		item.setItemMeta(meta);
+		
+		
+		// set ItemStack item to the item that was created in this function
+		avianElytra = item;
+	}
 	
 	
 	// custom tools

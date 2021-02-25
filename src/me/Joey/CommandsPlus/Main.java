@@ -77,7 +77,7 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 		alchemyPointsTracker.put(online.getUniqueId().toString(), 0 + playerDataConfig.getInt("Users." + online.getUniqueId() + ".stats" + ".alchemyPoints"));
 		
 		// player talent
-		talentHashMap.put(online.getUniqueId().toString(), 0 + playerDataConfig.getString("Users." + online.getUniqueId() + ".stats" + ".talent"));
+		talentHashMap.put(online.getUniqueId().toString(), playerDataConfig.getString("Users." + online.getUniqueId() + ".stats" + ".talent"));
 		
 		// player cooldowns
 		canTpHashMap.put(online.getUniqueId().toString(), false);
@@ -200,6 +200,17 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 		this.getServer().getPluginManager().registerEvents(new Events(), this);
 		BukkitScheduler scheduler = getServer().getScheduler();
 		
+		// check every 50ms
+		scheduler.scheduleSyncRepeatingTask(this, new Runnable() {
+            @Override
+            public void run() {
+            	if (!Bukkit.getOnlinePlayers().isEmpty()) {
+
+        			
+            	}
+            }
+		}, 0L, 1L);
+		
 		// check every 250ms for potion effects
 		scheduler.scheduleSyncRepeatingTask(this, new Runnable() {
             @Override
@@ -207,10 +218,26 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
             	if (!Bukkit.getOnlinePlayers().isEmpty()) {
 
         			for (Player online : Bukkit.getOnlinePlayers()) {
-        				if(online.getInventory().getBoots() != null) {
-        						online.addPotionEffect(new PotionEffect(PotionEffectType.DOLPHINS_GRACE, 30, 0));
+        				
+        				
+        				
+        				
+        				
+        				
+        				
+        				String talent = talentHashMap.get(online.getUniqueId().toString());
+        				Location location = online.getLocation();
+        				if (talent.equals("Avian")) {
+        					for(int y = location.getBlockY(); y < location.getBlockY() + 10; y++) {
+        						Location blockCheck = new Location(online.getWorld(), location.getBlockX(), y, location.getBlockZ());
+        						if (blockCheck.getBlock().getType() != Material.AIR && blockCheck.getBlock().getType() != Material.WATER && blockCheck.getBlock().getType() != Material.LAVA) {
+        							online.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 30, 0));
+        							online.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 30, 1));
+        							break;
+        						}
         					}
-        				String talent = talentHashMap.get(online.getUniqueId().toString()).replaceAll("\\d", "");
+        				}
+        				
         				if (talent.equals("Pyrokinetic")) {
         					Material m1 = online.getPlayer().getLocation().getBlock().getType();
         				    if (m1 == Material.WATER) {
@@ -230,9 +257,38 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
                 				    	}
                 				    }
         				    	}
-        						
         					}
-        					
+        				}
+        				
+        				if (talent.equals("Hydrokinetic")) {
+        					Material m1 = online.getPlayer().getLocation().getBlock().getType();
+        					Material m2 = online.getPlayer().getLocation().add(0, 1, 0).getBlock().getType();
+        				    if (m1 == Material.WATER || m2 == Material.WATER || m1 == Material.SEAGRASS || m2 == Material.SEAGRASS || m1 == Material.TALL_SEAGRASS || m2 == Material.TALL_SEAGRASS || m1 == Material.KELP || m2 == Material.KELP) {
+        				    	online.addPotionEffect(new PotionEffect(PotionEffectType.DOLPHINS_GRACE, 30, 0));
+            					online.addPotionEffect(new PotionEffect(PotionEffectType.WATER_BREATHING, 30, 0));
+            					boolean regenFound = false;
+            					for (PotionEffect potionEffect : online.getActivePotionEffects()) {
+            						if (potionEffect.getType().equals(PotionEffectType.REGENERATION)) {
+            							regenFound = true;
+            							int duration = potionEffect.getDuration();
+            							if (duration < 10) {
+            								online.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 100, 0));
+            							}
+            						}
+            						
+            					}
+            					if(!regenFound) {
+        							online.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 100, 0));
+        						}
+        				    }
+        				}
+        				
+        				if (talent.equals("Frostbender")) {
+        					Material m1 = online.getPlayer().getLocation().getBlock().getType();
+        					Material m2 = online.getPlayer().getLocation().subtract(0, 1, 0).getBlock().getType();
+        					if (m1 == Material.SNOW || m2 == Material.ICE || m2 == Material.PACKED_ICE || m2 == Material.BLUE_ICE || m2 == Material.SNOW_BLOCK) {
+        						online.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 30, 1));
+        					}
         				}
         			}
             	}
