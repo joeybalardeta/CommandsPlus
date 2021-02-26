@@ -50,6 +50,7 @@ public class ItemsPlus {
 	public static ItemStack slimeBall;
 	public static ItemStack quickPick;
 	public static ItemStack telekinesisBook;
+	public static ItemStack smeltingBook;
 	
 	
 	// custom admin items
@@ -89,6 +90,7 @@ public class ItemsPlus {
 		createBottleOfXP();
 		createSlimeBall();
 		createTelekinesisBook();
+		createSmeltingBook();
 		
 		
 		// custom admin items
@@ -388,6 +390,44 @@ public class ItemsPlus {
 		
 		// set ItemStack item to the item that was created in this function
 		telekinesisBook = item;
+	}
+	
+	public static void createSmeltingBook() {
+		// create item
+		ItemStack item = new ItemStack(Material.ENCHANTED_BOOK, 1);
+		
+		
+		// set item metadata
+		ItemMeta meta = item.getItemMeta();
+		List<String> lore = new ArrayList<String>();
+		lore.add(ChatColor.GRAY + "Smelting I");
+		meta.setLore(lore);
+		item.setItemMeta(meta);
+		
+		item.addUnsafeEnchantment(EnchantmentsPlus.SMELTING, 1);
+		
+		// set enchantment
+		
+		
+		
+		// create crafting recipe
+		
+		// shaped recipe
+		ShapedRecipe SR = new ShapedRecipe(NamespacedKey.minecraft("smelting_book"), item);
+		SR.shape("CCC",
+				 "CBC",
+				 "CCC");
+		
+		SR.setIngredient('B', Material.BOOK);
+		SR.setIngredient('C', Material.COAL_BLOCK);
+		Bukkit.getServer().addRecipe(SR);
+		
+		
+		 
+		
+		
+		// set ItemStack item to the item that was created in this function
+		smeltingBook = item;
 	}
 	
 	

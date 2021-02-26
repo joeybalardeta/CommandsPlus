@@ -1,5 +1,7 @@
 package me.Joey.CommandsPlus;
 
+import java.util.Random;
+
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.Location;
@@ -57,9 +59,16 @@ public class ParticleEffects {
 		// check every 250ms for potion effects
 		taskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(Main.getPlugin(Main.class), new Runnable() {
 			double var = 0;
-			Location loc, first; //, second, third;
+			Location loc, first;
 			ParticleData particle = new ParticleData(p.getUniqueId());
-			
+			Random rand = new Random();
+			double lookDirDouble = 0;
+			double lookDirPi = 0;
+        	double rotation = 0;
+        	int distanceTemp = 0;
+        	double distance = 0;
+        	int heightTemp = 0;
+        	double height = 0;
 			
             @Override
             public void run() {
@@ -67,20 +76,26 @@ public class ParticleEffects {
             		particle.setID(taskID);
             	}
             	
-            	var += Math.PI / 16;
+            	
+        		lookDirDouble = FunctionsPlus.getPlayerDirectionFloat(p);
+            	lookDirPi = ((lookDirDouble * Math.PI) / 180) + (5 * Math.PI / 6);
+            	var = rand.nextInt(240);
+            	rotation = ((var * Math.PI) / 180.0) - Math.PI;
+            	distanceTemp = rand.nextInt(100) + 50;
+            	distance = distanceTemp / 100.0;
+            	heightTemp = rand.nextInt(200) + 20;
+            	height = heightTemp / 100.0;
             	
             	
             	
             	loc = p.getLocation();
-            	first = loc.clone().add(Math.cos(var), 0.0, Math.sin(var));
-            	//second = loc.clone().add(Math.cos(var + (Math.PI) * (2.0 / 3)), 1.0, Math.sin(var + (Math.PI) * (2.0 / 3)));
-            	//third = loc.clone().add(Math.cos(var + (Math.PI) * (4.0 / 3)), 2.0, Math.sin(var + (Math.PI) * (4.0 / 3)));
+            	first = loc.clone().add(Math.cos(rotation + lookDirPi) * distance, height, Math.sin(rotation + lookDirPi) * distance);
             	
             	p.getWorld().spawnParticle(Particle.FLAME, first, 0);
-            	//p.getWorld().spawnParticle(Particle.FLAME, second, 0);
-            	//p.getWorld().spawnParticle(Particle.FLAME, third, 0);
+
+            	
             }
-		}, 0, 1L);
+		}, 0, 5L);
 	}
 	
 	// Frostbender particles
@@ -119,6 +134,40 @@ public class ParticleEffects {
             	p.getWorld().spawnParticle(Particle.REDSTONE, first, 0, 0, 0, 0, dust);
             	//p.getWorld().spawnParticle(Particle.FLAME, second, 0);
             	//p.getWorld().spawnParticle(Particle.FLAME, third, 0);
+            }
+		}, 0, 1L);
+	}
+	
+	
+	// Wing particles
+	public void startWingParticles() {
+		
+		
+		// check every 250ms for potion effects
+		taskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(Main.getPlugin(Main.class), new Runnable() {
+			double var = 1;
+			Location loc, first; //, second, third;
+			ParticleData particle = new ParticleData(p.getUniqueId());
+			
+			
+            @Override
+            public void run() {
+            	if (!particle.hasID()) {
+            		particle.setID(taskID);
+            	}
+            	
+            	double lookDirDouble = FunctionsPlus.getPlayerDirectionFloat(p);
+            	double lookDirPi = ((lookDirDouble * Math.PI) / 180) + Math.PI / 2;
+            	
+            	loc = p.getLocation();
+            	for (int i = -10; i < 10; i++) {
+            		for (int j = 0; j < 1; j++) {
+            			first = loc.clone().add((Math.cos(lookDirPi + i / 5.0) * var), (i / 10.0) + 1, (Math.sin(lookDirPi + i / 5.0) * var));
+            			p.getWorld().spawnParticle(Particle.SOUL_FIRE_FLAME, first, 0);
+            			first = loc.clone().add((Math.cos(lookDirPi - i / 5.0) * var), (i / 10.0) + 1, (Math.sin(lookDirPi - i / 5.0) * var));
+            			p.getWorld().spawnParticle(Particle.FLAME, first, 0);
+                	}
+            	}
             }
 		}, 0, 1L);
 	}

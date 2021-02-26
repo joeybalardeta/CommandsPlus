@@ -26,16 +26,19 @@ import org.bukkit.event.enchantment.EnchantItemEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryInteractEvent;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerFishEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerShearEntityEvent;
 import org.bukkit.inventory.BrewerInventory;
 import org.bukkit.inventory.ItemStack;
@@ -101,6 +104,13 @@ public class Events implements Listener{
 	@EventHandler
 	public void onLeave(PlayerQuitEvent event) {
 		FunctionsPlus.savePlayerData(event.getPlayer(), false);
+		
+		ParticleData particle = new ParticleData(event.getPlayer().getUniqueId());
+		
+		if (particle.hasID()) {
+			particle.endTask();
+			particle.removeID();
+		}
 	}
 	
 	@EventHandler
@@ -108,6 +118,19 @@ public class Events implements Listener{
 		Player p = (Player) event.getEntity();
 		ItemStack item = FunctionsPlus.getPlayerHead(p.getName().toString());
 		p.getWorld().dropItem(p.getLocation(), item);
+	}
+	
+	@EventHandler
+	public void onPlayerRespawn(PlayerRespawnEvent event) {
+		Player p = event.getPlayer();
+		String talent = Main.talentHashMap.get(p.getUniqueId().toString());
+		if (talent.equals("Avian")) {
+			p.setMaxHealth(16);
+			p.getInventory().setChestplate(ItemsPlus.avianElytra);
+		}
+		else {
+			p.setMaxHealth(20);
+		}
 	}
 	
 	
@@ -163,6 +186,9 @@ public class Events implements Listener{
 			Main.talentHashMap.put(p.getUniqueId().toString(), "Avian");
 			Main.playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".talent", "Avian");
 			p.closeInventory();
+			
+			// equip Avian Elytra and set lower health
+			p.setMaxHealth(16);
 			p.getInventory().setChestplate(ItemsPlus.avianElytra);
 		}
 		
@@ -249,20 +275,33 @@ public class Events implements Listener{
 	    
 	    if (action.equals(Action.RIGHT_CLICK_AIR) || action.equals(Action.RIGHT_CLICK_BLOCK)) {
 	         if (inv.getItemInMainHand() != null && inv.getItemInOffHand().getType() != Material.AIR) {
-	        	 if (inv.getItemInMainHand().equals(ItemsPlus.telekinesisBook)) {
+	        	 if (inv.getItemInMainHand().equals(ItemsPlus.telekinesisBook) && !inv.getItemInOffHand().containsEnchantment(EnchantmentsPlus.TELEKINESIS) && (inv.getItemInOffHand().getType().toString().contains("PICKAXE") || inv.getItemInOffHand().getType().toString().contains("AXE") || inv.getItemInOffHand().getType().toString().contains("SHOVEL") || inv.getItemInOffHand().getType().toString().contains("HOE"))) {
 	        		 inv.getItemInMainHand().setAmount(0); 
 		        	 inv.getItemInOffHand().addUnsafeEnchantment(EnchantmentsPlus.TELEKINESIS, 1);
 		        	 ItemMeta meta = inv.getItemInOffHand().getItemMeta();
-		     		 List<String> lore = new ArrayList<String>();
-		     		 lore.add(ChatColor.GRAY + "Telekinesis I");
-		     		 if (meta.hasLore()) {
-		     			 for (String l : meta.getLore()) {
-		     				 if (!(l.equals("Telekinesis I"))) {
-		     					lore.add(l);
-		     				 }
-		     				 
-		     			 }
+		        	 List<String> lore = new ArrayList<String>();
+		        	 if (meta.hasLore()) {
+		     			 for (String s : meta.getLore()) {
+			     			 lore.add(s);
+			     		 }
 		     		 }
+		     		 lore.add(ChatColor.GRAY + "Telekinesis I");
+		     		 meta.setLore(lore);
+		     		 inv.getItemInOffHand().setItemMeta(meta);
+	        	 }
+	        	 
+	        	 if (inv.getItemInMainHand().equals(ItemsPlus.smeltingBook) && !inv.getItemInOffHand().containsEnchantment(EnchantmentsPlus.SMELTING) && (inv.getItemInOffHand().getType().toString().contains("PICKAXE"))) {
+	        		 inv.getItemInMainHand().setAmount(0); 
+		        	 inv.getItemInOffHand().addUnsafeEnchantment(EnchantmentsPlus.SMELTING, 1);
+		        	 ItemMeta meta = inv.getItemInOffHand().getItemMeta();
+		     		 List<String> lore = new ArrayList<String>();
+		     		 if (meta.hasLore()) {
+		     			 for (String s : meta.getLore()) {
+			     			 lore.add(s);
+			     		 }
+		     		 }
+		     		
+		     		 lore.add(ChatColor.GRAY + "Smelting I");
 		     		 meta.setLore(lore);
 		     		 inv.getItemInOffHand().setItemMeta(meta);
 	        	 }
@@ -325,7 +364,7 @@ public class Events implements Listener{
 			Player p = (Player) event.getEntity();
 			String talent = Main.talentHashMap.get(p.getUniqueId().toString());
 			if (talent.equals("Avian")) {
-				if(event.getCause() == DamageCause.FALL) {
+				if(event.getCause() == DamageCause.FALL || event.getCause() == DamageCause.FLY_INTO_WALL) {
 					event.setCancelled(true);
 				}
 			}
@@ -495,17 +534,36 @@ public class Events implements Listener{
 		        // checks if item has meta
 		        if (inv.getItemInMainHand().hasItemMeta()){
 			        // checks if item in player's hand has enchantment TELEKINESIS
-			        if (inv.getItemInMainHand().getItemMeta().hasEnchant(EnchantmentsPlus.TELEKINESIS)) {
-			        	// checks if player's inventory is full and if the item being mined is a chest or other block that contains items
-			        	if (inv.firstEmpty() != -1 && !(event.getBlock().getState() instanceof Container)) {
-			        		event.setDropItems(false);
-			        		Collection<ItemStack> drops = event.getBlock().getDrops(inv.getItemInMainHand());
-			        		if (drops.isEmpty()) {
+		        	if (!(event.getBlock().getState() instanceof Container)) {
+		        		Collection<ItemStack> drops = event.getBlock().getDrops(inv.getItemInMainHand());
+			        	if (inv.getItemInMainHand().getItemMeta().hasEnchant(EnchantmentsPlus.SMELTING)) {
+		        			if (drops.isEmpty()) {
 			        			return;
 			        		}
-			        		inv.addItem(drops.iterator().next());
+			        		for (ItemStack item : drops) {
+			        			if (item.getType().toString().equals("IRON_ORE")) {
+			        				ItemStack oldItem = new ItemStack(Material.IRON_ORE);
+			        				item = new ItemStack(Material.IRON_INGOT);
+			        				drops.remove(oldItem);
+			        				drops.add(item);
+			        			}
+			        			if (item.getType().toString().equals("GOLD_ORE")) {
+			        				ItemStack oldItem = new ItemStack(Material.GOLD_ORE);
+			        				item = new ItemStack(Material.GOLD_INGOT);
+			        				drops.remove(oldItem);
+			        				drops.add(item);
+			        			}
+			        		}
 			        	}
-			        }
+				        if (inv.getItemInMainHand().getItemMeta().hasEnchant(EnchantmentsPlus.TELEKINESIS)) {
+				        	// checks if player's inventory is full and if the item being mined is a chest or other block that contains items
+				        	if (inv.firstEmpty() != -1) {
+				        		event.setDropItems(false);
+				        		
+				        		inv.addItem(drops.iterator().next());
+				        	}
+				        }
+		        	}
 		        }
 	        }
 
@@ -519,6 +577,23 @@ public class Events implements Listener{
 		if (event.getInventory() instanceof BrewerInventory) {
 			
 		}
+	}
+	
+	@EventHandler
+	public void onGrindstoneEvent(InventoryClickEvent event) {
+		if (event.getClickedInventory().getType() == InventoryType.GRINDSTONE && event.getSlotType() == InventoryType.SlotType.RESULT) {
+            ItemStack item = new ItemStack(event.getCurrentItem());
+            ItemMeta meta = item.getItemMeta();
+            if (meta.hasLore()) {
+            	List<String> lore = meta.getLore();
+                lore.clear();
+        		meta.setLore(lore);
+        		item.setItemMeta(meta);
+            }
+            
+    		
+    		event.setCurrentItem(item);
+         }
 	}
 
 	
@@ -594,6 +669,15 @@ public class Events implements Listener{
             }
         }
 	}
+	
+	@EventHandler
+	public void onEntityTarget(EntityTargetLivingEntityEvent event) {
+		event.setTarget(null);
+	}
+	
+	
+	
+	
 	
 	@SuppressWarnings("unused")
 	@EventHandler

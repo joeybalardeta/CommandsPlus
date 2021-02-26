@@ -5,6 +5,10 @@ import java.util.HashMap;
 public interface GlobalHashMaps{
 	// creates global interface to hashmaps for player/plugin data tracking
 	
+	
+	// player info
+	HashMap<String, String> factionHashMap = new HashMap<String, String>();
+	
 	// player skill data
 	HashMap<String, Integer> miningPointsTracker = new HashMap<String, Integer>();
 	HashMap<String, Integer> enchantingPointsTracker = new HashMap<String, Integer>();

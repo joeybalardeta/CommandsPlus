@@ -51,7 +51,7 @@ public class FunctionsPlus {
 	}
 	
 	// get player direction
-	public void getPlayerDirection(Player player) {
+	public static void getPlayerDirectionCardinal(Player player) {
 		double rotation = player.getLocation().getYaw() - 180;
         if (rotation < 0) {
             rotation += 360.0;
@@ -83,6 +83,14 @@ public class FunctionsPlus {
         if (337.5 <= rotation && rotation <= 360) {
             player.sendMessage("North");
         }
+	}
+	
+	public static double getPlayerDirectionFloat(Player player) {
+		double rotation = player.getLocation().getYaw() - 180;
+        if (rotation < 0) {
+            rotation += 360.0;
+        }
+        return rotation;
 	}
 	
 	
@@ -164,6 +172,7 @@ public class FunctionsPlus {
 		lore.add(ChatColor.YELLOW + "abilities and aerial prowess in battle.");
 		lore.add("");
 		lore.add(ChatColor.WHITE + "Abilities:");
+		lore.add(ChatColor.WHITE + "(" + ChatColor.BLUE + "Passive" + ChatColor.WHITE + ") " + ChatColor.GOLD + "Angel Wings" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you always have an Elytra equipped.");
 		lore.add(ChatColor.WHITE + "(" + ChatColor.BLUE + "Passive" + ChatColor.WHITE + ") " + ChatColor.GREEN + "Blessed Wind" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you take no fall damage.");
 		lore.add(ChatColor.WHITE + "(" + ChatColor.BLUE + "Passive" + ChatColor.WHITE + ") " + ChatColor.AQUA + "Hurricane Momentum" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you deal double");
 		lore.add(ChatColor.YELLOW + "damage while flying.");
@@ -171,6 +180,8 @@ public class FunctionsPlus {
 		lore.add(ChatColor.WHITE + "Weaknesses:");
 		lore.add(ChatColor.GRAY + "Head Room" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you become weak and slow while under");
 		lore.add(ChatColor.YELLOW + "low ceilings.");
+		lore.add(ChatColor.DARK_GREEN + "Low Defense" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you cannot equip chestplates and"); 
+		lore.add(ChatColor.YELLOW + "you have 2 less hearts of health.");
 		meta.setLore(lore);
 		item.setItemMeta(meta);
 		Main.talentInventory.setItem(0, item);
@@ -231,7 +242,7 @@ public class FunctionsPlus {
 		lore.add(ChatColor.YELLOW + "at will.");
 		lore.add("");
 		lore.add(ChatColor.WHITE + "Weaknesses:");
-		lore.add(ChatColor.DARK_RED + "Fire" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you take extra damage from fire.");
+		lore.add(ChatColor.DARK_RED + "Fire" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you take extra damage in the Nether and from fire.");
 		meta.setLore(lore);
 		item.setItemMeta(meta);
 		Main.talentInventory.setItem(3, item);

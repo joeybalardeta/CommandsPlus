@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Random;
 import java.util.UUID;
 import java.util.logging.Level;
@@ -53,6 +54,7 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 	
 	// some variable declarations
 	public static Inventory talentInventory;
+	public static List<String> toolIDs = new ArrayList <>();
 	
 	
 	// initialize plugin data files
@@ -69,6 +71,9 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 	
 	// HashMap loader function
 	public static void loadHashMaps(Player online) {
+		// player info
+		factionHashMap.put(online.getUniqueId().toString(), "" + playerDataConfig.getString("Users." + online.getUniqueId() + ".stats" + ".faction"));
+		
 		// player skill data
 		miningPointsTracker.put(online.getUniqueId().toString(), 0 + playerDataConfig.getInt("Users." + online.getUniqueId() + ".stats" + ".miningPoints"));
 		combatPointsTracker.put(online.getUniqueId().toString(), 0 + playerDataConfig.getInt("Users." + online.getUniqueId() + ".stats" + ".combatPoints"));
@@ -228,7 +233,7 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
         				String talent = talentHashMap.get(online.getUniqueId().toString());
         				Location location = online.getLocation();
         				if (talent.equals("Avian")) {
-        					for(int y = location.getBlockY(); y < location.getBlockY() + 10; y++) {
+        					for(int y = location.getBlockY() + 2; y < location.getBlockY() + 10; y++) {
         						Location blockCheck = new Location(online.getWorld(), location.getBlockX(), y, location.getBlockZ());
         						if (blockCheck.getBlock().getType() != Material.AIR && blockCheck.getBlock().getType() != Material.WATER && blockCheck.getBlock().getType() != Material.LAVA) {
         							online.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 30, 0));
@@ -537,6 +542,39 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 		}
 	}
 	
+	public void unclaimAllChunks(Player p) {
+		ConfigurationSection claimedChunks = chunkClaimDataConfig.getConfigurationSection("ClaimedChunks");
+		for (String s : claimedChunks.getKeys(false)) {
+			if (claimedChunks.get(s) != null){
+				UUID chunkOwnerUUID = UUID.fromString(claimedChunks.get(s + ".belongsToUUID").toString());
+				if (chunkOwnerUUID.equals(p.getUniqueId())) {
+					claimedChunks.set(s + ".belongsToUUID", null);
+					claimedChunks.set(s + ".belongsToName", null);
+					claimedChunks.set(s + ".appearsAs", null);
+					
+					if (playerDataConfig.contains("Users." + p.getUniqueId() + ".stats" + ".chunkClaims")){
+						playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".chunkClaims", playerDataConfig.getInt("Users." + p.getUniqueId() + ".stats" + ".chunkClaims") - 1);
+					}
+					
+					
+					try {
+						int i = chunkLocationsRAM.indexOf(s);
+						chunkLocationsRAM.remove(i);
+						chunkNamesRAM.remove(i);
+					} catch (Exception e){
+						getLogger().log(Level.SEVERE, "Chunk to unclaim not found in ArrayList!");
+					}
+				}
+			}
+		}
+		try {
+			chunkClaimDataConfig.save(chunkClaimData);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
 	public void loadChunkArrays() {
 		ConfigurationSection claimedChunks = chunkClaimDataConfig.getConfigurationSection("ClaimedChunks");
 		getLogger().log(Level.INFO, "Loading claimed chunks into ram: Location | Chunk Name");
@@ -570,7 +608,6 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 		}
 		
 		Player p = (Player) sender;
-		int playerLevel = playerDataConfig.getInt("Users." + p.getUniqueId() + ".stats" + ".level");
 		boolean vanillaMode = getConfig().getBoolean("System." + "settings" + ".vanillaMode");
 		
 		// command to reevaluate some user stats on the server, this is used to prevent cheating (editing the server config files)
@@ -676,30 +713,25 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 				return true;
 			}
 			
-			if (playerLevel > 3) {
-				// teleport player to top y-coordinate in their location(don't use in nether please)
-				Location l = new Location(Bukkit.getWorld("world"), p.getLocation().getX(), p.getWorld().getHighestBlockYAt(p.getLocation()) + 1, p.getLocation().getZ());
-				
-				// safeguards so people don't get tp'ed into lava
-				Location lCheck = new Location(Bukkit.getWorld("world"), p.getLocation().getX(), p.getWorld().getHighestBlockYAt(p.getLocation()) - 1, p.getLocation().getZ());
-				int xPlus = 0;
-				
-				while(lCheck.getBlock().getType() == Material.LAVA) {
-					xPlus += 10;
-					lCheck = new Location(Bukkit.getWorld("world"), p.getLocation().getX() + xPlus, p.getWorld().getHighestBlockYAt(p.getLocation()) - 1, p.getLocation().getZ());
-				}
-				
-				l = new Location(Bukkit.getWorld("world"), p.getLocation().getX() + xPlus, p.getWorld().getHighestBlockYAt(p.getLocation()) + 1, p.getLocation().getZ());
-				
-				p.teleport(l);
-				
-				// Commands+ System Message
-				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.GREEN + "Teleported you to the top!");
+			// teleport player to top y-coordinate in their location(don't use in nether please)
+			Location l = new Location(Bukkit.getWorld("world"), p.getLocation().getX(), p.getWorld().getHighestBlockYAt(p.getLocation()) + 1, p.getLocation().getZ());
+			
+			// safeguards so people don't get tp'ed into lava
+			Location lCheck = new Location(Bukkit.getWorld("world"), p.getLocation().getX(), p.getWorld().getHighestBlockYAt(p.getLocation()) - 1, p.getLocation().getZ());
+			int xPlus = 0;
+			
+			while(lCheck.getBlock().getType() == Material.LAVA) {
+				xPlus += 10;
+				lCheck = new Location(Bukkit.getWorld("world"), p.getLocation().getX() + xPlus, p.getWorld().getHighestBlockYAt(p.getLocation()) - 1, p.getLocation().getZ());
 			}
-			else {
-				// Commands+ System Message
-				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "Not high enough level to use command!");
-			}
+			
+			l = new Location(Bukkit.getWorld("world"), p.getLocation().getX() + xPlus, p.getWorld().getHighestBlockYAt(p.getLocation()) + 1, p.getLocation().getZ());
+			
+			p.teleport(l);
+			
+			// Commands+ System Message
+			p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.GREEN + "Teleported you to the top!");
+
 				
 			return true;
 		
@@ -712,22 +744,16 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 				return true;
 			}
 			
-			if (playerLevel > 1) {
-				if (args.length == 0) {
-					// Commands+ System Message
-					p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.AQUA + "" + ChatColor.BOLD + "Y E E T");
-					p.setVelocity(p.getLocation().getDirection().multiply(2).setY(1));
-					
-					return true;
-				}
-			
-			}
-			else {
+
+			if (args.length == 0) {
 				// Commands+ System Message
-				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "Not high enough level to use command!");
+				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.AQUA + "" + ChatColor.BOLD + "Y E E T");
+				p.setVelocity(p.getLocation().getDirection().multiply(2).setY(1));
 				
 				return true;
 			}
+			
+
 		}
 		
 		
@@ -773,16 +799,6 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 		}
 		
 		
-		if (label.equalsIgnoreCase("level")) {
-			// if vanilla mode is on don't run command
-			if (vanillaMode) {
-				return true;
-			}
-			
-			
-			p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "Your current level is " + ChatColor.RED + playerLevel);
-		}
-		
 		
 		if (label.equalsIgnoreCase("dailyxp")) {
 			// if vanilla mode is on don't run command
@@ -790,27 +806,17 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 				return true;
 			}
 			
-			if (playerLevel > 19) {
-				String format = "M/d/yyyy";
-				Date date = new Date();
-		        SimpleDateFormat ft = new SimpleDateFormat(format);
-				if ((playerLevel > 19) && !( ( (String) ft.format(date)).equals( (String) (playerDataConfig.getString("Users." + p.getUniqueId() + "." + "stats" + ".dailyXPLastClaimed"))))) {
-					playerDataConfig.set("Users." + p.getUniqueId() + "." + "stats" + ".dailyXPLastClaimed", ft.format(date));
-					saveConfig();
-					p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "Claimed daily XP");
-					p.giveExpLevels(20);
-				}
-				else if (playerLevel < 20) {
-					p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "Cannot claim XP! Not level 20!");
-				}
-				else {
-					p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "Already claimed daily XP!");
-				}
-				
+			String format = "M/d/yyyy";
+			Date date = new Date();
+	        SimpleDateFormat ft = new SimpleDateFormat(format);
+			if (!( ( (String) ft.format(date)).equals( (String) (playerDataConfig.getString("Users." + p.getUniqueId() + "." + "stats" + ".dailyXPLastClaimed"))))) {
+				playerDataConfig.set("Users." + p.getUniqueId() + "." + "stats" + ".dailyXPLastClaimed", ft.format(date));
+				saveConfig();
+				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "Claimed daily XP");
+				p.giveExpLevels(20);
 			}
 			else {
-				// Commands+ System Message
-				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "Not high enough level to use command!");
+				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "Already claimed daily XP!");
 			}
 			
 			
@@ -819,13 +825,6 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 		if (label.equalsIgnoreCase("wild")) {
 			// if vanilla mode is on don't run command
 			if (vanillaMode) {
-				return true;
-			}
-			
-			if (playerLevel < 15) {
-				// Commands+ System Message
-				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "Not high enough level to use command!");
-				
 				return true;
 			}
 			
@@ -934,15 +933,6 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 				return true;
 			}
 			
-			
-			// check player level
-			if (playerLevel < 10) {
-				// Commands+ System Message
-				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "Not high enough level to use command!");
-				
-				return true;
-			}
-			
 			// list waypoints, clickable too!
 			if (args.length == 0) {
 				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "Your waypoints:");
@@ -976,10 +966,6 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 					return true;
 				}
 				
-				if (0 + playerDataConfig.getInt("Users." + p.getUniqueId() + ".stats" + ".numberOfWaypoints") >= ((playerLevel - 10) / 10) + 2) {
-					p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "You've reached the max number of waypoints, level up to get more!");
-					return true;
-				}
 				
 				String wpName = args[1];
 				for (int i = 2; i < args.length; i++) {
@@ -1173,67 +1159,68 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 			if (vanillaMode) {
 				return true;
 			}
+			
+			
 			if (p.getWorld().getEnvironment() == Environment.NETHER){
 				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "You cannot claim chunks in the Nether!");
 				return true;
 			}
 			
 			
-			if (playerLevel > 0) {
-				String UUID = chunkClaimDataConfig.getString("ClaimedChunks." + ".X: " + p.getLocation().getChunk().getX() + ", Z: " + p.getLocation().getChunk().getZ() + ".belongsToUUID");
+			if (factionHashMap.get(p.getUniqueId().toString()).equals("")) {
+				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "You're not in a faction! Join a faction to claim chunks!");
+				return true;
+			}
+			
+			
+			String UUID = chunkClaimDataConfig.getString("ClaimedChunks." + ".X: " + p.getLocation().getChunk().getX() + ", Z: " + p.getLocation().getChunk().getZ() + ".belongsToUUID");
 
 
-				String chunkName = chunkClaimDataConfig.getString("ClaimedChunks." + ".X: " + p.getLocation().getChunk().getX() + ", Z: " + p.getLocation().getChunk().getZ() + ".appearsAs");
-				String name = chunkClaimDataConfig.getString("ClaimedChunks." + ".X: " + p.getLocation().getChunk().getX() + ", Z: " + p.getLocation().getChunk().getZ() + ".belongsToName");
-				String willAppearAs = playerDataConfig.getString("Users." + p.getUniqueId() + "." + "stats" + ".faction");
+			String chunkName = chunkClaimDataConfig.getString("ClaimedChunks." + ".X: " + p.getLocation().getChunk().getX() + ", Z: " + p.getLocation().getChunk().getZ() + ".appearsAs");
+			String name = chunkClaimDataConfig.getString("ClaimedChunks." + ".X: " + p.getLocation().getChunk().getX() + ", Z: " + p.getLocation().getChunk().getZ() + ".belongsToName");
+			String willAppearAs = playerDataConfig.getString("Users." + p.getUniqueId() + "." + "stats" + ".faction");
+			
+			int chunkClaims = playerDataConfig.getInt("Users." + p.getUniqueId() + ".stats" + ".chunkClaims");
+			
+			
+			if (UUID == null && chunkClaims < 400) {
+				chunkClaimDataConfig.set("ClaimedChunks." + ".X: " + p.getLocation().getChunk().getX() + ", Z: " + p.getLocation().getChunk().getZ() + ".belongsToUUID", "" + p.getUniqueId());
+				chunkClaimDataConfig.set("ClaimedChunks." + ".X: " + p.getLocation().getChunk().getX() + ", Z: " + p.getLocation().getChunk().getZ() + ".belongsToName", "" + p.getName());
+				chunkClaimDataConfig.set("ClaimedChunks." + ".X: " + p.getLocation().getChunk().getX() + ", Z: " + p.getLocation().getChunk().getZ() + ".appearsAs", "" + willAppearAs);
 				
-				int chunkClaims = playerDataConfig.getInt("Users." + p.getUniqueId() + ".stats" + ".chunkClaims");
+				chunkLocationsRAM.add("X: " + p.getLocation().getChunk().getX() + ", Z: " + p.getLocation().getChunk().getZ());
+				chunkNamesRAM.add(willAppearAs);
 				
+				// this is a safeguard just in case people mess with the server config files
+				if (chunkClaims < 0) {
+					chunkClaims = 0;
+				}
+				chunkClaims++;
+				playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".chunkClaims", chunkClaims);
+				try {
+					chunkClaimDataConfig.save(chunkClaimData);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} // this is important to have when editing server files, otherwise nothing gets changed
 				
-				if (UUID == null && (playerLevel * 2) > chunkClaims) {
-					chunkClaimDataConfig.set("ClaimedChunks." + ".X: " + p.getLocation().getChunk().getX() + ", Z: " + p.getLocation().getChunk().getZ() + ".belongsToUUID", "" + p.getUniqueId());
-					chunkClaimDataConfig.set("ClaimedChunks." + ".X: " + p.getLocation().getChunk().getX() + ", Z: " + p.getLocation().getChunk().getZ() + ".belongsToName", "" + p.getName());
-					chunkClaimDataConfig.set("ClaimedChunks." + ".X: " + p.getLocation().getChunk().getX() + ", Z: " + p.getLocation().getChunk().getZ() + ".appearsAs", "" + willAppearAs);
-					
-					chunkLocationsRAM.add("X: " + p.getLocation().getChunk().getX() + ", Z: " + p.getLocation().getChunk().getZ());
-					chunkNamesRAM.add(willAppearAs);
-					
-					// this is a safeguard just in case people mess with the server config files
-					if (chunkClaims < 0) {
-						chunkClaims = 0;
-					}
-					chunkClaims++;
-					playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".chunkClaims", chunkClaims);
-					try {
-						chunkClaimDataConfig.save(chunkClaimData);
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} // this is important to have when editing server files, otherwise nothing gets changed
-					
-					// Commands+ System Message
-					p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "Claimed chunk!");
-				}
-				else if ((UUID == null && playerLevel <= chunkClaims)) {
-					// Commands+ System Message
-					p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "You cannot claim any more chunks! Level up to get more chunk claims!");
-				}
-				else if (UUID.equals(p.getUniqueId().toString())) {
-					// Commands+ System Message
-					p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "You already own this chunk!");
-				}
-				else{
-					// Commands+ System Message
-					p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "Cannot claim chunk! Chunk is owned by " + chunkName + " (" + name + ")");
-				}
+				// Commands+ System Message
+				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "Claimed chunk!");
+			}
+			else if ((UUID == null && chunkClaims >= 400)) {
+				// Commands+ System Message
+				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "You cannot claim any more chunks! Level up to get more chunk claims!");
+			}
+			else if (UUID.equals(p.getUniqueId().toString())) {
+				// Commands+ System Message
+				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "You already own this chunk!");
+			}
+			else{
+				// Commands+ System Message
+				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "Cannot claim chunk! Chunk is owned by " + chunkName + " (" + name + ")");
+			}
 				
 			
-			}
-			else {
-				// Commands+ System Message
-				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "Not high enough level to use command!");
-				
-			}
 			
 			
 			return true;
@@ -1251,59 +1238,50 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 			}
 			
 			
-			if (playerLevel > 0) {
-				String UUID = chunkClaimDataConfig.getString("ClaimedChunks." + ".X: " + p.getLocation().getChunk().getX() + ", Z: " + p.getLocation().getChunk().getZ() + ".belongsToUUID");
-				String name = chunkClaimDataConfig.getString("ClaimedChunks." + ".X: " + p.getLocation().getChunk().getX() + ", Z: " + p.getLocation().getChunk().getZ() + ".belongsToName");
-				String chunkName = chunkClaimDataConfig.getString("ClaimedChunks." + ".X: " + p.getLocation().getChunk().getX() + ", Z: " + p.getLocation().getChunk().getZ() + ".appearsAs");
-				if (UUID.equals(p.getUniqueId().toString())) {
-					chunkClaimDataConfig.set("ClaimedChunks." + ".X: " + p.getLocation().getChunk().getX() + ", Z: " + p.getLocation().getChunk().getZ() + ".belongsToUUID", null);
-					chunkClaimDataConfig.set("ClaimedChunks." + ".X: " + p.getLocation().getChunk().getX() + ", Z: " + p.getLocation().getChunk().getZ() + ".belongsToName", null);
-					chunkClaimDataConfig.set("ClaimedChunks." + ".X: " + p.getLocation().getChunk().getX() + ", Z: " + p.getLocation().getChunk().getZ() + ".appearsAs", null);
-					int chunkClaims = playerDataConfig.getInt("Users." + p.getUniqueId() + ".stats" + ".chunkClaims");
-					chunkClaims--;
-					
-					try {
-						int i = chunkLocationsRAM.indexOf("X: " + p.getLocation().getChunk().getX() + ", Z: " + p.getLocation().getChunk().getZ());
-						chunkLocationsRAM.remove(i);
-						chunkNamesRAM.remove(i);
-					} catch (Exception e){
-						getLogger().log(Level.SEVERE, "Chunk to unclaim not found in ArrayList!");
-					}
-					
-					
-					// this is a safeguard just in case people mess with the server config files
-					if (chunkClaims < 0) {
-						chunkClaims = 0;
-					}
-					playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".chunkClaims", chunkClaims);
-					try {
-						chunkClaimDataConfig.save(chunkClaimData);
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					} // this is important to have when editing server files, otherwise nothing gets changed
-					
-					// Commands+ System Message
-					p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "Unclaimed chunk!");
-				}
-				else if(UUID.equals(null)){
-					// Commands+ System Message
-					p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "This chunk has not been claimed!");
-				}
-				else{
-					// Commands+ System Message
-					p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "Cannot unclaim chunk! Chunk is owned by " + chunkName + " (" + name + ")");
+			String UUID = chunkClaimDataConfig.getString("ClaimedChunks." + ".X: " + p.getLocation().getChunk().getX() + ", Z: " + p.getLocation().getChunk().getZ() + ".belongsToUUID");
+			String name = chunkClaimDataConfig.getString("ClaimedChunks." + ".X: " + p.getLocation().getChunk().getX() + ", Z: " + p.getLocation().getChunk().getZ() + ".belongsToName");
+			String chunkName = chunkClaimDataConfig.getString("ClaimedChunks." + ".X: " + p.getLocation().getChunk().getX() + ", Z: " + p.getLocation().getChunk().getZ() + ".appearsAs");
+			if (UUID.equals(p.getUniqueId().toString())) {
+				chunkClaimDataConfig.set("ClaimedChunks." + ".X: " + p.getLocation().getChunk().getX() + ", Z: " + p.getLocation().getChunk().getZ() + ".belongsToUUID", null);
+				chunkClaimDataConfig.set("ClaimedChunks." + ".X: " + p.getLocation().getChunk().getX() + ", Z: " + p.getLocation().getChunk().getZ() + ".belongsToName", null);
+				chunkClaimDataConfig.set("ClaimedChunks." + ".X: " + p.getLocation().getChunk().getX() + ", Z: " + p.getLocation().getChunk().getZ() + ".appearsAs", null);
+				int chunkClaims = playerDataConfig.getInt("Users." + p.getUniqueId() + ".stats" + ".chunkClaims");
+				chunkClaims--;
+				
+				try {
+					int i = chunkLocationsRAM.indexOf("X: " + p.getLocation().getChunk().getX() + ", Z: " + p.getLocation().getChunk().getZ());
+					chunkLocationsRAM.remove(i);
+					chunkNamesRAM.remove(i);
+				} catch (Exception e){
+					getLogger().log(Level.SEVERE, "Chunk to unclaim not found in ArrayList!");
 				}
 				
-				return true;
-			
-			}
-			else {
+				
+				// this is a safeguard just in case people mess with the server config files
+				if (chunkClaims < 0) {
+					chunkClaims = 0;
+				}
+				playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".chunkClaims", chunkClaims);
+				try {
+					chunkClaimDataConfig.save(chunkClaimData);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} // this is important to have when editing server files, otherwise nothing gets changed
+				
 				// Commands+ System Message
-				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "Not high enough level to use command!");
-				
-				return true;
+				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "Unclaimed chunk!");
 			}
+			else if(UUID.equals(null)){
+				// Commands+ System Message
+				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "This chunk has not been claimed!");
+			}
+			else{
+				// Commands+ System Message
+				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "Cannot unclaim chunk! Chunk is owned by " + chunkName + " (" + name + ")");
+			}
+			
+			return true;
 			
 		}
 		
@@ -1368,17 +1346,11 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 				return true;
 			}
 			
-			if (playerLevel < 1) {
-				// Commands+ System Message
-				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "Not high enough level to use command!");
-				return true;
-			}
-			
 			// variable grabbing
 			String playerFaction = playerDataConfig.getString("Users." + p.getUniqueId() + ".stats" + ".faction");
 			
 			
-			// BASE FACTION COMMANDS
+			// BASIC FACTION COMMANDS
 			
 			
 			// create faction
@@ -1412,7 +1384,7 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 					factionDataConfig.set("Factions." + factionName + ".members." + p.getUniqueId() + ".name", "" + p.getName());
 					factionDataConfig.set("Factions." + factionName + ".members." + p.getUniqueId() + ".rank", "Leader");
 					factionDataConfig.set("Users." + p.getUniqueId() + ".preferences" + ".chunkName", factionName);
-					changeChunkName(p, factionName);
+					factionHashMap.put(p.getUniqueId().toString(), factionName);
 
 					// save files
 					try {
@@ -1508,6 +1480,7 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 					playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".faction", factionName);
 					playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".invitedToFaction", false);
 					factionDataConfig.set("Factions." + factionName + ".members." + p.getUniqueId() + ".rank", "member");
+					factionHashMap.put(p.getUniqueId().toString(), factionName);
 
 
 					// save files
@@ -1532,8 +1505,6 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 							online.sendMessage(ChatColor.WHITE + "[" + ChatColor.AQUA + factionName + ChatColor.WHITE + "] " + ChatColor.GREEN + p.getName() + ChatColor.WHITE + " joined the faction!");
 						}
 					}
-					
-					changeChunkName(p, factionName);
 					
 					
 				}
@@ -1607,8 +1578,23 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 					
 					factionDataConfig.set("Factions." + playerFaction + ".members." + playerRemoved.getUniqueId() + ".rank", "none");
 					factionDataConfig.set("Factions." + playerFaction + ".stats" + ".memberCount", factionDataConfig.getInt("Factions." + playerFaction + ".stats" + ".memberCount") - 1);
+					factionHashMap.put(playerRemoved.getUniqueId().toString(), "");
+					unclaimAllChunks(p);
 					
-					saveConfig();
+					// save files
+					try {
+						playerDataConfig.save(playerData);
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} // this is important to have when editing server files, otherwise nothing gets changed
+					
+					try {
+						factionDataConfig.save(factionData);
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} // this is important to have when editing server files, otherwise nothing gets changed
 					
 					
 					// Commands+ System Messages
@@ -1631,10 +1617,28 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 					playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".faction", "");
 					factionDataConfig.set("Factions." + playerFaction + ".stats" + ".memberCount", factionDataConfig.getInt("Factions." + playerFaction + ".stats" + ".memberCount") - 1);
 					factionDataConfig.set("Factions." + playerFaction + ".members." + p.getUniqueId() + ".rank", "none");
-					factionDataConfig.set("Factions." + playerFaction + ".stats" + ".ownerUUID", null);
-					factionDataConfig.set("Factions." + playerFaction + ".stats" + ".ownerName", null);
+					if (factionDataConfig.get("Factions." + playerFaction + ".stats" + ".ownerUUID").equals(p.getUniqueId())) {
+						factionDataConfig.set("Factions." + playerFaction + ".stats" + ".ownerUUID", null);
+						factionDataConfig.set("Factions." + playerFaction + ".stats" + ".ownerName", null);
+					}
 					
-					saveConfig();
+					factionHashMap.put(p.getUniqueId().toString(), "");
+					unclaimAllChunks(p);
+					
+					// save files
+					try {
+						playerDataConfig.save(playerData);
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} // this is important to have when editing server files, otherwise nothing gets changed
+					
+					try {
+						factionDataConfig.save(factionData);
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} // this is important to have when editing server files, otherwise nothing gets changed
 				
 					// Commands+ System Message
 					p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "You've left " + ChatColor.AQUA + playerFaction + ChatColor.WHITE + "!");
@@ -1687,6 +1691,33 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 				p.sendMessage("Members: " + ChatColor.AQUA + factionMembers);
 
 				
+			}
+			
+			// MEMBER FACTION COMMANDS
+			
+			if (args[0].equals("msg")) {
+				if (factionHashMap.get(p.getUniqueId().toString()).equals("")) {
+					p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "You must be in a faction to use messages!");
+					return true;
+				}
+				
+				String msg = "";
+				if (args.length == 1) {
+					p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "You need to eneter a message!");
+					return true;
+				}
+				else {
+					msg = args[1];
+					for (int i = 2; i < args.length; i++) {
+						msg += " " + args[i];
+					}
+				}
+				
+				for (Player online : Bukkit.getOnlinePlayers()) {
+					if (factionHashMap.get(p.getUniqueId().toString()).equals(factionHashMap.get(online.getUniqueId().toString()))) {
+						online.sendMessage(ChatColor.WHITE + "[" + ChatColor.AQUA + playerFaction + ChatColor.WHITE + "] " + ChatColor.GREEN + p.getName() + ChatColor.WHITE + ": " + msg);
+					}
+				}
 			}
 			
 			// ADMIN FACTION COMMANDS
