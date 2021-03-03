@@ -173,7 +173,8 @@ public class FunctionsPlus {
 		lore.add("");
 		lore.add(ChatColor.WHITE + "Abilities:");
 		lore.add(ChatColor.WHITE + "(" + ChatColor.BLUE + "Passive" + ChatColor.WHITE + ") " + ChatColor.GOLD + "Angel Wings" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you always have an Elytra equipped.");
-		lore.add(ChatColor.WHITE + "(" + ChatColor.BLUE + "Passive" + ChatColor.WHITE + ") " + ChatColor.GREEN + "Blessed Wind" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you take no fall damage.");
+		lore.add(ChatColor.WHITE + "(" + ChatColor.BLUE + "Passive" + ChatColor.WHITE + ") " + ChatColor.GREEN + "Blessed Wind" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you take no fall damage and");
+		lore.add(ChatColor.YELLOW + "regenerate health at high altitudes.");
 		lore.add(ChatColor.WHITE + "(" + ChatColor.BLUE + "Passive" + ChatColor.WHITE + ") " + ChatColor.AQUA + "Hurricane Momentum" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you deal double");
 		lore.add(ChatColor.YELLOW + "damage while flying.");
 		lore.add("");
@@ -196,17 +197,20 @@ public class FunctionsPlus {
 		lore.add("");
 		lore.add(ChatColor.WHITE + "Abilities:");
 		lore.add(ChatColor.WHITE + "(" + ChatColor.BLUE + "Passive" + ChatColor.WHITE + ") " + ChatColor.LIGHT_PURPLE + "Obsidian Skin" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you're immune to fire and take");
-		lore.add(ChatColor.YELLOW + "less damage in the Nether.");
-		lore.add(ChatColor.WHITE + "(" + ChatColor.BLUE + "Passive" + ChatColor.WHITE + ") " + ChatColor.RED + "Fire Storm" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you deal 50% more damage while on fire.");
+		lore.add(ChatColor.YELLOW + "less damage in the Nether, you take no fall damage in lava.");
+		lore.add(ChatColor.WHITE + "(" + ChatColor.BLUE + "Passive" + ChatColor.WHITE + ") " + ChatColor.RED + "Fire Storm" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you deal 40% more damage while on fire.");
+		lore.add(ChatColor.YELLOW + "(does not stack with strength)");
+		lore.add(ChatColor.WHITE + "(" + ChatColor.BLUE + "Passive" + ChatColor.WHITE + ") " + ChatColor.DARK_RED + "Blazing Fists" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you have a small chance of lighting");
+		lore.add(ChatColor.YELLOW + "enemies on fire by hitting them. (5% for players, 100% for mobs)");
 		lore.add("");
 		lore.add(ChatColor.WHITE + "Weaknesses:");
-		lore.add(ChatColor.BLUE + "Water" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you take damage in water and rain.");
+		lore.add(ChatColor.BLUE + "Water" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you take more damage in water and rain.");
 		meta.setLore(lore);
 		item.setItemMeta(meta);
 		Main.talentInventory.setItem(1, item);
 		
 		// Hydrokinetic class item
-		item.setType(Material.PRISMARINE_SHARD);
+		item.setType(Material.COD);
 		meta.setDisplayName(ChatColor.BLUE + "Hydrokinetic");
 		lore.clear();
 		lore.add(ChatColor.WHITE + "Description:");
@@ -214,13 +218,13 @@ public class FunctionsPlus {
 		lore.add(ChatColor.YELLOW + "gained the ocean's favor and can command its power at will.");
 		lore.add("");
 		lore.add(ChatColor.WHITE + "Abilities:");
-		lore.add(ChatColor.WHITE + "(" + ChatColor.BLUE + "Passive" + ChatColor.WHITE + ") " + ChatColor.AQUA + "Water Magic" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you swim faster and can't drown.");
+		lore.add(ChatColor.WHITE + "(" + ChatColor.BLUE + "Passive" + ChatColor.WHITE + ") " + ChatColor.AQUA + "Waterwheel" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you dig faster in water.");
 		lore.add(ChatColor.WHITE + "(" + ChatColor.BLUE + "Passive" + ChatColor.WHITE + ") " + ChatColor.DARK_AQUA + "Cyclone" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you deal 30% more damage in water.");
 		lore.add(ChatColor.WHITE + "(" + ChatColor.BLUE + "Passive" + ChatColor.WHITE + ") " + ChatColor.BLUE + "Hydrokinetic Regeneration" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you regenerate");
-		lore.add(ChatColor.YELLOW + "health in water.");
+		lore.add(ChatColor.YELLOW + "health in water and can't drown.");
 		lore.add("");
 		lore.add(ChatColor.WHITE + "Weaknesses:");
-		lore.add(ChatColor.DARK_RED + "Fire" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you take extra damage in the Nether and from fire.");
+		lore.add(ChatColor.DARK_RED + "Fire" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you take more damage in the Nether and from fire.");
 		meta.setLore(lore);
 		item.setItemMeta(meta);
 		Main.talentInventory.setItem(2, item);
@@ -242,10 +246,74 @@ public class FunctionsPlus {
 		lore.add(ChatColor.YELLOW + "at will.");
 		lore.add("");
 		lore.add(ChatColor.WHITE + "Weaknesses:");
-		lore.add(ChatColor.DARK_RED + "Fire" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you take extra damage in the Nether and from fire.");
+		lore.add(ChatColor.DARK_RED + "Fire" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you take more damage in the Nether and from fire.");
 		meta.setLore(lore);
 		item.setItemMeta(meta);
 		Main.talentInventory.setItem(3, item);
+		
+		// Terran class item
+		item.setType(Material.GRASS_BLOCK);
+		meta.setDisplayName(ChatColor.DARK_GREEN + "Terran");
+		lore.clear();
+		lore.add(ChatColor.WHITE + "Description:");
+		lore.add(ChatColor.YELLOW + "Terrans are known for their ground based");
+		lore.add(ChatColor.YELLOW + "abilities and down to earth personalities.");
+		lore.add("");
+		lore.add(ChatColor.WHITE + "Abilities:");
+		lore.add(ChatColor.WHITE + "(" + ChatColor.RED + "Active" + ChatColor.WHITE + ") " + ChatColor.DARK_GREEN + "Terraportation" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you can teleport");
+		lore.add(ChatColor.YELLOW + "vertically through the ground.");
+		lore.add(ChatColor.WHITE + "(" + ChatColor.BLUE + "Passive" + ChatColor.WHITE + ") " + ChatColor.GRAY + "Tough Skin" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you take 20% less damage");
+		lore.add(ChatColor.YELLOW + "from all sources, except falling.");
+		lore.add("");
+		lore.add(ChatColor.WHITE + "Weaknesses:");
+		lore.add(ChatColor.DARK_AQUA + "Heights" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you take 30% more fall damage.");
+		meta.setLore(lore);
+		item.setItemMeta(meta);
+		Main.talentInventory.setItem(4, item);
+		
+		// Biokinetic class item
+		item.setType(Material.RED_TULIP);
+		meta.setDisplayName(ChatColor.GREEN + "Biokinetic");
+		lore.clear();
+		lore.add(ChatColor.WHITE + "Description:");
+		lore.add(ChatColor.YELLOW + "Biokinetics have been praised throughout history");
+		lore.add(ChatColor.YELLOW + "for their extraordinary healing abilities");
+		lore.add(ChatColor.YELLOW + "and loyalty to their allies.");
+		lore.add("");
+		lore.add(ChatColor.WHITE + "Abilities:");
+		lore.add(ChatColor.WHITE + "(" + ChatColor.BLUE + "Passive" + ChatColor.WHITE + ") " + ChatColor.AQUA + "Calming touch" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you heal horses while");
+		lore.add(ChatColor.YELLOW + "riding them.");
+		lore.add(ChatColor.WHITE + "(" + ChatColor.RED + "Active" + ChatColor.WHITE + ") " + ChatColor.RED + "Mending Aura" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you can heal allies with your");
+		lore.add(ChatColor.YELLOW + "Arcane Crystal.");
+		lore.add(ChatColor.WHITE + "(" + ChatColor.RED + "Active" + ChatColor.WHITE + ") " + ChatColor.DARK_PURPLE + "Arcane Surge" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "area of effect ability");
+		lore.add(ChatColor.YELLOW + "that gives all enemies weakness.");
+		lore.add("");
+		lore.add(ChatColor.WHITE + "Weaknesses:");
+		lore.add(ChatColor.DARK_GREEN + "Poison" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you take more damage from poison sources.");
+		meta.setLore(lore);
+		item.setItemMeta(meta);
+		Main.talentInventory.setItem(5, item);
+		
+		// Enderian class item
+		item.setType(Material.ENDER_PEARL);
+		meta.setDisplayName(ChatColor.DARK_PURPLE + "Enderian");
+		lore.clear();
+		lore.add(ChatColor.WHITE + "Description:");
+		lore.add(ChatColor.YELLOW + "Enderians are quiet beings, often traveling");
+		lore.add(ChatColor.YELLOW + "with a tight pack of trusted friends.");
+		lore.add("");
+		lore.add(ChatColor.WHITE + "Abilities:");
+		lore.add(ChatColor.WHITE + "(" + ChatColor.BLUE + "Passive" + ChatColor.WHITE + ") " + ChatColor.LIGHT_PURPLE + "Dimensional Manipulation" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you don't");
+		lore.add(ChatColor.YELLOW + "consume ender pearls when teleporting.");
+		lore.add(ChatColor.WHITE + "(" + ChatColor.BLUE + "Passive" + ChatColor.WHITE + ") " + ChatColor.DARK_PURPLE + "Voidwalker" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "hostile mobs ignore you.");
+		lore.add(ChatColor.WHITE + "(" + ChatColor.RED + "Active" + ChatColor.WHITE + ") " + ChatColor.DARK_RED + "Dual-Phase Matter" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you can't get hit by arrows.");
+		lore.add("");
+		lore.add(ChatColor.WHITE + "Weaknesses:");
+		lore.add(ChatColor.BLUE + "Water" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you take more damage in water and rain.");
+		meta.setLore(lore);
+		item.setItemMeta(meta);
+		Main.talentInventory.setItem(6, item);
+		
 		
 		// Cobble man class item
 		item.setType(Material.COBBLESTONE);
@@ -262,6 +330,21 @@ public class FunctionsPlus {
 		item.setItemMeta(meta);
 		Main.talentInventory.setItem(18, item);
 		
+		// Sheriff class item
+		item.setType(Material.STICK);
+		meta.setDisplayName(ChatColor.GOLD + "SHERIFF");
+		lore.clear();
+		lore.add(ChatColor.WHITE + "Description:");
+		lore.add(ChatColor.YELLOW + "Born in the west, the Sheriff stops at nothing to");
+		lore.add(ChatColor.YELLOW + "ensure the safety of his people.");
+		lore.add("");
+		lore.add(ChatColor.WHITE + "Abilities:");
+		lore.add(ChatColor.WHITE + "(" + ChatColor.RED + "Active" + ChatColor.WHITE + ") " + ChatColor.GOLD + "Giddy Up" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you can summon a mighty steed.");
+		lore.add(ChatColor.WHITE + "(" + ChatColor.RED + "Active" + ChatColor.WHITE + ") " + ChatColor.DARK_RED + "The Jail" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you can put players in The Jail.");
+		meta.setLore(lore);
+		item.setItemMeta(meta);
+		Main.talentInventory.setItem(19, item);
+				
 		
 		// close menu button
 		item.setType(Material.BARRIER);

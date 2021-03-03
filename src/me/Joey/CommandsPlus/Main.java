@@ -17,21 +17,26 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.World.Environment;
-import org.bukkit.block.Biome;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.Horse;
+import org.bukkit.entity.Horse.Color;
 import org.bukkit.entity.Phantom;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Listener;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.potion.PotionType;
 import org.bukkit.scheduler.BukkitScheduler;
 import org.bukkit.scoreboard.DisplaySlot;
 import org.bukkit.scoreboard.Objective;
@@ -67,6 +72,27 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 	public static File factionData;
 	public static FileConfiguration factionDataConfig;
 	
+	
+	// initialize plugin data variables
+	public static boolean isBloodMoon = false;
+	public static ArrayList<ItemStack> bloodMoonLootTable = new ArrayList<>();
+	
+	public static void loadBloodMoonLootTable() {
+		bloodMoonLootTable.add(new ItemStack(Material.GOLD_INGOT));
+		bloodMoonLootTable.add(new ItemStack(Material.IRON_INGOT));
+		bloodMoonLootTable.add(new ItemStack(Material.GOLDEN_APPLE));
+		
+		
+		PotionType[] effects = new PotionType[]{PotionType.STRENGTH, PotionType.FIRE_RESISTANCE, PotionType.INVISIBILITY, PotionType.JUMP, PotionType.INSTANT_HEAL};
+		for (PotionType effect : effects) {
+			ItemStack potion = new ItemStack(Material.POTION);
+			PotionMeta potionMeta = (PotionMeta) potion.getItemMeta();
+			potionMeta.setBasePotionData(new PotionData(effect));
+			potion.setItemMeta(potionMeta);
+			bloodMoonLootTable.add(potion);
+		}
+		
+	}
 	
 	
 	// HashMap loader function
@@ -109,8 +135,10 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 		// load config file
 		loadConfig();
 		
+		
 		// enable ItemsPlus
 		ItemsPlus.init();
+		
 		
 		// register EnchantsPlus
 		EnchantmentsPlus.register();
@@ -118,6 +146,10 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 		
 		// construct talent inventory
 		FunctionsPlus.createTalentSelectionInventory();
+		
+		
+		// load blood moon loot table - very descriptive, I know, thank me later
+		loadBloodMoonLootTable();
 		
 		
 		// register valid log materials HashSet for Timber Axe
@@ -210,7 +242,9 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
             @Override
             public void run() {
             	if (!Bukkit.getOnlinePlayers().isEmpty()) {
-
+            		
+            		
+            		
         			
             	}
             }
@@ -241,27 +275,22 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
         							break;
         						}
         					}
-        				}
-        				
-        				if (talent.equals("Pyrokinetic")) {
-        					Material m1 = online.getPlayer().getLocation().getBlock().getType();
-        				    if (m1 == Material.WATER) {
-        				    	online.damage(2);
-        				    }
-        				    else if (online.getWorld().hasStorm()) {
-        				    	if (online.getLocation().getBlock().getBiome() != Biome.DESERT) {
-        				    		Location loc = new Location(online.getWorld(), online.getLocation().getBlockX(), online.getLocation().getWorld().getHighestBlockYAt(online.getLocation()), online.getLocation().getBlockZ());
-        				    		loc.add(0, 1, 0);
-        				    		
-        				    		Material m2 = online.getWorld().getBlockAt(loc).getType();
-        				    		
-                				    if (m2 != Material.SNOW) {
-                				    	int blockLocation = online.getLocation().getWorld().getHighestBlockYAt(online.getLocation());
-                				    	if(blockLocation <= online.getLocation().getY()) {
-                				    		online.damage(1);
-                				    	}
-                				    }
-        				    	}
+        					
+        					if (location.getBlockY() > 127) {
+        						boolean regenFound = false;
+            					for (PotionEffect potionEffect : online.getActivePotionEffects()) {
+            						if (potionEffect.getType().equals(PotionEffectType.REGENERATION)) {
+            							regenFound = true;
+            							int duration = potionEffect.getDuration();
+            							if (duration < 10) {
+            								online.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 100, 0));
+            							}
+            						}
+            						
+            					}
+            					if(!regenFound) {
+        							online.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 100, 0));
+        						}
         					}
         				}
         				
@@ -269,8 +298,8 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
         					Material m1 = online.getPlayer().getLocation().getBlock().getType();
         					Material m2 = online.getPlayer().getLocation().add(0, 1, 0).getBlock().getType();
         				    if (m1 == Material.WATER || m2 == Material.WATER || m1 == Material.SEAGRASS || m2 == Material.SEAGRASS || m1 == Material.TALL_SEAGRASS || m2 == Material.TALL_SEAGRASS || m1 == Material.KELP || m2 == Material.KELP) {
-        				    	online.addPotionEffect(new PotionEffect(PotionEffectType.DOLPHINS_GRACE, 30, 0));
             					online.addPotionEffect(new PotionEffect(PotionEffectType.WATER_BREATHING, 30, 0));
+            					online.addPotionEffect(new PotionEffect(PotionEffectType.FAST_DIGGING, 30, 1));
             					boolean regenFound = false;
             					for (PotionEffect potionEffect : online.getActivePotionEffects()) {
             						if (potionEffect.getType().equals(PotionEffectType.REGENERATION)) {
@@ -295,6 +324,11 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
         						online.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 30, 1));
         					}
         				}
+        				
+        				if (talent.equals("Rogue")) {
+        					online.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 100000, 0));
+        					online.addPotionEffect(new PotionEffect(PotionEffectType.NIGHT_VISION, 100000, 0));
+        				}
         			}
             	}
             }
@@ -315,15 +349,21 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
         					online.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
         				}
         				endCheck(online);
-        				/*
-        				if (playerDataConfig.getBoolean("Users." + online.getUniqueId() + "." + "preferences" + ".chunkMapLive")){
-        					chunkMapDraw(online);
+        				
+        				
+        				if (!isBloodMoon && (FunctionsPlus.getTime(getServer(), online) % 24000) >= 13000 && ((FunctionsPlus.getTime(getServer(), online) % 24000) < 13020)) {
+        					if (((int) (Math.random() * 20)) == 7) {
+        						isBloodMoon = true;
+        						for (Player online_copy : Bukkit.getOnlinePlayers()) {
+        							online_copy.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "A blood moon is rising!");
+        						}
+        					}
         				}
-        				*/
-        				
-        				
-        				if ((FunctionsPlus.getTime(getServer(), online) % 24000) > 12300) {
-        					// chance for blood moon
+        				if (isBloodMoon && (FunctionsPlus.getTime(getServer(), online) % 24000) >= 23000 && ((FunctionsPlus.getTime(getServer(), online) % 24000) < 23200)) {
+        					isBloodMoon = false;
+    						for (Player online_copy : Bukkit.getOnlinePlayers()) {
+    							online_copy.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "The blood moon sets, only to rise again soon.");
+    						}
         				}
         				
         				
@@ -546,25 +586,29 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 		ConfigurationSection claimedChunks = chunkClaimDataConfig.getConfigurationSection("ClaimedChunks");
 		for (String s : claimedChunks.getKeys(false)) {
 			if (claimedChunks.get(s) != null){
-				UUID chunkOwnerUUID = UUID.fromString(claimedChunks.get(s + ".belongsToUUID").toString());
-				if (chunkOwnerUUID.equals(p.getUniqueId())) {
-					claimedChunks.set(s + ".belongsToUUID", null);
-					claimedChunks.set(s + ".belongsToName", null);
-					claimedChunks.set(s + ".appearsAs", null);
-					
-					if (playerDataConfig.contains("Users." + p.getUniqueId() + ".stats" + ".chunkClaims")){
-						playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".chunkClaims", playerDataConfig.getInt("Users." + p.getUniqueId() + ".stats" + ".chunkClaims") - 1);
+				try {
+					UUID chunkOwnerUUID = UUID.fromString(claimedChunks.get(s + ".belongsToUUID").toString());
+					if (chunkOwnerUUID.equals(p.getUniqueId())) {
+						claimedChunks.set(s + ".belongsToUUID", null);
+						claimedChunks.set(s + ".belongsToName", null);
+						claimedChunks.set(s + ".appearsAs", null);
+						
+						if (playerDataConfig.contains("Users." + p.getUniqueId() + ".stats" + ".chunkClaims")){
+							playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".chunkClaims", playerDataConfig.getInt("Users." + p.getUniqueId() + ".stats" + ".chunkClaims") - 1);
+						}
+						
+						
+						try {
+							int i = chunkLocationsRAM.indexOf(s);
+							chunkLocationsRAM.remove(i);
+							chunkNamesRAM.remove(i);
+						} catch (Exception e){
+							getLogger().log(Level.SEVERE, "Chunk to unclaim not found in ArrayList!");
+						}
 					}
-					
-					
-					try {
-						int i = chunkLocationsRAM.indexOf(s);
-						chunkLocationsRAM.remove(i);
-						chunkNamesRAM.remove(i);
-					} catch (Exception e){
-						getLogger().log(Level.SEVERE, "Chunk to unclaim not found in ArrayList!");
-					}
+				} catch (Exception e) {
 				}
+				
 			}
 		}
 		try {
@@ -1367,6 +1411,14 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 					return true;
 				}
 				
+				ConfigurationSection factions = factionDataConfig.getConfigurationSection("Factions.");
+				for (String s : factions.getKeys(false)) {
+					if (s.equals(factionName)) {
+						p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "Faction alrady exists!");
+						return true;
+					}
+				}
+				
 				if (factionName.length() > 20) {
 					factionName = factionName.substring(0, 20);
 					// Commands+ System Message
@@ -1383,7 +1435,6 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 					factionDataConfig.set("Factions." + factionName + ".stats" + ".memberCount", 1);
 					factionDataConfig.set("Factions." + factionName + ".members." + p.getUniqueId() + ".name", "" + p.getName());
 					factionDataConfig.set("Factions." + factionName + ".members." + p.getUniqueId() + ".rank", "Leader");
-					factionDataConfig.set("Users." + p.getUniqueId() + ".preferences" + ".chunkName", factionName);
 					factionHashMap.put(p.getUniqueId().toString(), factionName);
 
 					// save files
@@ -1479,7 +1530,7 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 					playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".inFaction", true);
 					playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".faction", factionName);
 					playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".invitedToFaction", false);
-					factionDataConfig.set("Factions." + factionName + ".members." + p.getUniqueId() + ".rank", "member");
+					factionDataConfig.set("Factions." + factionName + ".members." + p.getUniqueId() + ".rank", "Member");
 					factionHashMap.put(p.getUniqueId().toString(), factionName);
 
 
@@ -1612,15 +1663,16 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 			if (args[0].equals("leave")) {
 				if (playerDataConfig.getBoolean("Users." + p.getUniqueId() + ".stats" + ".inFaction")) {
 					
+					if (factionDataConfig.get("Factions." + playerFaction + ".stats" + ".ownerUUID").equals(p.getUniqueId().toString())) {
+						p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "You must promote someone before leaving the faction! If you want to disband your faction you can do so by using the '/faction disband' command.");
+						return true;
+					}
 					
 					playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".inFaction", false);
 					playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".faction", "");
 					factionDataConfig.set("Factions." + playerFaction + ".stats" + ".memberCount", factionDataConfig.getInt("Factions." + playerFaction + ".stats" + ".memberCount") - 1);
 					factionDataConfig.set("Factions." + playerFaction + ".members." + p.getUniqueId() + ".rank", "none");
-					if (factionDataConfig.get("Factions." + playerFaction + ".stats" + ".ownerUUID").equals(p.getUniqueId())) {
-						factionDataConfig.set("Factions." + playerFaction + ".stats" + ".ownerUUID", null);
-						factionDataConfig.set("Factions." + playerFaction + ".stats" + ".ownerName", null);
-					}
+					
 					
 					factionHashMap.put(p.getUniqueId().toString(), "");
 					unclaimAllChunks(p);
@@ -1671,6 +1723,12 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 					for (int i = 2; i < args.length; i++) {
 						factionName += " " + args[i];
 					}
+				}
+				
+				if (!factionDataConfig.contains("Factions." + factionName)) {
+					// Commands+ System Message
+					p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "Faction does not exist!");
+					return true;
 				}
 				
 				
@@ -1724,12 +1782,119 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 			
 			// promote faction member
 			if (args[0].equals("promote")) {
-				;
+				if (factionDataConfig.getString("Factions." + playerFaction + ".stats" + ".ownerUUID").equals(p.getUniqueId().toString())) {
+					String playerName = args[1];
+					for (int i = 2; i < args.length; i++) {
+						playerName += " " + args[i];
+					}
+					
+					Player playerPromoted = Bukkit.getServer().getPlayer(playerName);
+					
+					if (!factionHashMap.get(p.getUniqueId().toString()).equals(factionHashMap.get(playerPromoted.getUniqueId().toString()))) {
+						p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "Player is not in faction!");
+						return true;
+					}
+					
+					if (factionDataConfig.get("Factions." + playerFaction + ".members." + playerPromoted.getUniqueId() + ".rank").equals("Member")) {
+						factionDataConfig.set("Factions." + playerFaction + ".members." + playerPromoted.getUniqueId() + ".rank", "Admin");
+					}
+
+					if (factionDataConfig.get("Factions." + playerFaction + ".members." + playerPromoted.getUniqueId() + ".rank").equals("Admin")) {
+						factionDataConfig.set("Factions." + playerFaction + ".members." + playerPromoted.getUniqueId() + ".rank", "Leader");
+						factionDataConfig.set("Factions." + playerFaction + ".members." + p.getUniqueId() + ".rank", "Admin");
+						factionDataConfig.set("Factions." + playerFaction + ".stats" + ".ownerUUID", playerPromoted.getUniqueId());
+						factionDataConfig.set("Factions." + playerFaction + ".stats" + ".ownerName", playerPromoted.getName());
+					}
+					
+					
+					// save files
+					try {
+						playerDataConfig.save(playerData);
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} // this is important to have when editing server files, otherwise nothing gets changed
+					
+					try {
+						factionDataConfig.save(factionData);
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} // this is important to have when editing server files, otherwise nothing gets changed
+				}
 			}
 			
 			// demote faction member
 			if (args[0].equals("demote")) {
-				;
+				if (factionDataConfig.getString("Factions." + playerFaction + ".stats" + ".ownerUUID").equals(p.getUniqueId().toString())) {
+					String playerName = args[1];
+					for (int i = 2; i < args.length; i++) {
+						playerName += " " + args[i];
+					}
+					
+					Player playerDemoted = Bukkit.getServer().getPlayer(playerName);
+					
+					if (!factionHashMap.get(p.getUniqueId().toString()).equals(factionHashMap.get(playerDemoted.getUniqueId().toString()))) {
+						p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "Player is not in faction!");
+						return true;
+					}
+					
+					if (factionDataConfig.get("Factions." + playerFaction + ".members." + playerDemoted.getUniqueId() + ".rank").equals("Member")) {
+						p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "Cannot demote a player with the rank of member! If you want to remove this player from your faction, you can do so with the '/faction remove <player>' command!");
+						return true;
+					}
+
+					if (factionDataConfig.get("Factions." + playerFaction + ".members." + playerDemoted.getUniqueId() + ".rank").equals("Admin")) {
+						factionDataConfig.set("Factions." + playerFaction + ".members." + playerDemoted.getUniqueId() + ".rank", "Member");
+					}
+					
+					
+					// save files
+					try {
+						playerDataConfig.save(playerData);
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} // this is important to have when editing server files, otherwise nothing gets changed
+					
+					try {
+						factionDataConfig.save(factionData);
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} // this is important to have when editing server files, otherwise nothing gets changed
+				}
+						
+			}
+			
+			// disbands faction
+			if (args[0].equals("disband")) {
+				String factionName = factionHashMap.get(p.getUniqueId().toString());
+				for (Player online : Bukkit.getOnlinePlayers()) {
+					if (factionHashMap.get(p.getUniqueId().toString()).equals(factionHashMap.get(online.getUniqueId().toString()))) {
+						p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "Faction has been disbanded!");
+						factionHashMap.put(online.getUniqueId().toString(), null);
+						playerDataConfig.set("Users." + online.getUniqueId() + ".stats" + ".inFaction", false);
+						playerDataConfig.set("Users." + online.getUniqueId() + ".stats" + ".faction", "");
+						unclaimAllChunks(online);
+					}
+				}
+				factionDataConfig.set("Factions." + factionName, null);
+				
+				// save files
+				try {
+					playerDataConfig.save(playerData);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} // this is important to have when editing server files, otherwise nothing gets changed
+				
+				try {
+					factionDataConfig.save(factionData);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} // this is important to have when editing server files, otherwise nothing gets changed
 			}
 			
 			// get interactive list of faction members
@@ -1769,6 +1934,25 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 			ItemStack item = new ItemStack(ItemsPlus.bonkStick);
 			
 			p.getInventory().addItem(item);
+
+		}
+		
+		if (label.equalsIgnoreCase("yeehaw")) {
+			
+			Horse horse = (Horse) p.getWorld().spawn(p.getLocation().add(Math.cos(FunctionsPlus.getPlayerDirectionFloat(p)) * 2, 0, Math.sin(FunctionsPlus.getPlayerDirectionFloat(p)) * 2), Horse.class);
+			
+			horse.setTamed(true);
+			horse.getInventory().setArmor(new ItemStack(Material.DIAMOND_HORSE_ARMOR));
+			horse.getInventory().setSaddle(new ItemStack(Material.SADDLE));
+			horse.setAdult();
+			horse.setColor(Color.BLACK);
+			
+			horse.setJumpStrength(2.0);
+			horse.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, Integer.MAX_VALUE, 255));
+			horse.setHealth(horse.getMaxHealth());
+			horse.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(0.6);
+			
+			
 
 		}
 		

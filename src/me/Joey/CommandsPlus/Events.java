@@ -7,31 +7,45 @@ import java.util.LinkedList;
 import java.util.List;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World.Environment;
+import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
 import org.bukkit.block.Container;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Animals;
+import org.bukkit.entity.Creeper;
+import org.bukkit.entity.Drowned;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Item;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Skeleton;
+import org.bukkit.entity.Spider;
+import org.bukkit.entity.Zombie;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.enchantment.EnchantItemEvent;
+import org.bukkit.event.entity.CreatureSpawnEvent;
+import org.bukkit.event.entity.CreatureSpawnEvent.SpawnReason;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
+import org.bukkit.event.entity.EntityPotionEffectEvent;
 import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryInteractEvent;
 import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.event.player.PlayerBedEnterEvent;
 import org.bukkit.event.player.PlayerFishEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
@@ -59,6 +73,7 @@ public class Events implements Listener{
 	@EventHandler
 	public void onJoin(PlayerJoinEvent event) {
 		Player online = event.getPlayer();
+		
 		
 		if (!online.hasPlayedBefore()) {
 			Main.playerDataConfig.set("Users." + event.getPlayer().getUniqueId() + "." + "preferences" + ".hasPlayedBefore", true);
@@ -187,7 +202,7 @@ public class Events implements Listener{
 			Main.playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".talent", "Avian");
 			p.closeInventory();
 			
-			// equip Avian Elytra and set lower health
+			// equip Avian Elytra and lower max health
 			p.setMaxHealth(16);
 			p.getInventory().setChestplate(ItemsPlus.avianElytra);
 		}
@@ -199,6 +214,9 @@ public class Events implements Listener{
 			Main.playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".talent", "Pyrokinetic");
 			p.closeInventory();
 			
+			// set health (really just for testers since the max health doesn't change back when swapping talents)
+			p.setMaxHealth(20);
+			
 			// Start particle effects
 			trails.startPyrokineticParticles();
 		}
@@ -209,6 +227,9 @@ public class Events implements Listener{
 			Main.talentHashMap.put(p.getUniqueId().toString(), "Hydrokinetic");
 			Main.playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".talent", "Hydrokinetic");
 			p.closeInventory();
+			
+			// set health (really just for testers since the max health doesn't change back when swapping talents)
+			p.setMaxHealth(20);
 		}
 		
 		// Frostbender selected
@@ -218,8 +239,47 @@ public class Events implements Listener{
 			Main.playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".talent", "Frostbender");
 			p.closeInventory();
 			
+			// set health (really just for testers since the max health doesn't change back when swapping talents)
+			p.setMaxHealth(20);
+			
 			// Start particle effects
 			trails.startFrostbenderParticles();
+		}
+		
+		// Terran selected
+		if (event.getSlot() == 4) {
+			p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "You chose the Terran talent!");
+			Main.talentHashMap.put(p.getUniqueId().toString(), "Terran");
+			Main.playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".talent", "Terran");
+			p.closeInventory();
+			
+			// set health (really just for testers since the max health doesn't change back when swapping talents)
+			p.setMaxHealth(20);
+		}
+		
+		// Biokinetic selected
+		if (event.getSlot() == 5) {
+			p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "You chose the Biokinetic talent!");
+			Main.talentHashMap.put(p.getUniqueId().toString(), "Biokinetic");
+			Main.playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".talent", "Biokinetic");
+			p.closeInventory();
+			
+			// set health (really just for testers since the max health doesn't change back when swapping talents)
+			p.setMaxHealth(20);
+		}
+		
+		// Enderian selected
+		if (event.getSlot() == 6) {
+			p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "You chose the Enderian talent!");
+			Main.talentHashMap.put(p.getUniqueId().toString(), "Enderian");
+			Main.playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".talent", "Enderian");
+			p.closeInventory();
+			
+			// set health (really just for testers since the max health doesn't change back when swapping talents)
+			p.setMaxHealth(20);
+			
+			// Start particle effects
+			trails.startEnderianParticles();
 		}
 		
 		// Cobble Man selected
@@ -231,6 +291,27 @@ public class Events implements Listener{
 			Main.talentHashMap.put(p.getUniqueId().toString(), "COBBLE MAN");
 			Main.playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".talent", "COBBLE MAN");
 			p.closeInventory();
+			
+			// set health (really just for testers since the max health doesn't change back when swapping talents)
+			p.setMaxHealth(40);
+		}
+		
+		// Sheriff selected
+		if (event.getSlot() == 19) {
+			p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "OH LAWD HE COMIN!");
+			for (Player online : Bukkit.getOnlinePlayers()) {
+				online.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "THE SHERIFF HAS ARRIVED");
+			}
+			Main.talentHashMap.put(p.getUniqueId().toString(), "SHERIFF");
+			Main.playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".talent", "SHERIFF");
+			p.closeInventory();
+			
+			// set health (really just for testers since the max health doesn't change back when swapping talents)
+			p.setMaxHealth(40);
+		}
+		
+		for (PotionEffect effect : p.getActivePotionEffects()) {
+	        p.removePotionEffect(effect.getType());
 		}
 		
 		
@@ -274,8 +355,14 @@ public class Events implements Listener{
 	    Action action = event.getAction();
 	    
 	    if (action.equals(Action.RIGHT_CLICK_AIR) || action.equals(Action.RIGHT_CLICK_BLOCK)) {
-	         if (inv.getItemInMainHand() != null && inv.getItemInOffHand().getType() != Material.AIR) {
-	        	 if (inv.getItemInMainHand().equals(ItemsPlus.telekinesisBook) && !inv.getItemInOffHand().containsEnchantment(EnchantmentsPlus.TELEKINESIS) && (inv.getItemInOffHand().getType().toString().contains("PICKAXE") || inv.getItemInOffHand().getType().toString().contains("AXE") || inv.getItemInOffHand().getType().toString().contains("SHOVEL") || inv.getItemInOffHand().getType().toString().contains("HOE"))) {
+	    	// if using splash potion
+	    if(event.getItem().getType() == Material.SPLASH_POTION) {
+	    		
+	    	}
+	    	
+	    	
+	    	if (inv.getItemInMainHand() != null && inv.getItemInOffHand().getType() != Material.AIR) {
+	    		if (inv.getItemInMainHand().equals(ItemsPlus.telekinesisBook) && !inv.getItemInOffHand().containsEnchantment(EnchantmentsPlus.TELEKINESIS) && (inv.getItemInOffHand().getType().toString().contains("PICKAXE") || inv.getItemInOffHand().getType().toString().contains("AXE") || inv.getItemInOffHand().getType().toString().contains("SHOVEL") || inv.getItemInOffHand().getType().toString().contains("HOE"))) {
 	        		 inv.getItemInMainHand().setAmount(0); 
 		        	 inv.getItemInOffHand().addUnsafeEnchantment(EnchantmentsPlus.TELEKINESIS, 1);
 		        	 ItemMeta meta = inv.getItemInOffHand().getItemMeta();
@@ -370,12 +457,29 @@ public class Events implements Listener{
 			}
 			
 			if (talent.equals("Pyrokinetic")) {
+				Material m1 = p.getLocation().getBlock().getType();
+				Material m2 = p.getLocation().add(0, 1, 0).getBlock().getType();
+				if (m1 == Material.WATER || m2 == Material.WATER) {
+					event.setDamage(event.getDamage() * 1.2);
+				}
+				else if (p.getWorld().hasStorm()) {
+			    	if (p.getLocation().getBlock().getBiome() != Biome.DESERT) {
+			    		Location loc = new Location(p.getWorld(), p.getLocation().getBlockX(), p.getLocation().getWorld().getHighestBlockYAt(p.getLocation()), p.getLocation().getBlockZ());
+			    		loc.add(0, 1, 0);
+			    		
+    				    int blockLocation = p.getLocation().getWorld().getHighestBlockYAt(p.getLocation());
+    				    if(blockLocation <= p.getLocation().getY()) {
+    				    	event.setDamage(event.getDamage() * 1.2);
+    				    }
+			    	}
+				}
 				if(event.getCause() == DamageCause.FIRE || event.getCause() == DamageCause.FIRE_TICK || event.getCause() == DamageCause.HOT_FLOOR || event.getCause() == DamageCause.LAVA || event.getCause() == DamageCause.MELTING) {
 					event.setCancelled(true);
 				}
 				if (p.getWorld().getEnvironment() == Environment.NETHER) {
 					event.setDamage(event.getDamage() * 0.7);
 				}
+				
 			}
 			
 			if (talent.equals("Hydrokinetic") || talent.equals("Frostbender")) {
@@ -384,7 +488,7 @@ public class Events implements Listener{
 				}
 				else {
 					if (p.getWorld().getEnvironment() == Environment.NETHER) {
-						event.setDamage(event.getDamage() * 1.3);
+						event.setDamage(event.getDamage() * 1.2);
 					}
 				}
 			}
@@ -408,6 +512,7 @@ public class Events implements Listener{
 					p.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 100, 4));
 					p.addPotionEffect(new PotionEffect(PotionEffectType.SATURATION, 20, 3));
 				}
+				
 			}
 		}
 		
@@ -425,9 +530,20 @@ public class Events implements Listener{
 			}
 			
 			if (talent.equals("Pyrokinetic")) {
-				if (event.getDamager().getFireTicks() != 0) {
-					event.setDamage(event.getDamage() * 1.5);
+				if (p.getFireTicks() !=  0 && !p.hasPotionEffect(PotionEffectType.INCREASE_DAMAGE)) {
+					event.setDamage(event.getDamage() * 1.4);
 				}
+				if (event.getEntity() instanceof Player) {
+					if (((int) (Math.random() * 20)) == 7) {
+						LivingEntity victim = (LivingEntity) event.getEntity();
+						victim.setFireTicks(100);
+					}
+				}
+				else {
+					LivingEntity victim = (LivingEntity) event.getEntity();
+					victim.setFireTicks(100);
+				}
+				
 			}
 			
 			if (talent.equals("Hydrokinetic")) {
@@ -438,6 +554,8 @@ public class Events implements Listener{
 			    	event.setDamage(event.getDamage() * 1.3);
 			    }
 			}
+			
+			
 		}
 	}
 	
@@ -540,19 +658,47 @@ public class Events implements Listener{
 		        			if (drops.isEmpty()) {
 			        			return;
 			        		}
+		        			
+		        			boolean smeltable = false;
+		        			
+		        			
 			        		for (ItemStack item : drops) {
 			        			if (item.getType().toString().equals("IRON_ORE")) {
 			        				ItemStack oldItem = new ItemStack(Material.IRON_ORE);
 			        				item = new ItemStack(Material.IRON_INGOT);
 			        				drops.remove(oldItem);
 			        				drops.add(item);
+			        				smeltable = true;
 			        			}
 			        			if (item.getType().toString().equals("GOLD_ORE")) {
 			        				ItemStack oldItem = new ItemStack(Material.GOLD_ORE);
 			        				item = new ItemStack(Material.GOLD_INGOT);
 			        				drops.remove(oldItem);
 			        				drops.add(item);
+			        				smeltable = true;
 			        			}
+			        			if (item.getType().toString().equals("COBBLESTONE")) {
+			        				ItemStack oldItem = new ItemStack(Material.COBBLESTONE);
+			        				item = new ItemStack(Material.STONE);
+			        				drops.remove(oldItem);
+			        				drops.add(item);
+			        				smeltable = true;
+			        			}
+			        			if (item.getType().toString().equals("STONE")) {
+			        				ItemStack oldItem = new ItemStack(Material.STONE);
+			        				item = new ItemStack(Material.STONE);
+			        				drops.remove(oldItem);
+			        				drops.add(item);
+			        				smeltable = true;
+			        			}
+			        		}
+			        		
+			        		if (smeltable) {
+			        			event.setDropItems(false);
+			        			if (!inv.getItemInMainHand().getItemMeta().hasEnchant(EnchantmentsPlus.TELEKINESIS)) {
+			        				event.getBlock().getWorld().dropItemNaturally(event.getBlock().getLocation(), new ItemStack(drops.iterator().next()));
+			        			}
+			        			p.getWorld().playEffect(event.getBlock().getLocation(), Effect.MOBSPAWNER_FLAMES, 12);
 			        		}
 			        	}
 				        if (inv.getItemInMainHand().getItemMeta().hasEnchant(EnchantmentsPlus.TELEKINESIS)) {
@@ -639,15 +785,17 @@ public class Events implements Listener{
 	}
 	
 	@EventHandler
-    public void onPlayerItemConsumeEvent(PlayerItemConsumeEvent e) {
+    public void onPlayerItemConsumeEvent(PlayerItemConsumeEvent event) {
 		
-		Player p = e.getPlayer();
+		Player p = event.getPlayer();
        
-        if (e.getItem() != null && e.getItem().hasItemMeta()) {
-            if (e.getItem().getItemMeta() instanceof PotionMeta) {
+        if (event.getItem() != null && event.getItem().hasItemMeta()) {
+            if (event.getItem().getItemMeta() instanceof PotionMeta) {
            
-       
-                final PotionMeta meta = (PotionMeta) e.getItem().getItemMeta();
+            	
+            	
+            	
+                final PotionMeta meta = (PotionMeta) event.getItem().getItemMeta();
                 final PotionData data = meta.getBasePotionData();
                 if(data.getType() == PotionType.MUNDANE || data.getType() == PotionType.AWKWARD) {
                 	Main.alchemyPointsTracker.put(p.getUniqueId().toString(), Main.alchemyPointsTracker.get(p.getUniqueId().toString()) + 1);
@@ -660,19 +808,36 @@ public class Events implements Listener{
                 }
                 else {
                 	
-                }
+                }            
                 
                 
-                if (data.isUpgraded()) {
-                	
+                if (data.isUpgraded() || data.isExtended()) {
+                	Main.alchemyPointsTracker.put(p.getUniqueId().toString(), Main.alchemyPointsTracker.get(p.getUniqueId().toString()) + 5);
                 }
             }
         }
 	}
 	
+	
+	@EventHandler
+	public void onPotionEffect(EntityPotionEffectEvent event) {
+		if (event.getEntity() instanceof Player && (event.getCause().equals(EntityPotionEffectEvent.Cause.POTION_DRINK) || event.getCause().equals(EntityPotionEffectEvent.Cause.POTION_SPLASH)
+				|| event.getCause().equals(EntityPotionEffectEvent.Cause.ARROW) || event.getCause().equals(EntityPotionEffectEvent.Cause.TOTEM)
+				|| event.getCause().equals(EntityPotionEffectEvent.Cause.DOLPHIN) || event.getCause().equals(EntityPotionEffectEvent.Cause.BEACON))) {
+			Player p = (Player) event.getEntity();
+			if (Main.talentHashMap.get(p.getUniqueId().toString()).equals("Shaman") || Main.talentHashMap.get(p.getUniqueId().toString()).equals("Poison")) {
+				PotionEffect potionEffect = event.getNewEffect();
+				event.setCancelled(true);
+				p.addPotionEffect(new PotionEffect(potionEffect.getType(), potionEffect.getDuration() * 2, 0));
+			}
+			
+		}
+		
+	}
+	
 	@EventHandler
 	public void onEntityTarget(EntityTargetLivingEntityEvent event) {
-		event.setTarget(null);
+		//event.setTarget(null);
 	}
 	
 	
@@ -687,6 +852,109 @@ public class Events implements Listener{
 		}
 		// snow walking
 		// event.getPlayer().getWorld().getBlockAt(new Location(event.getPlayer().getWorld(), event.getPlayer().getLocation().getBlockX(), event.getPlayer().getLocation().getBlockY(), event.getPlayer().getLocation().getBlockZ())).setType(Material.SNOW);
+	}
+	
+	
+	
+	
+	
+	
+	
+	// Blood Moon events
+	
+	@EventHandler
+	public void onCreatureSpawn(CreatureSpawnEvent event) {
+		if (Main.isBloodMoon) {
+			if (event.getEntityType() == EntityType.CREEPER) {
+				Creeper creeper = (Creeper) event.getEntity();
+				if (((int) (Math.random() * 5)) == 3) {
+					creeper.setPowered(true);
+					creeper.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 6000, 0));
+				}
+				
+			}
+			else if (event.getEntityType() == EntityType.ZOMBIE) {
+				Zombie zombie = (Zombie) event.getEntity();
+				zombie.getEquipment().setChestplate(new ItemStack(Material.GOLDEN_CHESTPLATE));
+				zombie.getEquipment().setLeggings(new ItemStack(Material.CHAINMAIL_LEGGINGS));
+				zombie.getEquipment().setBoots(new ItemStack(Material.NETHERITE_BOOTS));
+				zombie.getEquipment().setBootsDropChance(0);
+				zombie.getEquipment().setItemInMainHand(new ItemStack(Material.IRON_AXE));
+				zombie.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 6000, 0));
+			}
+			else if (event.getEntityType() == EntityType.SKELETON) {
+				Skeleton skeleton = (Skeleton) event.getEntity();
+				ItemStack bow = new ItemStack(Material.BOW);
+				
+				// THEY HIT LIKE TRUCKS
+				bow.addEnchantment(Enchantment.ARROW_FIRE, 1);
+				bow.addEnchantment(Enchantment.ARROW_DAMAGE, 1);
+				bow.addEnchantment(Enchantment.ARROW_KNOCKBACK, 1);
+				
+				skeleton.getEquipment().setChestplate(new ItemStack(Material.CHAINMAIL_CHESTPLATE));
+				skeleton.getEquipment().setLeggings(new ItemStack(Material.IRON_LEGGINGS));
+				skeleton.getEquipment().setBoots(new ItemStack(Material.GOLDEN_BOOTS));
+				skeleton.getEquipment().setItemInMainHand(bow);
+				skeleton.getEquipment().setItemInMainHandDropChance(0);
+				
+				
+				skeleton.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 6000, 0));
+			}
+			else if (event.getEntityType() == EntityType.SPIDER) {
+				Spider spider = (Spider) event.getEntity();
+				spider.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 6000, 0));
+				spider.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 6000, 0));
+			}
+			else if (event.getEntityType() == EntityType.DROWNED) {
+				Zombie zombie = (Zombie) event.getEntity();
+				zombie.getEquipment().setChestplate(new ItemStack(Material.NETHERITE_CHESTPLATE));
+				zombie.getEquipment().setChestplateDropChance(0);
+				if (((int) (Math.random() * 10)) >= 7) {
+					zombie.getEquipment().setItemInMainHand(new ItemStack(Material.TRIDENT));
+				}	
+			}
+			
+			if (event.getSpawnReason().equals(SpawnReason.SPAWNER)) {
+				event.setCancelled(true);
+			}	
+		}
+		
+	}
+	
+	@EventHandler
+	public void onBloodMoonMobDamage(EntityDamageByEntityEvent event) {
+		if (Main.isBloodMoon) {
+			if (event.getEntity() instanceof Player && (event.getDamager() instanceof Zombie || event.getDamager() instanceof Spider || event.getDamager() instanceof Drowned)) {
+				Player p = (Player) event.getEntity();
+				if (((int) (Math.random() * 5)) == 3) {
+					p.addPotionEffect(new PotionEffect(PotionEffectType.POISON, 60, 0));
+				}
+			}
+		}
+		
+	}
+	
+	@EventHandler
+	public void onBloodMoonMobDeath(EntityDeathEvent event) {
+		if (Main.isBloodMoon) {
+			if (event.getEntity() instanceof Zombie || event.getEntity() instanceof Spider || event.getEntity() instanceof Skeleton || event.getEntity() instanceof Creeper || event.getEntity() instanceof Drowned) {
+				Collection<ItemStack> drops = event.getDrops();
+				if (((int) (Math.random() * 4)) == 1) {
+					int range = Main.bloodMoonLootTable.size();
+					drops.add(Main.bloodMoonLootTable.get((int) (Math.random() * range)));
+				}
+				
+			}
+		}
+		
+	}
+	
+	@EventHandler
+	public void onPlayerSleep(PlayerBedEnterEvent event) {
+		if (Main.isBloodMoon) {
+			event.setCancelled(true);
+			event.getPlayer().sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "You do not feel tired.");
+		}
 	}
 	
 }
