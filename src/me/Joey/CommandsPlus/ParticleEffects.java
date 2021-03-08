@@ -6,7 +6,11 @@ import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Particle;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
 
 public class ParticleEffects {
 	
@@ -260,6 +264,90 @@ public class ParticleEffects {
             			p.getWorld().spawnParticle(Particle.FLAME, first, 0);
                 	}
             	}
+            }
+		}, 0, 1L);
+	}
+	
+	
+	// Interactive Particle Effects
+	public void damagingFireBurst() {
+		// check every 250ms for potion effects
+				taskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(Main.getPlugin(Main.class), new Runnable() {
+					double var = 0;
+					Location loc, first;
+					int i = 0;
+					int ringDensity = 32;
+					ParticleData particle = new ParticleData(p.getUniqueId());
+					
+					
+		            @Override
+		            public void run() {
+		            	if (!particle.hasID()) {
+		            		particle.setID(taskID);
+		            	}
+		            	loc = p.getLocation();
+		            	
+		            	for (int j = 0; j < ringDensity; j++) {
+		            		var += Math.PI / ringDensity;
+			            	first = loc.clone().add(Math.sin(var) * i, 0, Math.cos(var) * i);
+			            	p.getWorld().spawnParticle(Particle.LAVA, first, 0);
+		            	}
+		            	
+		            	
+		            	i++;
+		            	
+		            	for (Entity entity : p.getWorld().getEntities()) {
+		            		if (entity.getLocation().distance(loc) < i + 1) {
+		            			entity.setFireTicks(50);
+		            		}
+		            	}
+		            	
+		            	if (i > 10) {
+				    		Bukkit.getScheduler().cancelTask(taskID);
+				    	}
+		            }
+				}, 0, 1L);
+	}
+	
+	public void weakeningArcaneBurst() {
+		// check every 250ms for potion effects
+		taskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(Main.getPlugin(Main.class), new Runnable() {
+			double var = 0;
+			Location loc, first;
+			int i = 0;
+			int ringDensity = 32;
+			ParticleData particle = new ParticleData(p.getUniqueId());
+			
+			
+            @Override
+            public void run() {
+            	if (!particle.hasID()) {
+            		particle.setID(taskID);
+            	}
+            	loc = p.getLocation();
+            	
+            	for (int j = 0; j < ringDensity; j++) {
+            		var += Math.PI / ringDensity;
+	            	first = loc.clone().add(Math.sin(var) * i, 0.1, Math.cos(var) * i);
+	            	p.getWorld().spawnParticle(Particle.ENCHANTMENT_TABLE, first, 0);
+            	}
+            	
+            	
+            	i++;
+            	
+            	for (Entity entity : p.getWorld().getEntities()) {
+            		if (entity instanceof LivingEntity && entity.getLocation().distance(loc) < i + 1) {
+            			LivingEntity e = (LivingEntity) entity;
+            			if (!e.equals(p)) {
+            				e.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 200, 0));
+            			}
+            			
+            		}
+            	}
+            	
+            	if (i > 10) {
+		    		Bukkit.getScheduler().cancelTask(taskID);
+		    	}
             }
 		}, 0, 1L);
 	}

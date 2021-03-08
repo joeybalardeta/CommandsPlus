@@ -8,7 +8,10 @@ author: Joey_Balardeta
 commands:
   C+help:
   Talents:
+  Top:
   Reeval:
+  Setrank:
+  Getplayerhead:
   Vanillamode:
   Cords:
   Claim:
@@ -23,3 +26,5 @@ commands:
   Credits:
   Bonkstick:
   Yeehaw:
+  Amongus:
+  Test:

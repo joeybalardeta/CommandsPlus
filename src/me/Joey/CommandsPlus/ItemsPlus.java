@@ -23,10 +23,10 @@ public class ItemsPlus {
 	public static ItemStack superTNT;
 	public static ItemStack thugnarsGlock;
 	public static ItemStack dashSword;
+	public static ItemStack trackingBow;
 	
 	
 	// custom armor
-	public static ItemStack avianElytra;
 	
 	
 	// custom tools
@@ -35,10 +35,14 @@ public class ItemsPlus {
 	
 	
 	// custom potions
-	public static ItemStack absorbtion;
+	public static ItemStack absorbtionPotion;
+	public static ItemStack hastePotion;
 	
 	
-	// custom talismans
+	// custom class items
+	public static ItemStack stasisCrystal;
+	public static ItemStack arcaneCrystal;
+	public static ItemStack avianElytra;
 	
 	
 	// custom miscellaneous
@@ -51,6 +55,7 @@ public class ItemsPlus {
 	public static ItemStack quickPick;
 	public static ItemStack telekinesisBook;
 	public static ItemStack smeltingBook;
+	public static ItemStack gunpowder;
 	
 	
 	// custom admin items
@@ -66,9 +71,11 @@ public class ItemsPlus {
 		// custom weapons
 		createThugnarsGlock();
 		createDashSword();
+		createTrackingBow();
+		
 		
 		// custom armor
-		createAvianElytra();
+		
 		
 		// custom tools
 		createTimberAxe();
@@ -79,7 +86,10 @@ public class ItemsPlus {
 
 		
 		
-		// custom talismans
+		// custom class items
+		createAvianElytra();
+		createStasisCrystal();
+		createArcaneCrystal();
 		
 		
 		// custom miscellaneous
@@ -87,10 +97,9 @@ public class ItemsPlus {
 
 		
 		// custom crafts
-		createBottleOfXP();
-		createSlimeBall();
 		createTelekinesisBook();
 		createSmeltingBook();
+		createGunpowder();
 		
 		
 		// custom admin items
@@ -158,26 +167,41 @@ public class ItemsPlus {
 		dashSword = item;
 	}
 	
-	
-	// custom armor
-	public static void createAvianElytra() {
+	public static void createTrackingBow() {
 		// create item
-		ItemStack item = new ItemStack(Material.ELYTRA, 1);
+		ItemStack item = new ItemStack(Material.BOW, 1);
 		
 		
 		// set item metadata
 		ItemMeta meta = item.getItemMeta();
-		meta.setUnbreakable(true);
-		meta.addEnchant(Enchantment.BINDING_CURSE, 1, true);
-		meta.addEnchant(Enchantment.VANISHING_CURSE, 1, true);
-		meta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_UNBREAKABLE);
-		
+		meta.setDisplayName(ChatColor.LIGHT_PURPLE + "Tracking Bow");
+		List<String> lore = new ArrayList <>();
+		lore.add(ChatColor.YELLOW + "Pretty self explanatory.");
+		lore.add(ChatColor.WHITE + "");
+		lore.add(ChatColor.GRAY + "Aimbot I");
+		meta.setLore(lore);
 		item.setItemMeta(meta);
+		
+		// create crafting recipe
+		
+		// shaped recipe
+		ShapedRecipe SR = new ShapedRecipe(NamespacedKey.minecraft("tracking_bow"), item);
+		SR.shape("EEE",
+				 "EBE",
+				 "EEE");
+		
+		SR.setIngredient('E', Material.ENDER_PEARL);
+		SR.setIngredient('B', Material.BOW);
+		Bukkit.getServer().addRecipe(SR);
 		
 		
 		// set ItemStack item to the item that was created in this function
-		avianElytra = item;
+		trackingBow = item;
 	}
+	
+	
+	
+	// custom armor
 	
 	
 	// custom tools
@@ -257,10 +281,86 @@ public class ItemsPlus {
 	
 	
 	// custom potions
+	public static void createAbsorbtionPotion() {
+		ItemStack item = new ItemStack(Material.POTION);
+		
+		
+		// set item metadata
+		ItemMeta meta = item.getItemMeta();
+		meta.setDisplayName(ChatColor.GOLD + "Potion of Absorbtion");
+		List<String> lore = new ArrayList<String>();
+		lore.add(ChatColor.BLUE + "Absorbtion ");
+		meta.setLore(lore);
+		
+		item.setItemMeta(meta);
+		
+		
+		// set ItemStack item to the item that was created in this function
+		absorbtionPotion = item;
+	}
+	
+	// custom class items
+	public static void createAvianElytra() {
+		// create item
+		ItemStack item = new ItemStack(Material.ELYTRA, 1);
+		
+		
+		// set item metadata
+		ItemMeta meta = item.getItemMeta();
+		meta.setUnbreakable(true);
+		meta.addEnchant(Enchantment.BINDING_CURSE, 1, true);
+		meta.addEnchant(Enchantment.VANISHING_CURSE, 1, true);
+		meta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_UNBREAKABLE);
+		
+		item.setItemMeta(meta);
+		
+		
+		// set ItemStack item to the item that was created in this function
+		avianElytra = item;
+	}
+	
+	public static void createStasisCrystal() {
+		ItemStack item = FunctionsPlus.getPlayerHead("Tecno_");
+		
+		
+		// set item metadata
+		ItemMeta meta = item.getItemMeta();
+		meta.setDisplayName(ChatColor.AQUA + "Stasis Crystal");
+		List<String> lore = new ArrayList<String>();
+		lore.add(ChatColor.LIGHT_PURPLE + "The fabled Stasis Crystal...");
+		lore.add(ChatColor.LIGHT_PURPLE + "what power could it hold?");
+		meta.setLore(lore);
+		meta.addEnchant(Enchantment.VANISHING_CURSE, 1, true);
+		meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+		
+		item.setItemMeta(meta);
+		
+		
+		// set ItemStack item to the item that was created in this function
+		stasisCrystal = item;
+	}
 	
 	
-	// custom talismans
-	
+	public static void createArcaneCrystal() {
+		ItemStack item = FunctionsPlus.getPlayerHead("Chaochris");
+		
+		
+		// set item metadata
+		ItemMeta meta = item.getItemMeta();
+		meta.setDisplayName(ChatColor.DARK_PURPLE + "Arcane Crystal");
+		List<String> lore = new ArrayList<String>();
+		lore.add(ChatColor.LIGHT_PURPLE + "The fabled Arcane Crystal...");
+		lore.add(ChatColor.LIGHT_PURPLE + "what power could it hold?");
+		meta.setLore(lore);
+		meta.addEnchant(Enchantment.VANISHING_CURSE, 1, true);
+		meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+		
+		item.setItemMeta(meta);
+		
+		
+		// set ItemStack item to the item that was created in this function
+		arcaneCrystal = item;
+	}
 	
 	// custom miscellaneous
 	
@@ -430,6 +530,36 @@ public class ItemsPlus {
 		smeltingBook = item;
 	}
 	
+	
+	public static void createGunpowder() {
+		// create item
+		ItemStack item = new ItemStack(Material.GUNPOWDER, 3);
+		
+		
+		// create crafting recipe
+		
+		// shaped recipe
+		ShapedRecipe SR = new ShapedRecipe(NamespacedKey.minecraft("gunpowder_custom"), item);
+		SR.shape("RRR",
+				 "FFF",
+				 "CCC");
+		
+		SR.setIngredient('R', Material.REDSTONE);
+		SR.setIngredient('F', Material.FLINT);
+		SR.setIngredient('C', Material.COAL);
+		Bukkit.getServer().addRecipe(SR);
+		
+		// shapeless recipe
+		ShapelessRecipe SLR = new ShapelessRecipe(NamespacedKey.minecraft("gunpowder_custom_shapeless"), item);
+		SLR.addIngredient(3, Material.REDSTONE);
+		SLR.addIngredient(3, Material.FLINT);
+		SLR.addIngredient(3, Material.COAL);
+		Bukkit.getServer().addRecipe(SLR);
+		
+		
+		// set ItemStack item to the item that was created in this function
+		gunpowder = item;
+	}
 	
 	// custom admin items
 	

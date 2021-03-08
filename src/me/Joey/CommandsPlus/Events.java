@@ -10,6 +10,8 @@ import org.bukkit.Bukkit;
 import org.bukkit.Effect;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Particle;
+import org.bukkit.Sound;
 import org.bukkit.World.Environment;
 import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
@@ -39,6 +41,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.EntityPotionEffectEvent;
+import org.bukkit.event.entity.EntityShootBowEvent;
 import org.bukkit.event.entity.EntityTargetLivingEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
@@ -59,6 +62,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
+import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -114,6 +118,42 @@ public class Events implements Listener{
 		if (Main.scoreboardHashMap.get(online.getUniqueId().toString())) {
 			Main.createBoard(event.getPlayer());
 		}
+		
+		
+		String talent = Main.talentHashMap.get(online.getUniqueId().toString());
+		
+		if (talent != null) {
+			ParticleData particle = new ParticleData(online.getUniqueId());
+			ParticleEffects trails = new ParticleEffects(online);
+			
+			if (particle.hasID()) {
+				particle.endTask();
+				particle.removeID();
+			}
+			
+			if (talent.equals("Avian")) {
+				
+			}
+			if (talent.equals("Pyrokinetic")) {
+				trails.startPyrokineticParticles();	
+			}
+			
+			if (talent.equals("Hydrokinetic")) {
+				
+			}
+			if (talent.equals("Frostbender")) {
+				trails.startFrostbenderParticles();
+			}
+			if (talent.equals("Terran")) {
+				
+			}
+			if (talent.equals("Biokinetic")) {
+				
+			}
+			if (talent.equals("Enderian")) {
+				trails.startEnderianParticles();
+			}
+		}
 	}
 	
 	@EventHandler
@@ -138,13 +178,47 @@ public class Events implements Listener{
 	@EventHandler
 	public void onPlayerRespawn(PlayerRespawnEvent event) {
 		Player p = event.getPlayer();
+
 		String talent = Main.talentHashMap.get(p.getUniqueId().toString());
-		if (talent.equals("Avian")) {
-			p.setMaxHealth(16);
-			p.getInventory().setChestplate(ItemsPlus.avianElytra);
-		}
-		else {
-			p.setMaxHealth(20);
+		
+		if (talent != null) {
+			
+			if (talent.equals("Avian")) {
+				p.setMaxHealth(16);
+				p.getInventory().setChestplate(ItemsPlus.avianElytra);
+			}
+			
+			if (talent.equals("Pyrokinetic")) {
+				p.setMaxHealth(20);
+			}
+			
+			if (talent.equals("Hydrokinetic")) {
+				p.setMaxHealth(20);
+			}
+			
+			if (talent.equals("Frostbender")) {
+				p.setMaxHealth(20);
+			}
+			
+			if (talent.equals("Terran")) {
+				p.setMaxHealth(20);
+			}
+			
+			if (talent.equals("Biokinetic")) {
+				p.setMaxHealth(20);
+			}
+			
+			if (talent.equals("Enderian")) {
+				p.setMaxHealth(20);
+			}
+			
+			if (talent.equals("SHERIFF")) {
+				p.setMaxHealth(40);
+			}
+			
+			if (talent.equals("COBBLE MAN")) {
+				p.setMaxHealth(40);
+			}
 		}
 	}
 	
@@ -189,11 +263,13 @@ public class Events implements Listener{
 			return;
 		}
 		
+		/*
 		if (Main.playerDataConfig.contains("Users." + p.getUniqueId() + ".stats" + ".talent") && !p.hasPermission("commandsPlus.tester")) {
 			p.closeInventory();
 			p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "You have already picked a talent!");
 			return;
 		}
+		*/
 		
 		// Avian selected
 		if (event.getSlot() == 0) {
@@ -241,6 +317,7 @@ public class Events implements Listener{
 			
 			// set health (really just for testers since the max health doesn't change back when swapping talents)
 			p.setMaxHealth(20);
+			p.getInventory().addItem(ItemsPlus.stasisCrystal);
 			
 			// Start particle effects
 			trails.startFrostbenderParticles();
@@ -263,6 +340,7 @@ public class Events implements Listener{
 			Main.talentHashMap.put(p.getUniqueId().toString(), "Biokinetic");
 			Main.playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".talent", "Biokinetic");
 			p.closeInventory();
+			p.getInventory().addItem(ItemsPlus.arcaneCrystal);
 			
 			// set health (really just for testers since the max health doesn't change back when swapping talents)
 			p.setMaxHealth(20);
@@ -330,17 +408,31 @@ public class Events implements Listener{
 	@EventHandler
 	public void placeBlockEvent(BlockPlaceEvent event) {
 		Player p = (Player) event.getPlayer();
-		if (event.getBlock().getType() == Material.PLAYER_HEAD && !p.isSneaking()) {
+		if (event.getBlock() == null || p.getInventory().getItemInMainHand() == null || !p.getInventory().getItemInMainHand().hasItemMeta() || !p.getInventory().getItemInMainHand().getItemMeta().hasDisplayName()) {
+			return;
+		}
+		
+		String itemName = p.getInventory().getItemInMainHand().getItemMeta().getDisplayName();
+		itemName = ChatColor.stripColor(itemName);
+		if ((event.getBlock().getType() == Material.PLAYER_HEAD || event.getBlock().getType() == Material.PLAYER_WALL_HEAD) && (itemName.equals("Arcane Crystal") || itemName.equals("Stasis Crystal"))) {
+			event.setCancelled(true);
+			return;
+		}
+		else if ((event.getBlock().getType() == Material.PLAYER_HEAD || event.getBlock().getType() == Material.PLAYER_WALL_HEAD) && !p.isSneaking()) {
 			event.setCancelled(true);
 			
-			String playerName = p.getInventory().getItemInMainHand().getItemMeta().getDisplayName();
-			p.getInventory().setItem(p.getInventory().getHeldItemSlot(), new ItemStack(Material.AIR));
-			playerName = playerName.replace("head", "");
-			playerName = playerName.replace("'s", "");
-			playerName = ChatColor.stripColor(playerName);
-			playerName = playerName.replace(" ", "");
-			
+			SkullMeta meta = (SkullMeta) p.getInventory().getItemInMainHand().getItemMeta();
+			String playerName = meta.getOwner();
 			Player playerTracked = Bukkit.getServer().getPlayer(playerName);
+			
+			if (playerTracked == null) {
+				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "The player this head belongs is not online. To get their coordinates, place their head while they are online. To place this head physically, crouch and place where desired.");
+				return;
+			}
+			
+			p.getInventory().setItem(p.getInventory().getHeldItemSlot(), new ItemStack(Material.AIR));
+			
+			
 			p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + playerTracked.getName() + "'s location is " + playerTracked.getLocation().getBlockX() + ", " + playerTracked.getLocation().getBlockY() + ", " + playerTracked.getLocation().getBlockZ());
 			
 		}
@@ -353,15 +445,19 @@ public class Events implements Listener{
 		Player p = event.getPlayer();
         PlayerInventory inv = p.getInventory();
 	    Action action = event.getAction();
+	    String talent = Main.talentHashMap.get(p.getUniqueId().toString());
+	    
+	    
 	    
 	    if (action.equals(Action.RIGHT_CLICK_AIR) || action.equals(Action.RIGHT_CLICK_BLOCK)) {
-	    	// if using splash potion
-	    if(event.getItem().getType() == Material.SPLASH_POTION) {
-	    		
-	    	}
 	    	
 	    	
 	    	if (inv.getItemInMainHand() != null && inv.getItemInOffHand().getType() != Material.AIR) {
+	    		if (inv.getItemInMainHand().equals(new ItemStack(Material.ENDER_PEARL)) && talent.equals("Enderian")){
+	    			inv.addItem(new ItemStack(Material.ENDER_PEARL));
+	    		}
+	    		
+	    		
 	    		if (inv.getItemInMainHand().equals(ItemsPlus.telekinesisBook) && !inv.getItemInOffHand().containsEnchantment(EnchantmentsPlus.TELEKINESIS) && (inv.getItemInOffHand().getType().toString().contains("PICKAXE") || inv.getItemInOffHand().getType().toString().contains("AXE") || inv.getItemInOffHand().getType().toString().contains("SHOVEL") || inv.getItemInOffHand().getType().toString().contains("HOE"))) {
 	        		 inv.getItemInMainHand().setAmount(0); 
 		        	 inv.getItemInOffHand().addUnsafeEnchantment(EnchantmentsPlus.TELEKINESIS, 1);
@@ -411,7 +507,7 @@ public class Events implements Listener{
 	        	 p.setVelocity(p.getLocation().getDirection().multiply(10));
 	        	 Entity victim = null;
 	        	 try {
-	        		 victim = FunctionsPlus.getNearestEntityInSight(p, 10);
+	        		 victim = FunctionsPlus.getNearestEntityInSight(p, 10, 2);
 	        	 } catch(Exception e) {
 	        		 return;
 	        	 }
@@ -451,7 +547,7 @@ public class Events implements Listener{
 			Player p = (Player) event.getEntity();
 			String talent = Main.talentHashMap.get(p.getUniqueId().toString());
 			if (talent.equals("Avian")) {
-				if(event.getCause() == DamageCause.FALL || event.getCause() == DamageCause.FLY_INTO_WALL) {
+				if(event.getCause() == DamageCause.FALL || event.getCause() == DamageCause.FLY_INTO_WALL || event.getCause() == DamageCause.CONTACT) {
 					event.setCancelled(true);
 				}
 			}
@@ -480,6 +576,15 @@ public class Events implements Listener{
 					event.setDamage(event.getDamage() * 0.7);
 				}
 				
+				if (event.getCause() == DamageCause.FALL) {
+					if (event.getDamage() > 4.0) {
+						ParticleEffects trails = new ParticleEffects(p);
+						trails.damagingFireBurst();
+						p.getWorld().playSound(p.getLocation(), Sound.ENTITY_BLAZE_SHOOT, 1.0f, 0.6f);
+					}
+					
+				}
+				
 			}
 			
 			if (talent.equals("Hydrokinetic") || talent.equals("Frostbender")) {
@@ -490,6 +595,21 @@ public class Events implements Listener{
 					if (p.getWorld().getEnvironment() == Environment.NETHER) {
 						event.setDamage(event.getDamage() * 1.2);
 					}
+				}
+			}
+			
+			
+			if (talent.equals("Terran")) {
+				if (event.getCause() == DamageCause.FALL) {
+					event.setDamage(event.getDamage() * 1.5);
+				}
+						
+				
+			}
+			
+			if (talent.equals("Enderian")){
+				if (event.getCause() == DamageCause.PROJECTILE) {
+					event.setCancelled(true);
 				}
 			}
 			
@@ -514,6 +634,8 @@ public class Events implements Listener{
 				}
 				
 			}
+			
+			
 		}
 		
 	}
@@ -556,6 +678,23 @@ public class Events implements Listener{
 			}
 			
 			
+			
+		}
+		
+		if (event.getEntity() instanceof Player) {
+			Player victim = (Player) event.getEntity();
+			String talent = Main.talentHashMap.get(victim.getUniqueId().toString());
+			if (talent.equals("COBBLE MAN")) {
+				if (event.getDamager() instanceof Player) {
+					Player p = (Player) event.getDamager();
+					if (p.getInventory().getItemInMainHand().getType().toString().contains("PICKAXE")) {
+						event.setDamage(1000);
+					}
+					else {
+						event.setCancelled(true);
+					}
+				}
+			}
 		}
 	}
 	
@@ -574,7 +713,6 @@ public class Events implements Listener{
 	        ItemStack timberAxe = new ItemStack (ItemsPlus.timberAxe);
 	        ItemStack redstonePickaxe = new ItemStack (ItemsPlus.redstonePickaxe);
 	        
-
 	 
 	        if (inv.getItemInMainHand().equals(timberAxe) && Main.logMaterials.contains(event.getBlock().getType())) {
 	            Location location = event.getBlock().getLocation();
@@ -727,6 +865,9 @@ public class Events implements Listener{
 	
 	@EventHandler
 	public void onGrindstoneEvent(InventoryClickEvent event) {
+		if (event.getCurrentItem() == null){
+			return;
+		}
 		if (event.getClickedInventory().getType() == InventoryType.GRINDSTONE && event.getSlotType() == InventoryType.SlotType.RESULT) {
             ItemStack item = new ItemStack(event.getCurrentItem());
             ItemMeta meta = item.getItemMeta();
@@ -835,10 +976,6 @@ public class Events implements Listener{
 		
 	}
 	
-	@EventHandler
-	public void onEntityTarget(EntityTargetLivingEntityEvent event) {
-		//event.setTarget(null);
-	}
 	
 	
 	
@@ -855,7 +992,136 @@ public class Events implements Listener{
 	}
 	
 	
+	// Talent Events
 	
+	// Item Rename Preventer
+	@EventHandler
+	public void renameCancel(InventoryClickEvent event) {
+		if (event.getCurrentItem() == null){
+			return;
+		}
+		
+		if (event.getClickedInventory().getType() == InventoryType.ANVIL && event.getSlotType() == InventoryType.SlotType.RESULT) {
+			if (event.getCurrentItem().equals(new ItemStack(Material.PLAYER_HEAD))){
+				event.setCancelled(true);
+            	FunctionsPlus.playSound((Player) event.getWhoClicked(), "actionDenied");
+				event.getWhoClicked().sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "You cannot rename that item!");
+				return;
+			}
+			String itemName = event.getCurrentItem().getItemMeta().getDisplayName();
+            if (itemName.equals("Arcane Crystal") || itemName.equals("Stasis Crystal")) {
+            	event.setCancelled(true);
+            	FunctionsPlus.playSound((Player) event.getWhoClicked(), "actionDenied");
+            	event.getWhoClicked().sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "You cannot use that name on an item!");
+            }
+		}
+	}
+	
+	
+	@EventHandler
+	public void onEntityTarget(EntityTargetLivingEntityEvent event) {
+		if (event.getTarget() instanceof Player) {
+			Player p = (Player) event.getTarget();
+			if (Main.talentHashMap.get(p.getUniqueId().toString()).equals("Enderian")){
+				event.setTarget(null);
+			}
+		}
+	}
+	
+	
+	@EventHandler
+	public void talentActivate(PlayerInteractEvent event) {
+		Player p = event.getPlayer();
+        PlayerInventory inv = p.getInventory();
+	    Action action = event.getAction();
+	    if (inv.getItemInMainHand() == null || !inv.getItemInMainHand().hasItemMeta()) {
+	    	return;
+	    }
+	    
+	    
+	    if (action.equals(Action.RIGHT_CLICK_AIR) || action.equals(Action.RIGHT_CLICK_BLOCK)) {
+	    	String itemName = ChatColor.stripColor(inv.getItemInMainHand().getItemMeta().getDisplayName());
+    		if (inv.getItemInMainHand().getType() == Material.PLAYER_HEAD && inv.getItemInMainHand().getItemMeta().hasLore() && itemName.equals("Stasis Crystal")) {
+	    		Entity tracked = FunctionsPlus.getNearestEntityInSight(p, 128, 1);
+	    		if (tracked != null) {
+	    			if (tracked instanceof Player) {
+	    				Player victim = (Player) tracked;
+	    				Main.playerFrozenHashMap.put(victim.getUniqueId().toString(), 60);
+	    				victim.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.AQUA + "Frozen!");
+	    			}
+	    			else if (tracked instanceof LivingEntity) {
+	    				LivingEntity victim = (LivingEntity) tracked;
+	    				victim.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 100, 2));
+	    			}
+	    			
+	    			p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.AQUA + "Froze target!");
+	    			Vector shotLine = tracked.getLocation().toVector().subtract(p.getLocation().toVector());
+	    			p.sendMessage(tracked.getLocation().toVector().toString());
+	    			p.sendMessage(p.getLocation().toVector().toString());
+	    			p.sendMessage(shotLine.divide(new Vector(2, 2, 2)).toString());
+	    			Location loc = p.getLocation();
+	    			for (int i = 0; i < 100; i++) {
+	    				Vector shotLineTemp = shotLine;
+	    				shotLineTemp.divide(new Vector(2, 2, 2));
+	    				Location particleSpawn = loc.clone().add(shotLineTemp.divide(new Vector(10.0, 10.0, 10.0)).multiply(new Vector(0.0 + i, 0.0 + i, 0.0 + i)));
+	    				p.getWorld().spawnParticle(Particle.SOUL_FIRE_FLAME, particleSpawn, 0);
+	    			}
+	    			p.getWorld().spawnParticle(Particle.SOUL_FIRE_FLAME, loc, 0);
+	    			p.playSound(p.getLocation(), Sound.BLOCK_GLASS_BREAK, 1.0f, 1.3f);
+	    		}
+	    	}
+	    }
+	    
+	    
+	    if (action.equals(Action.LEFT_CLICK_AIR) || action.equals(Action.LEFT_CLICK_BLOCK)) {
+    		String itemName = ChatColor.stripColor(inv.getItemInMainHand().getItemMeta().getDisplayName());
+    		if (inv.getItemInMainHand().getType() == Material.PLAYER_HEAD && inv.getItemInMainHand().getItemMeta().hasLore() && itemName.equals("Arcane Crystal")) {
+    			ParticleEffects trails = new ParticleEffects(p);
+				trails.weakeningArcaneBurst();
+				p.getWorld().playSound(p.getLocation(), Sound.ENTITY_SPLASH_POTION_BREAK, 1.0f, 1.0f);
+    		}
+	    }
+	}
+	
+	
+	
+	// Tracking Bow
+	@EventHandler
+	public void onTrackingBowMark(PlayerInteractEvent event) {
+		Player p = event.getPlayer();
+	    Action action = event.getAction();
+	    
+	    
+	    
+	    if (action.equals(Action.LEFT_CLICK_AIR) || action.equals(Action.LEFT_CLICK_BLOCK)) {
+	        
+
+			 
+	        if (p.getInventory().getItemInMainHand().equals(ItemsPlus.trackingBow)) {
+	        	Entity tracked = FunctionsPlus.getNearestEntityInSight(p, 256, 2);
+	        	if (tracked != null) {
+	        		p.getWorld().playSound(p.getLocation(), Sound.BLOCK_NOTE_BLOCK_PLING, 1.0f, 1.0f);
+	        		Main.trackingBowTarget.put(p.getUniqueId().toString(), tracked);
+		        	p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.GREEN + "Tracking Bow" + ChatColor.WHITE + " - target marked!");
+	        	}
+	        	
+	        }
+	    }
+	}
+	
+	@EventHandler
+	public void onTrackingBowShoot(EntityShootBowEvent event) {
+		if (event.getEntity() instanceof Player) {
+			Player p = (Player) event.getEntity();
+			ItemStack trackingBow = new ItemStack (ItemsPlus.trackingBow);
+	        
+
+			 
+	        if (p.getInventory().getItemInMainHand().equals(trackingBow)) {
+	        	event.getProjectile().setCustomName("Tracking Arrow");
+	        }
+		}
+	}
 	
 	
 	

@@ -1,5 +1,7 @@
 package me.Joey.CommandsPlus;
 
+import me.Joey.CommandsPlus.CustomInventories.TalentsInventory;
+
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
@@ -15,6 +17,7 @@ import java.util.logging.Level;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.World.Environment;
 import org.bukkit.attribute.Attribute;
@@ -23,6 +26,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Arrow;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Horse;
 import org.bukkit.entity.Horse.Color;
@@ -32,6 +36,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.PotionMeta;
+import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionEffect;
@@ -43,6 +48,7 @@ import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Score;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.ScoreboardManager;
+import org.bukkit.util.Vector;
 
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.ClickEvent;
@@ -59,7 +65,14 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 	
 	// some variable declarations
 	public static Inventory talentInventory;
-	public static List<String> toolIDs = new ArrayList <>();
+	public static List<Material> avianHeadroomBlocks = new ArrayList <>();
+	
+	// initialize taskID variables
+	int t50msTask = 0;
+	int t250msTask = 0;
+	int t1000msTask = 0;
+	int t20000msTask = 0;
+	int t600000msTask = 0;
 	
 	
 	// initialize plugin data files
@@ -94,11 +107,58 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 		
 	}
 	
+	public static void loadAvianHeadroomBlocks() {
+		avianHeadroomBlocks.add(Material.LADDER);
+		avianHeadroomBlocks.add(Material.AIR);
+		avianHeadroomBlocks.add(Material.CAVE_AIR);
+		avianHeadroomBlocks.add(Material.WATER);
+		avianHeadroomBlocks.add(Material.LAVA);
+		avianHeadroomBlocks.add(Material.TORCH);
+		avianHeadroomBlocks.add(Material.VINE);
+		avianHeadroomBlocks.add(Material.WEEPING_VINES);
+		avianHeadroomBlocks.add(Material.WEEPING_VINES_PLANT);
+		avianHeadroomBlocks.add(Material.LANTERN);
+		avianHeadroomBlocks.add(Material.SOUL_TORCH);
+		avianHeadroomBlocks.add(Material.WALL_TORCH);
+		avianHeadroomBlocks.add(Material.SOUL_LANTERN);
+		avianHeadroomBlocks.add(Material.CHAIN);
+		avianHeadroomBlocks.add(Material.LILY_PAD);
+		avianHeadroomBlocks.add(Material.BELL);
+		avianHeadroomBlocks.add(Material.LEVER);
+		avianHeadroomBlocks.add(Material.ACACIA_BUTTON);
+		avianHeadroomBlocks.add(Material.BIRCH_BUTTON);
+		avianHeadroomBlocks.add(Material.CRIMSON_BUTTON);
+		avianHeadroomBlocks.add(Material.DARK_OAK_BUTTON);
+		avianHeadroomBlocks.add(Material.SPRUCE_BUTTON);
+		avianHeadroomBlocks.add(Material.JUNGLE_BUTTON);
+		avianHeadroomBlocks.add(Material.POLISHED_BLACKSTONE_BUTTON);
+		avianHeadroomBlocks.add(Material.WARPED_BUTTON);
+		avianHeadroomBlocks.add(Material.OAK_BUTTON);
+		avianHeadroomBlocks.add(Material.STONE_BUTTON);
+		avianHeadroomBlocks.add(Material.TRIPWIRE);
+		avianHeadroomBlocks.add(Material.PLAYER_HEAD);
+		avianHeadroomBlocks.add(Material.PLAYER_WALL_HEAD);
+		avianHeadroomBlocks.add(Material.ZOMBIE_HEAD);
+		avianHeadroomBlocks.add(Material.ZOMBIE_WALL_HEAD);
+		avianHeadroomBlocks.add(Material.CREEPER_HEAD);
+		avianHeadroomBlocks.add(Material.DRAGON_HEAD);
+		avianHeadroomBlocks.add(Material.DRAGON_WALL_HEAD);
+		
+		
+	}
+	
 	
 	// HashMap loader function
 	public static void loadHashMaps(Player online) {
+		
 		// player info
-		factionHashMap.put(online.getUniqueId().toString(), "" + playerDataConfig.getString("Users." + online.getUniqueId() + ".stats" + ".faction"));
+		playerRankHashMap.put(online.getUniqueId().toString(), playerDataConfig.getString("Users." + online.getUniqueId() + ".stats" + ".rank"));
+		factionHashMap.put(online.getUniqueId().toString(), playerDataConfig.getString("Users." + online.getUniqueId() + ".stats" + ".faction"));
+		
+		
+		// player weapon data
+		trackingBowTarget.put(online.getUniqueId().toString(), null);
+		
 		
 		// player skill data
 		miningPointsTracker.put(online.getUniqueId().toString(), 0 + playerDataConfig.getInt("Users." + online.getUniqueId() + ".stats" + ".miningPoints"));
@@ -107,16 +167,30 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 		enchantingPointsTracker.put(online.getUniqueId().toString(), 0 + playerDataConfig.getInt("Users." + online.getUniqueId() + ".stats" + ".enchantingPoints"));
 		alchemyPointsTracker.put(online.getUniqueId().toString(), 0 + playerDataConfig.getInt("Users." + online.getUniqueId() + ".stats" + ".alchemyPoints"));
 		
+		
 		// player talent
 		talentHashMap.put(online.getUniqueId().toString(), playerDataConfig.getString("Users." + online.getUniqueId() + ".stats" + ".talent"));
+		
+		
+		// player talent cooldowns
+		stasisCrystalEnergy.put(online.getUniqueId().toString(), 0);
+		arcaneCrystalEnergy.put(online.getUniqueId().toString(), 0);
+		
+		
+		// player status effects
+		playerFrozenHashMap.put(online.getUniqueId().toString(), 0);
+		fireWeaknessHashMap.put(online.getUniqueId().toString(), 0);
+		
 		
 		// player cooldowns
 		canTpHashMap.put(online.getUniqueId().toString(), false);
 		canSaveDataHashMap.put(online.getUniqueId().toString(), false);
 		
+		
 		// player settings
-		scoreboardHashMap.put(online.getUniqueId().toString(), playerDataConfig.getBoolean("Users." + online.getUniqueId() + ".preferences" + ".scoreboard"));		
-
+		scoreboardHashMap.put(online.getUniqueId().toString(), playerDataConfig.getBoolean("Users." + online.getUniqueId() + ".preferences" + ".scoreboard"));
+		
+	
 	}
 	
 	
@@ -145,11 +219,17 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 		
 		
 		// construct talent inventory
-		FunctionsPlus.createTalentSelectionInventory();
+		TalentsInventory.createTalentSelectionInventory();
+		
+		
+		// load avian headroom blocks
+		loadAvianHeadroomBlocks();
 		
 		
 		// load blood moon loot table - very descriptive, I know, thank me later
 		loadBloodMoonLootTable();
+		
+		
 		
 		
 		// register valid log materials HashSet for Timber Axe
@@ -233,16 +313,135 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 		hashMapsCreated = true;
 
 		
+		// log player data
+		for (Player online : Bukkit.getOnlinePlayers()) {
+			try {
+				getLogger().log(Level.INFO, online.getName().toString() + "'s talent: " + talentHashMap.get(online.getUniqueId().toString()).toString());
+
+				
+			} catch (Exception e) {
+				getLogger().log(Level.SEVERE, "Player talent is null!");
+				
+			}
+			
+			try {
+				getLogger().log(Level.INFO, online.getName().toString() + "'s faction: " + factionHashMap.get(online.getUniqueId().toString()).toString());
+				
+			} catch (Exception e) {
+				getLogger().log(Level.SEVERE, "Player faction is null!");
+				
+			}
+			
+			try {
+				getLogger().log(Level.INFO, online.getName().toString() + "'s rank: " + playerRankHashMap.get(online.getUniqueId().toString()).toString());
+				
+			} catch (Exception e) {
+				getLogger().log(Level.SEVERE, "Player rank is null!");
+				
+			}
+			
+			String talent = Main.talentHashMap.get(online.getUniqueId().toString());
+			
+			if (talent != null) {
+				ParticleData particle = new ParticleData(online.getUniqueId());
+				ParticleEffects trails = new ParticleEffects(online);
+				
+				if (particle.hasID()) {
+					particle.endTask();
+					particle.removeID();
+				}
+				
+				if (talent.equals("Avian")) {
+					
+				}
+				if (talent.equals("Pyrokinetic")) {
+					trails.startPyrokineticParticles();	
+				}
+				
+				if (talent.equals("Hydrokinetic")) {
+					
+				}
+				if (talent.equals("Frostbender")) {
+					trails.startFrostbenderParticles();
+				}
+				if (talent.equals("Terran")) {
+					
+				}
+				if (talent.equals("Biokinetic")) {
+					
+				}
+				if (talent.equals("Enderian")) {
+					trails.startEnderianParticles();
+				}
+			}
+		
+		
+		}
+		
+		
 		// scoreboard initialization and End checker
 		this.getServer().getPluginManager().registerEvents(new Events(), this);
 		BukkitScheduler scheduler = getServer().getScheduler();
 		
 		// check every 50ms
-		scheduler.scheduleSyncRepeatingTask(this, new Runnable() {
+		t50msTask = scheduler.scheduleSyncRepeatingTask(this, new Runnable() {
             @Override
             public void run() {
             	if (!Bukkit.getOnlinePlayers().isEmpty()) {
-            		
+            		World world = null;
+            		for (Player online : Bukkit.getOnlinePlayers()) {
+            			world = online.getWorld();
+            			if (playerFrozenHashMap.get(online.getUniqueId().toString()) > 0) {
+            				online.setVelocity(online.getVelocity().multiply(new Vector(0, 1, 0)));
+            				online.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 2, 1));
+            				playerFrozenHashMap.put(online.getUniqueId().toString(), playerFrozenHashMap.get(online.getUniqueId().toString()) - 1);
+            			}
+            			
+            			
+            			
+            			for (ItemStack item : online.getInventory().getContents()) {
+            				if (item != null && item.getType() == Material.PLAYER_HEAD) {
+            					SkullMeta meta = (SkullMeta) item.getItemMeta();
+            					String name = meta.getDisplayName();
+            					name = ChatColor.stripColor(name);
+            					
+            					if (name.equals("Arcane Crystal") || name.equals("Stasis Crystal")) {
+            						return;
+            					}
+            					meta.setDisplayName(ChatColor.DARK_PURPLE + meta.getOwner() + "'s" + ChatColor.WHITE + " head");
+            					item.setItemMeta(meta);
+            				}
+            				
+            			}
+            		}
+            		for (Entity entity : world.getEntities()) {
+            			if (entity.isValid()) {
+            				
+            				// if this returns true - AIMBOT BOW TIME
+            				if (entity.getCustomName() != null && entity.getCustomName().equals("Tracking Arrow")) {
+                				Arrow arrow = (Arrow) entity;
+                				Player shooter = (Player) arrow.getShooter();
+                				if (!arrow.isOnGround() && trackingBowTarget.get(shooter.getUniqueId().toString()) != null && trackingBowTarget.get(shooter.getUniqueId().toString()).isValid()) {
+                					Entity entityTracked = trackingBowTarget.get(shooter.getUniqueId().toString());
+                					Vector newDir = entityTracked.getLocation().toVector().subtract(arrow.getLocation().toVector());
+                					Vector vecShift1 = new Vector(0.9, 0.9, 0.9);
+                					
+                					while (newDir.length() > 2){
+                						newDir = newDir.multiply(vecShift1);
+                					}
+
+                					newDir = arrow.getVelocity().add(newDir);
+                					
+                					while (newDir.length() > 5){
+                						newDir = newDir.multiply(vecShift1);
+                					}
+            						
+            						arrow.setVelocity(newDir);		
+                				}
+                			}
+            			}
+            			
+            		}
             		
             		
         			
@@ -250,8 +449,8 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
             }
 		}, 0L, 1L);
 		
-		// check every 250ms for potion effects
-		scheduler.scheduleSyncRepeatingTask(this, new Runnable() {
+		// check every 250ms
+		t250msTask = scheduler.scheduleSyncRepeatingTask(this, new Runnable() {
             @Override
             public void run() {
             	if (!Bukkit.getOnlinePlayers().isEmpty()) {
@@ -266,75 +465,87 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
         				
         				String talent = talentHashMap.get(online.getUniqueId().toString());
         				Location location = online.getLocation();
-        				if (talent.equals("Avian")) {
-        					for(int y = location.getBlockY() + 2; y < location.getBlockY() + 10; y++) {
-        						Location blockCheck = new Location(online.getWorld(), location.getBlockX(), y, location.getBlockZ());
-        						if (blockCheck.getBlock().getType() != Material.AIR && blockCheck.getBlock().getType() != Material.WATER && blockCheck.getBlock().getType() != Material.LAVA) {
-        							online.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 30, 0));
-        							online.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 30, 1));
-        							break;
-        						}
-        					}
-        					
-        					if (location.getBlockY() > 127) {
-        						boolean regenFound = false;
-            					for (PotionEffect potionEffect : online.getActivePotionEffects()) {
-            						if (potionEffect.getType().equals(PotionEffectType.REGENERATION)) {
-            							regenFound = true;
-            							int duration = potionEffect.getDuration();
-            							if (duration < 10) {
-            								online.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 100, 0));
-            							}
+        				
+        				
+        				if (talent != null) {
+        					if (talent.equals("Avian")) {
+            					for(int y = location.getBlockY() + 2; y < location.getBlockY() + 7; y++) {
+            						Location blockCheck = new Location(online.getWorld(), location.getBlockX(), y, location.getBlockZ());
+            						boolean setDebuffed = true;
+            						for (Material m : avianHeadroomBlocks) {
+            							if (blockCheck.getBlock().getType() == m) {
+                							setDebuffed = false;
+                							break;
+                						}
+            						}
+            						if (setDebuffed && location.getBlockY() < 128) {
+            							online.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 30, 0));
+            							online.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 30, 1));
             						}
             						
             					}
-            					if(!regenFound) {
-        							online.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 100, 0));
-        						}
-        					}
-        				}
-        				
-        				if (talent.equals("Hydrokinetic")) {
-        					Material m1 = online.getPlayer().getLocation().getBlock().getType();
-        					Material m2 = online.getPlayer().getLocation().add(0, 1, 0).getBlock().getType();
-        				    if (m1 == Material.WATER || m2 == Material.WATER || m1 == Material.SEAGRASS || m2 == Material.SEAGRASS || m1 == Material.TALL_SEAGRASS || m2 == Material.TALL_SEAGRASS || m1 == Material.KELP || m2 == Material.KELP) {
-            					online.addPotionEffect(new PotionEffect(PotionEffectType.WATER_BREATHING, 30, 0));
-            					online.addPotionEffect(new PotionEffect(PotionEffectType.FAST_DIGGING, 30, 1));
-            					boolean regenFound = false;
-            					for (PotionEffect potionEffect : online.getActivePotionEffects()) {
-            						if (potionEffect.getType().equals(PotionEffectType.REGENERATION)) {
-            							regenFound = true;
-            							int duration = potionEffect.getDuration();
-            							if (duration < 10) {
-            								online.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 100, 0));
-            							}
+            					
+            					if (location.getBlockY() > 127) {
+            						boolean regenFound = false;
+                					for (PotionEffect potionEffect : online.getActivePotionEffects()) {
+                						if (potionEffect.getType().equals(PotionEffectType.REGENERATION)) {
+                							regenFound = true;
+                							int duration = potionEffect.getDuration();
+                							if (duration < 10) {
+                								online.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 100, 0));
+                							}
+                						}
+                						
+                					}
+                					if(!regenFound) {
+            							online.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 100, 0));
             						}
-            						
             					}
-            					if(!regenFound) {
-        							online.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 100, 0));
-        						}
-        				    }
+            				}
+            				
+            				if (talent.equals("Hydrokinetic")) {
+            					Material m1 = online.getPlayer().getLocation().getBlock().getType();
+            					Material m2 = online.getPlayer().getLocation().add(0, 1, 0).getBlock().getType();
+            				    if (m1 == Material.WATER || m2 == Material.WATER || m1 == Material.SEAGRASS || m2 == Material.SEAGRASS || m1 == Material.TALL_SEAGRASS || m2 == Material.TALL_SEAGRASS || m1 == Material.KELP || m2 == Material.KELP) {
+                					online.addPotionEffect(new PotionEffect(PotionEffectType.WATER_BREATHING, 30, 0));
+                					online.addPotionEffect(new PotionEffect(PotionEffectType.FAST_DIGGING, 30, 1));
+                					boolean regenFound = false;
+                					for (PotionEffect potionEffect : online.getActivePotionEffects()) {
+                						if (potionEffect.getType().equals(PotionEffectType.REGENERATION)) {
+                							regenFound = true;
+                							int duration = potionEffect.getDuration();
+                							if (duration < 10) {
+                								online.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 100, 0));
+                							}
+                						}
+                						
+                					}
+                					if(!regenFound) {
+            							online.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 100, 0));
+            						}
+            				    }
+            				}
+            				
+            				if (talent.equals("Frostbender")) {
+            					Material m1 = online.getPlayer().getLocation().getBlock().getType();
+            					Material m2 = online.getPlayer().getLocation().subtract(0, 1, 0).getBlock().getType();
+            					if (m1 == Material.SNOW || m2 == Material.ICE || m2 == Material.PACKED_ICE || m2 == Material.BLUE_ICE || m2 == Material.SNOW_BLOCK) {
+            						online.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 30, 1));
+            					}
+            				}
+            				
+            				if (talent.equals("Terran")) {
+            					online.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 100000, 0));
+            				}
         				}
         				
-        				if (talent.equals("Frostbender")) {
-        					Material m1 = online.getPlayer().getLocation().getBlock().getType();
-        					Material m2 = online.getPlayer().getLocation().subtract(0, 1, 0).getBlock().getType();
-        					if (m1 == Material.SNOW || m2 == Material.ICE || m2 == Material.PACKED_ICE || m2 == Material.BLUE_ICE || m2 == Material.SNOW_BLOCK) {
-        						online.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 30, 1));
-        					}
-        				}
-        				
-        				if (talent.equals("Rogue")) {
-        					online.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 100000, 0));
-        					online.addPotionEffect(new PotionEffect(PotionEffectType.NIGHT_VISION, 100000, 0));
-        				}
         			}
             	}
             }
 		}, 0L, 5L);
 		
-		scheduler.scheduleSyncRepeatingTask(this, new Runnable() {
+		// check every 1000ms
+		t1000msTask = scheduler.scheduleSyncRepeatingTask(this, new Runnable() {
             @Override
             public void run() {
             	if (!Bukkit.getOnlinePlayers().isEmpty()) {
@@ -366,12 +577,23 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
     						}
         				}
         				
+        				String talent = Main.talentHashMap.get(online.getUniqueId().toString());
+        				
+        				
+        				if (!talent.equals("Avian")) {
+        					if (online.getInventory().getChestplate() != null && online.getInventory().getChestplate().getItemMeta().isUnbreakable()) {
+        						online.getInventory().setChestplate(null);
+        					}
+        				}
+        				
         				
         			}
             	}
             }
         }, 0L, 20L);
-		scheduler.scheduleSyncRepeatingTask(this, new Runnable() {
+		
+		// check every 20 seconds
+		t20000msTask = scheduler.scheduleSyncRepeatingTask(this, new Runnable() {
             @Override
             public void run() {
             	if (!Bukkit.getOnlinePlayers().isEmpty()) {
@@ -384,7 +606,9 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
             	}
             }
         }, 0L, 400L);
-		scheduler.scheduleSyncRepeatingTask(this, new Runnable() {
+		
+		// check every 10 minutes
+		t600000msTask = scheduler.scheduleSyncRepeatingTask(this, new Runnable() {
             @Override
             public void run() {
             	if (!Bukkit.getOnlinePlayers().isEmpty()) {
@@ -417,9 +641,11 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 	
 	@Override
 	public void onDisable() {
-		// shutdown
-		// reloads
-		// plugin reloads
+		Bukkit.getScheduler().cancelTask(t50msTask);
+		Bukkit.getScheduler().cancelTask(t250msTask);
+		Bukkit.getScheduler().cancelTask(t1000msTask);
+		Bukkit.getScheduler().cancelTask(t20000msTask);
+		Bukkit.getScheduler().cancelTask(t600000msTask);
 	}
 	
 
@@ -460,7 +686,7 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 		
 		score3.setScore(4);
 		
-		Score score4 = obj.getScore("Level: " + ChatColor.AQUA + playerDataConfig.getInt("Users." + player.getUniqueId() + ".stats" + ".level"));
+		Score score4 = obj.getScore("Level: " + ChatColor.AQUA + 0);
 		score4.setScore(3);
 		
 		Score score5 = obj.getScore("");
@@ -653,6 +879,7 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 		
 		Player p = (Player) sender;
 		boolean vanillaMode = getConfig().getBoolean("System." + "settings" + ".vanillaMode");
+		String talent = talentHashMap.get(p.getUniqueId().toString());
 		
 		// command to reevaluate some user stats on the server, this is used to prevent cheating (editing the server config files)
 		if (label.equalsIgnoreCase("reeval")) {
@@ -660,7 +887,7 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 			if (vanillaMode) {
 				return true;
 			}
-			if ((p.getUniqueId().toString()).equals("b859c378-5ea4-47f8-b7e4-fc80bfc1b713")) {
+			if (p.hasPermission("CommandsPlus.superuser")) {
 				for (Player online : Bukkit.getOnlinePlayers()) {
 					FunctionsPlus.savePlayerData(online, false);
 					playerDataConfig.set("Users." + online.getUniqueId() + "." + "stats" + ".name", online.getName());
@@ -677,7 +904,7 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 		
 		//-----------------------------------------------------------------------------------------------------------------------------------------------
 		// System Commands
-		if (label.equalsIgnoreCase("listplayers") && (p.getUniqueId().toString()).equals("b859c378-5ea4-47f8-b7e4-fc80bfc1b713")) {
+		if (label.equalsIgnoreCase("listplayers") && playerRankHashMap.get(p.getUniqueId().toString()).equals("Superuser")) {
 			int i = 0;
 			for (Player online : Bukkit.getOnlinePlayers()) {
 				p.sendMessage(online.getName() + ": " + online.getUniqueId());
@@ -685,13 +912,52 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 			}
 			p.sendMessage("Total players online: " + i);
 		}
+		
+		if (label.equalsIgnoreCase("getplayerhead") && playerRankHashMap.get(p.getUniqueId().toString()) != null && playerRankHashMap.get(p.getUniqueId().toString()).equals("Superuser")) {
+			if (args.length < 1) {
+				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "Parameter error!");
+				return true;
+			}
+			
+			String playerName = args[0];
+			ItemStack playerHead = FunctionsPlus.getPlayerHead(playerName);
+			p.getInventory().addItem(playerHead);
+			
+			return true;
+		}
+		
+		
+		
+		
+		if (label.equalsIgnoreCase("setrank") && playerRankHashMap.get(p.getUniqueId().toString()) != null && playerRankHashMap.get(p.getUniqueId().toString()).equals("Superuser")) {
+			if (args.length < 2) {
+				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "Parameter error!");
+				return true;
+			}
+			
+			String playerName = args[0];
+			String rank = args[1];
+			
+			
+			for (int i = 2; i < args.length; i++) {
+				rank += " " + args[i];
+				
+			}
+			
+			Player target = Bukkit.getServer().getPlayer(playerName);
+			
+			playerRankHashMap.put(target.getUniqueId().toString(), "" + rank);
+			playerDataConfig.set("Users." + target.getUniqueId() + ".stats" + ".rank", rank);
+			p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "Set rank of " + ChatColor.BLUE + target.getName() + ChatColor.WHITE + " to " + ChatColor.RED + rank);
+			target.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "Your rank was changed to " + ChatColor.RED + rank);
+		}
 
 		//-----------------------------------------------------------------------------------------------------------------------------------------------
 		
 		
 		//-----------------------------------------------------------------------------------------------------------------------------------------------
 		// commands to edit system and personal preferences
-		if (label.equalsIgnoreCase("vanillamode") && (p.getUniqueId().toString()).equals("b859c378-5ea4-47f8-b7e4-fc80bfc1b713")) {
+		if (label.equalsIgnoreCase("vanillamode") && p.hasPermission("CommandsPlus.superuser")) {
 			
 			if (getConfig().getBoolean("System." + "settings" + ".vanillaMode") == true) {
 				getConfig().set("System." + "settings" + ".vanillaMode", false);
@@ -749,6 +1015,12 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 		if (label.equalsIgnoreCase("top")) {
 			// if vanilla mode is on don't run command
 			if (vanillaMode) {
+				return true;
+			}
+			
+			if (!talent.equals("Terran") && !playerRankHashMap.get(p.getUniqueId().toString()).equals("Superuser")) {
+				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "Only terrans can use /top!");
+				FunctionsPlus.playSound(p, "actionDenied");
 				return true;
 			}
 			
@@ -860,6 +1132,7 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 				p.giveExpLevels(20);
 			}
 			else {
+				FunctionsPlus.playSound(p, "actionDenied");
 				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "Already claimed daily XP!");
 			}
 			
@@ -954,7 +1227,7 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 			scheduler.scheduleSyncDelayedTask(this, new Runnable() {
 	            public void run() {
 	            	if (!(currX == p.getLocation().getBlockX() && currY == p.getLocation().getBlockY() && currZ == p.getLocation().getBlockZ())) {
-	            		
+	            		FunctionsPlus.playSound(p, "actionDenied");
 	            		p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "You moved! Cancelling teleport!");
 	            	}
 	            	else {
@@ -1177,6 +1450,7 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 				scheduler.scheduleSyncDelayedTask(this, new Runnable() {
 		            public void run() {
 		            	if (!(currX == p.getLocation().getBlockX() && currY == p.getLocation().getBlockY() && currZ == p.getLocation().getBlockZ())) {
+		            		FunctionsPlus.playSound(p, "actionDenied");
 		            		p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "You moved! Cancelling teleport!");
 		            	}
 		            	else {
@@ -1204,18 +1478,17 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 				return true;
 			}
 			
-			
-			if (p.getWorld().getEnvironment() == Environment.NETHER){
-				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "You cannot claim chunks in the Nether!");
-				return true;
-			}
-			
-			
-			if (factionHashMap.get(p.getUniqueId().toString()).equals("")) {
+			if (factionHashMap.get(p.getUniqueId().toString()) == null) {
+				FunctionsPlus.playSound(p, "actionDenied");
 				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "You're not in a faction! Join a faction to claim chunks!");
 				return true;
 			}
 			
+			if (p.getWorld().getEnvironment() == Environment.NETHER){
+				FunctionsPlus.playSound(p, "actionDenied");
+				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "You cannot claim chunks in the Nether!");
+				return true;
+			}
 			
 			String UUID = chunkClaimDataConfig.getString("ClaimedChunks." + ".X: " + p.getLocation().getChunk().getX() + ", Z: " + p.getLocation().getChunk().getZ() + ".belongsToUUID");
 
@@ -1252,15 +1525,18 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "Claimed chunk!");
 			}
 			else if ((UUID == null && chunkClaims >= 400)) {
+				FunctionsPlus.playSound(p, "actionDenied");
 				// Commands+ System Message
 				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "You cannot claim any more chunks! Level up to get more chunk claims!");
 			}
 			else if (UUID.equals(p.getUniqueId().toString())) {
+				FunctionsPlus.playSound(p, "actionDenied");
 				// Commands+ System Message
 				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "You already own this chunk!");
 			}
 			else{
 				// Commands+ System Message
+				FunctionsPlus.playSound(p, "actionDenied");
 				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "Cannot claim chunk! Chunk is owned by " + chunkName + " (" + name + ")");
 			}
 				
@@ -1276,7 +1552,17 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 			if (vanillaMode) {
 				return true;
 			}
+			
+			if (factionHashMap.get(p.getUniqueId().toString()).equals("")) {
+				FunctionsPlus.playSound(p, "actionDenied");
+				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "You're not in a faction! Join a faction to claim chunks!");
+				return true;
+			}
+			
+			
 			if (p.getWorld().getEnvironment() == Environment.NETHER){
+				
+				FunctionsPlus.playSound(p, "actionDenied");
 				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "You cannot unclaim chunks in the Nether!");
 				return true;
 			}
@@ -1317,11 +1603,13 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "Unclaimed chunk!");
 			}
 			else if(UUID.equals(null)){
+				FunctionsPlus.playSound(p, "actionDenied");
 				// Commands+ System Message
 				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "This chunk has not been claimed!");
 			}
 			else{
 				// Commands+ System Message
+				FunctionsPlus.playSound(p, "actionDenied");
 				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "Cannot unclaim chunk! Chunk is owned by " + chunkName + " (" + name + ")");
 			}
 			
@@ -1405,22 +1693,30 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 				}
 				
 				if (playerDataConfig.getBoolean("Users." + p.getUniqueId() + ".stats" + ".inFaction")) {
+					FunctionsPlus.playSound(p, "actionDenied");
 					// Commands+ System Message
 					p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "You're already in a faction!");
 					
 					return true;
 				}
 				
-				ConfigurationSection factions = factionDataConfig.getConfigurationSection("Factions.");
-				for (String s : factions.getKeys(false)) {
-					if (s.equals(factionName)) {
-						p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "Faction alrady exists!");
-						return true;
+				try {
+					ConfigurationSection factions = factionDataConfig.getConfigurationSection("Factions.");
+					for (String s : factions.getKeys(false)) {
+						if (s.equals(factionName)) {
+							FunctionsPlus.playSound(p, "actionDenied");
+							p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "Faction alrady exists!");
+							return true;
+						}
 					}
+				} catch (Exception e) {
+					e.printStackTrace();
 				}
+				
 				
 				if (factionName.length() > 20) {
 					factionName = factionName.substring(0, 20);
+					FunctionsPlus.playSound(p, "actionDenied");
 					// Commands+ System Message
 					p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "Faction name cannot be longer than 20 characters!");
 					
@@ -1461,6 +1757,7 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 				
 				else {
 					// Commands+ System Message
+					FunctionsPlus.playSound(p, "actionDenied");
 					p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "Faction name is already in use!");
 					
 					return true;
@@ -1506,6 +1803,7 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 						p.sendMessage(ChatColor.WHITE + "[" + ChatColor.AQUA + playerFaction + ChatColor.WHITE + "] " + "Invited " + ChatColor.GREEN + playerInvited.getName() + ChatColor.WHITE + " to " + ChatColor.AQUA + playerFaction + ChatColor.WHITE + "!");
 					}
 					else {
+						FunctionsPlus.playSound(p, "actionDenied");
 						// Commands+ System Message
 						p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "Player is in another faction!");
 					}
@@ -1560,6 +1858,7 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 					
 				}
 				else {
+					FunctionsPlus.playSound(p, "actionDenied");
 					// Commands+ System Message
 					p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "You haven't been invited to a faction yet!");
 				}
@@ -1602,6 +1901,7 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 					p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "Declined invite from faction " + ChatColor.AQUA + factionName + ChatColor.WHITE + "!");
 				}
 				else {
+					FunctionsPlus.playSound(p, "actionDenied");
 					// Commands+ System Message
 					p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "You haven't been invited to a faction yet!");
 				}
@@ -1649,6 +1949,7 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 					
 					
 					// Commands+ System Messages
+					FunctionsPlus.playSound(playerRemoved, "actionDenied");
 					playerRemoved.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "You've been removed from " + ChatColor.AQUA + playerFaction + ChatColor.WHITE + "!");
 					for (Player online : Bukkit.getOnlinePlayers()) {
 						if (playerDataConfig.getBoolean("Users." + online.getUniqueId() + ".stats" + ".inFaction") != false && playerDataConfig.getString("Users." + online.getUniqueId() + ".stats" + ".faction").equals(playerFaction)) {
@@ -1664,6 +1965,7 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 				if (playerDataConfig.getBoolean("Users." + p.getUniqueId() + ".stats" + ".inFaction")) {
 					
 					if (factionDataConfig.get("Factions." + playerFaction + ".stats" + ".ownerUUID").equals(p.getUniqueId().toString())) {
+						FunctionsPlus.playSound(p, "actionDenied");
 						p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "You must promote someone before leaving the faction! If you want to disband your faction you can do so by using the '/faction disband' command.");
 						return true;
 					}
@@ -1702,6 +2004,7 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 					}
 				}
 				else {
+					FunctionsPlus.playSound(p, "actionDenied");
 					// Commands+ System Message
 					p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "You're not in a faction!");
 				}
@@ -1711,6 +2014,7 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 			if (args[0].equals("info")) {
 				String factionName = "";
 				if (args.length == 1 && playerDataConfig.getBoolean("Users." + p.getUniqueId() + ".stats" + ".inFaction") != true) {
+					FunctionsPlus.playSound(p, "actionDenied");
 					// Commands+ System Message
 					p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "Type in a faction name to see stats!");
 					return true;
@@ -1726,6 +2030,7 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 				}
 				
 				if (!factionDataConfig.contains("Factions." + factionName)) {
+					FunctionsPlus.playSound(p, "actionDenied");
 					// Commands+ System Message
 					p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "Faction does not exist!");
 					return true;
@@ -1755,13 +2060,15 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 			
 			if (args[0].equals("msg")) {
 				if (factionHashMap.get(p.getUniqueId().toString()).equals("")) {
+					FunctionsPlus.playSound(p, "actionDenied");
 					p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "You must be in a faction to use messages!");
 					return true;
 				}
 				
 				String msg = "";
 				if (args.length == 1) {
-					p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "You need to eneter a message!");
+					FunctionsPlus.playSound(p, "actionDenied");
+					p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "You need to enter a message!");
 					return true;
 				}
 				else {
@@ -1772,7 +2079,7 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 				}
 				
 				for (Player online : Bukkit.getOnlinePlayers()) {
-					if (factionHashMap.get(p.getUniqueId().toString()).equals(factionHashMap.get(online.getUniqueId().toString()))) {
+					if (factionHashMap.get(p.getUniqueId().toString()) != null && factionHashMap.get(p.getUniqueId().toString()).equals(factionHashMap.get(online.getUniqueId().toString()))) {
 						online.sendMessage(ChatColor.WHITE + "[" + ChatColor.AQUA + playerFaction + ChatColor.WHITE + "] " + ChatColor.GREEN + p.getName() + ChatColor.WHITE + ": " + msg);
 					}
 				}
@@ -1791,7 +2098,8 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 					Player playerPromoted = Bukkit.getServer().getPlayer(playerName);
 					
 					if (!factionHashMap.get(p.getUniqueId().toString()).equals(factionHashMap.get(playerPromoted.getUniqueId().toString()))) {
-						p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "Player is not in faction!");
+						FunctionsPlus.playSound(p, "actionDenied");
+						p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "That player is not in your faction!");
 						return true;
 					}
 					
@@ -1835,11 +2143,13 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 					Player playerDemoted = Bukkit.getServer().getPlayer(playerName);
 					
 					if (!factionHashMap.get(p.getUniqueId().toString()).equals(factionHashMap.get(playerDemoted.getUniqueId().toString()))) {
-						p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "Player is not in faction!");
+						FunctionsPlus.playSound(p, "actionDenied");
+						p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "That player is not in your faction!");
 						return true;
 					}
 					
 					if (factionDataConfig.get("Factions." + playerFaction + ".members." + playerDemoted.getUniqueId() + ".rank").equals("Member")) {
+						FunctionsPlus.playSound(p, "actionDenied");
 						p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "Cannot demote a player with the rank of member! If you want to remove this player from your faction, you can do so with the '/faction remove <player>' command!");
 						return true;
 					}
@@ -1871,11 +2181,11 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 			if (args[0].equals("disband")) {
 				String factionName = factionHashMap.get(p.getUniqueId().toString());
 				for (Player online : Bukkit.getOnlinePlayers()) {
-					if (factionHashMap.get(p.getUniqueId().toString()).equals(factionHashMap.get(online.getUniqueId().toString()))) {
+					if (factionHashMap.get(p.getUniqueId().toString()) != null && factionHashMap.get(p.getUniqueId().toString()).equals(factionHashMap.get(online.getUniqueId().toString()))) {
 						p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "Faction has been disbanded!");
 						factionHashMap.put(online.getUniqueId().toString(), null);
 						playerDataConfig.set("Users." + online.getUniqueId() + ".stats" + ".inFaction", false);
-						playerDataConfig.set("Users." + online.getUniqueId() + ".stats" + ".faction", "");
+						playerDataConfig.set("Users." + online.getUniqueId() + ".stats" + ".faction", null);
 						unclaimAllChunks(online);
 					}
 				}
@@ -1929,7 +2239,7 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 		//-----------------------------------------------------------------------------------------------------------------------------------------------
 		// Custom Item Commands
 		
-		if (label.equalsIgnoreCase("bonkstick") && (p.getUniqueId().toString()).equals("b859c378-5ea4-47f8-b7e4-fc80bfc1b713")) {
+		if (label.equalsIgnoreCase("bonkstick") && (playerRankHashMap.get(p.getUniqueId().toString()).equals("Superuser") || playerRankHashMap.get(p.getUniqueId().toString()).equals("Sheriff"))) {
 			
 			ItemStack item = new ItemStack(ItemsPlus.bonkStick);
 			
@@ -1938,6 +2248,19 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 		}
 		
 		if (label.equalsIgnoreCase("yeehaw")) {
+			
+			if (!(playerRankHashMap.get(p.getUniqueId().toString()).equals("Superuser") || playerRankHashMap.get(p.getUniqueId().toString()).equals("Sheriff"))) {
+				FunctionsPlus.playSound(p, "actionDenied");
+				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "Only the sheriff can use this command!");
+				return true;
+			}
+			
+			
+			for (Entity entity : p.getWorld().getEntities()) {
+				if (entity.getCustomName() != null && entity.getCustomName().equals("Sheriff's Horse")) {
+					entity.remove();
+				}
+			}
 			
 			Horse horse = (Horse) p.getWorld().spawn(p.getLocation().add(Math.cos(FunctionsPlus.getPlayerDirectionFloat(p)) * 2, 0, Math.sin(FunctionsPlus.getPlayerDirectionFloat(p)) * 2), Horse.class);
 			
@@ -1948,9 +2271,10 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 			horse.setColor(Color.BLACK);
 			
 			horse.setJumpStrength(2.0);
-			horse.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, Integer.MAX_VALUE, 255));
+			horse.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, Integer.MAX_VALUE, 2));
 			horse.setHealth(horse.getMaxHealth());
 			horse.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(0.6);
+			horse.setCustomName("Sheriff's Horse");
 			
 			
 
@@ -1961,20 +2285,141 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 		
 		//-----------------------------------------------------------------------------------------------------------------------------------------------
 		// Miscellaneous Commands
+		
+		if (label.equalsIgnoreCase("test")){
+			p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.AQUA + "Frozen!");
+			playerFrozenHashMap.put(p.getUniqueId().toString(), 100);
+		}
+		
+		
+		
 		if (label.equalsIgnoreCase("credits")){
 			p.sendMessage(ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+ " + ChatColor.WHITE + "Credits:");
 			p.sendMessage(ChatColor.WHITE + "Base plugin - huge thanks to everyone who worked");
 			p.sendMessage(ChatColor.WHITE + "in the beta stages of the plugin to work out the kinks!");
 			p.sendMessage(ChatColor.WHITE + "");
-			p.sendMessage(ChatColor.WHITE + "Factions Update - Warlocck, I cannot thank you enough");
-			p.sendMessage(ChatColor.WHITE + "for your patience during the testing of this system.");
 			p.sendMessage(ChatColor.WHITE + "");
 			p.sendMessage(ChatColor.WHITE + "Items+, Enchantments+, and Skills Updates - the biggest");
 			p.sendMessage(ChatColor.WHITE + "inspiration was Hypixel Skyblock, if any of those");
 			p.sendMessage(ChatColor.WHITE + "developers see this, huge thanks to you guys!");
 			p.sendMessage(ChatColor.WHITE + "");
 			p.sendMessage(ChatColor.WHITE + "Talents Update - the Origins mod was a huge inspiration");
-			p.sendMessage(ChatColor.WHITE + "for this project, Apace100, thank you for that awesome mod!");
+			p.sendMessage(ChatColor.WHITE + "for this project, Apace100, thank you for the Origins mod!");
+			p.sendMessage(ChatColor.WHITE + "");
+			p.sendMessage(ChatColor.WHITE + "Entire plugin - ");
+			p.sendMessage(ChatColor.WHITE + "Warlocck, I cannot thank you enough for your");
+			p.sendMessage(ChatColor.WHITE + "patience and assistance during the testing and");
+			p.sendMessage(ChatColor.WHITE + "designing of this plugin.");
+		}
+		
+		
+		if (label.equalsIgnoreCase("amongus")){
+			BukkitScheduler scheduler = getServer().getScheduler();
+			
+			long delay = 0L;
+			long normalDelay = 6L;
+			long longDelay = 18L;
+			long shortDelay = 3L;
+			
+			Sound main = Sound.BLOCK_NOTE_BLOCK_PLING;
+			Sound snare = Sound.BLOCK_NOTE_BLOCK_SNARE;
+			
+			scheduler.scheduleSyncDelayedTask(this, new Runnable() {
+	            public void run() {
+	            	
+	            	p.getWorld().playSound(p.getLocation(), main, 1.0f, 1.4f);
+	            }
+	        }, delay);
+			
+			delay += normalDelay;
+			
+			scheduler.scheduleSyncDelayedTask(this, new Runnable() {
+	            public void run() {
+	            	
+	            	p.getWorld().playSound(p.getLocation(), main, 1.0f, 1.7f);
+	            }
+	        }, delay);
+			
+			delay += normalDelay;
+			
+			scheduler.scheduleSyncDelayedTask(this, new Runnable() {
+	            public void run() {
+	            	
+	            	p.getWorld().playSound(p.getLocation(), main, 1.0f, 1.9f);
+	            }
+	        }, delay);
+			
+			delay += normalDelay;
+			
+			scheduler.scheduleSyncDelayedTask(this, new Runnable() {
+	            public void run() {
+	            	
+	            	p.getWorld().playSound(p.getLocation(), main, 1.0f, 2.0f);
+	            }
+	        }, delay);
+			
+			delay += normalDelay;
+			
+			scheduler.scheduleSyncDelayedTask(this, new Runnable() {
+	            public void run() {
+	            	
+	            	p.getWorld().playSound(p.getLocation(), main, 1.0f, 1.9f);
+	            }
+	        }, delay);
+			
+			delay += normalDelay;
+			
+			scheduler.scheduleSyncDelayedTask(this, new Runnable() {
+	            public void run() {
+	            	
+	            	p.getWorld().playSound(p.getLocation(), main, 1.0f, 1.7f);
+	            }
+	        }, delay);
+			
+			delay += normalDelay;
+			
+			scheduler.scheduleSyncDelayedTask(this, new Runnable() {
+	            public void run() {
+	            	
+	            	p.getWorld().playSound(p.getLocation(), main, 1.0f, 1.4f);
+	            }
+	        }, delay);
+			
+			delay += longDelay - 6;
+			
+			scheduler.scheduleSyncDelayedTask(this, new Runnable() {
+	            public void run() {
+	            	
+	            	p.getWorld().playSound(p.getLocation(), snare, 1.0f, 1.4f);
+	            }
+	        }, delay);
+			
+			delay += longDelay - 12;
+			
+			scheduler.scheduleSyncDelayedTask(this, new Runnable() {
+	            public void run() {
+	            	
+	            	p.getWorld().playSound(p.getLocation(), main, 1.0f, 1.25f);
+	            }
+	        }, delay);
+			
+			delay += shortDelay;
+			
+			scheduler.scheduleSyncDelayedTask(this, new Runnable() {
+	            public void run() {
+	            	
+	            	p.getWorld().playSound(p.getLocation(), main, 1.0f, 1.6f);
+	            }
+	        }, delay);
+			
+			delay += shortDelay;
+			
+			scheduler.scheduleSyncDelayedTask(this, new Runnable() {
+	            public void run() {
+	            	
+	            	p.getWorld().playSound(p.getLocation(), main, 1.0f, 1.4f);
+	            }
+	        }, delay);
 		}
 		
 		return false;
