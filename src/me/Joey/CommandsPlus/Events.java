@@ -69,6 +69,8 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
 import org.bukkit.util.Vector;
 
+import me.Joey.CommandsPlus.Particles.ParticleData;
+import me.Joey.CommandsPlus.Particles.ParticleEffects;
 import net.md_5.bungee.api.ChatColor;
 
 @SuppressWarnings("deprecation")
@@ -223,183 +225,218 @@ public class Events implements Listener{
 	}
 	
 	
-	// Interaction Events
+	// Inventory Interaction Events
 	@EventHandler
 	public void onInventoryClick(InventoryClickEvent event) {
-		if (!event.getInventory().equals(Main.talentInventory)) {
-			return;
-		}
-		
-		if (event.getCurrentItem() == null) {
-			return;
-		}
-		
-		if (event.getCurrentItem().getItemMeta() == null) {
-			return;		
-		}
-		
-		if (event.getCurrentItem().getItemMeta().getDisplayName() == null) {
-			return;
-		}
-		
-		event.setCancelled(true);
-		
-		
-		Player p = (Player) event.getWhoClicked();
-		
-		// Instantiate particle data/trails objects for player
-		ParticleData particle = new ParticleData(p.getUniqueId());
-		ParticleEffects trails = new ParticleEffects(p);
-		
-		if (particle.hasID()) {
-			particle.endTask();
-			particle.removeID();
-		}
-		
-		
-		// Close Menu selected
-		if (event.getSlot() == 26) {
-			p.closeInventory();
-			return;
-		}
-		
-		/*
-		if (Main.playerDataConfig.contains("Users." + p.getUniqueId() + ".stats" + ".talent") && !p.hasPermission("commandsPlus.tester")) {
-			p.closeInventory();
-			p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "You have already picked a talent!");
-			return;
-		}
-		*/
-		
-		// Avian selected
-		if (event.getSlot() == 0) {
-			p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "You chose the Avian talent!");
-			Main.talentHashMap.put(p.getUniqueId().toString(), "Avian");
-			Main.playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".talent", "Avian");
-			p.closeInventory();
-			
-			// equip Avian Elytra and lower max health
-			p.setMaxHealth(16);
-			p.getInventory().setChestplate(ItemsPlus.avianElytra);
-		}
-		
-		// Pyrokinetic selected
-		if (event.getSlot() == 1) {
-			p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "You chose the Pyrokinetic talent!");
-			Main.talentHashMap.put(p.getUniqueId().toString(), "Pyrokinetic");
-			Main.playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".talent", "Pyrokinetic");
-			p.closeInventory();
-			
-			// set health (really just for testers since the max health doesn't change back when swapping talents)
-			p.setMaxHealth(20);
-			
-			// Start particle effects
-			trails.startPyrokineticParticles();
-		}
-		
-		// Hydrokinetic selected
-		if (event.getSlot() == 2) {
-			p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "You chose the Hydrokinetic talent!");
-			Main.talentHashMap.put(p.getUniqueId().toString(), "Hydrokinetic");
-			Main.playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".talent", "Hydrokinetic");
-			p.closeInventory();
-			
-			// set health (really just for testers since the max health doesn't change back when swapping talents)
-			p.setMaxHealth(20);
-		}
-		
-		// Frostbender selected
-		if (event.getSlot() == 3) {
-			p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "You chose the Frostbender talent!");
-			Main.talentHashMap.put(p.getUniqueId().toString(), "Frostbender");
-			Main.playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".talent", "Frostbender");
-			p.closeInventory();
-			
-			// set health (really just for testers since the max health doesn't change back when swapping talents)
-			p.setMaxHealth(20);
-			p.getInventory().addItem(ItemsPlus.stasisCrystal);
-			
-			// Start particle effects
-			trails.startFrostbenderParticles();
-		}
-		
-		// Terran selected
-		if (event.getSlot() == 4) {
-			p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "You chose the Terran talent!");
-			Main.talentHashMap.put(p.getUniqueId().toString(), "Terran");
-			Main.playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".talent", "Terran");
-			p.closeInventory();
-			
-			// set health (really just for testers since the max health doesn't change back when swapping talents)
-			p.setMaxHealth(20);
-		}
-		
-		// Biokinetic selected
-		if (event.getSlot() == 5) {
-			p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "You chose the Biokinetic talent!");
-			Main.talentHashMap.put(p.getUniqueId().toString(), "Biokinetic");
-			Main.playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".talent", "Biokinetic");
-			p.closeInventory();
-			p.getInventory().addItem(ItemsPlus.arcaneCrystal);
-			
-			// set health (really just for testers since the max health doesn't change back when swapping talents)
-			p.setMaxHealth(20);
-		}
-		
-		// Enderian selected
-		if (event.getSlot() == 6) {
-			p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "You chose the Enderian talent!");
-			Main.talentHashMap.put(p.getUniqueId().toString(), "Enderian");
-			Main.playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".talent", "Enderian");
-			p.closeInventory();
-			
-			// set health (really just for testers since the max health doesn't change back when swapping talents)
-			p.setMaxHealth(20);
-			
-			// Start particle effects
-			trails.startEnderianParticles();
-		}
-		
-		// Cobble Man selected
-		if (event.getSlot() == 18) {
-			p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "OH LAWD HE COMIN!");
-			for (Player online : Bukkit.getOnlinePlayers()) {
-				online.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "COBBLE MAN HAS ARRIVED");
+		if (event.getInventory().equals(Main.masterMenuInventory)) {
+			if (event.getCurrentItem() == null) {
+				return;
 			}
-			Main.talentHashMap.put(p.getUniqueId().toString(), "COBBLE MAN");
-			Main.playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".talent", "COBBLE MAN");
-			p.closeInventory();
 			
-			// set health (really just for testers since the max health doesn't change back when swapping talents)
-			p.setMaxHealth(40);
-		}
-		
-		// Sheriff selected
-		if (event.getSlot() == 19) {
-			p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "OH LAWD HE COMIN!");
-			for (Player online : Bukkit.getOnlinePlayers()) {
-				online.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "THE SHERIFF HAS ARRIVED");
+			if (event.getCurrentItem().getItemMeta() == null) {
+				return;		
 			}
-			Main.talentHashMap.put(p.getUniqueId().toString(), "SHERIFF");
-			Main.playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".talent", "SHERIFF");
-			p.closeInventory();
 			
-			// set health (really just for testers since the max health doesn't change back when swapping talents)
-			p.setMaxHealth(40);
+			if (event.getCurrentItem().getItemMeta().getDisplayName() == null) {
+				return;
+			}
+			
+			event.setCancelled(true);
+			
+			
+			Player p = (Player) event.getWhoClicked();
+			
+			// Close Menu selected
+			if (event.getSlot() == 49) {
+				p.closeInventory();
+				
+				return;
+			}
+			
+			// Talent Menu selected
+			if (event.getSlot() == 21) {
+				p.openInventory(Main.talentInventory);
+				return;
+			}
 		}
 		
-		for (PotionEffect effect : p.getActivePotionEffects()) {
-	        p.removePotionEffect(effect.getType());
-		}
-		
-		
-		// save player data file
-		try {
-			Main.playerDataConfig.save(Main.playerData);
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} // this is important to have when editing server files, otherwise nothing gets changed
+		if (event.getInventory().equals(Main.talentInventory)) {
+			if (event.getCurrentItem() == null) {
+				return;
+			}
+			
+			if (event.getCurrentItem().getItemMeta() == null) {
+				return;		
+			}
+			
+			if (event.getCurrentItem().getItemMeta().getDisplayName() == null) {
+				return;
+			}
+			
+			event.setCancelled(true);
+			
+			
+			Player p = (Player) event.getWhoClicked();
+			
+			// Instantiate particle data/trails objects for player
+			ParticleData particle = new ParticleData(p.getUniqueId());
+			ParticleEffects trails = new ParticleEffects(p);
+			
+			if (particle.hasID()) {
+				particle.endTask();
+				particle.removeID();
+			}
+			
+			// Go Back selected
+			if (event.getSlot() == 48) {
+				p.openInventory(Main.masterMenuInventory);
+				return;
+			}
+						
+			// Close Menu selected
+			if (event.getSlot() == 49) {
+				p.closeInventory();
+				return;
+			}
+			
+			/*
+			if (Main.playerDataConfig.contains("Users." + p.getUniqueId() + ".stats" + ".talent") && !p.hasPermission("commandsPlus.tester")) {
+				p.closeInventory();
+				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "You have already picked a talent!");
+				return;
+			}
+			*/
+			
+			// Avian selected
+			if (event.getSlot() == 18) {
+				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "You chose the Avian talent!");
+				Main.talentHashMap.put(p.getUniqueId().toString(), "Avian");
+				Main.playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".talent", "Avian");
+				p.closeInventory();
+				
+				// equip Avian Elytra and lower max health
+				p.setMaxHealth(16);
+				p.getInventory().setChestplate(ItemsPlus.avianElytra);
+			}
+			
+			// Pyrokinetic selected
+			if (event.getSlot() == 19) {
+				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "You chose the Pyrokinetic talent!");
+				Main.talentHashMap.put(p.getUniqueId().toString(), "Pyrokinetic");
+				Main.playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".talent", "Pyrokinetic");
+				p.closeInventory();
+				
+				// set health (really just for testers since the max health doesn't change back when swapping talents)
+				p.setMaxHealth(20);
+				
+				// Start particle effects
+				trails.startPyrokineticParticles();
+			}
+			
+			// Hydrokinetic selected
+			if (event.getSlot() == 20) {
+				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "You chose the Hydrokinetic talent!");
+				Main.talentHashMap.put(p.getUniqueId().toString(), "Hydrokinetic");
+				Main.playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".talent", "Hydrokinetic");
+				p.closeInventory();
+				
+				// set health (really just for testers since the max health doesn't change back when swapping talents)
+				p.setMaxHealth(20);
+			}
+			
+			// Frostbender selected
+			if (event.getSlot() == 21) {
+				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "You chose the Frostbender talent!");
+				Main.talentHashMap.put(p.getUniqueId().toString(), "Frostbender");
+				Main.playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".talent", "Frostbender");
+				p.closeInventory();
+				
+				// set health (really just for testers since the max health doesn't change back when swapping talents)
+				p.setMaxHealth(20);
+				p.getInventory().addItem(ItemsPlus.stasisCrystal);
+				
+				// Start particle effects
+				trails.startFrostbenderParticles();
+			}
+			
+			// Terran selected
+			if (event.getSlot() == 22) {
+				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "You chose the Terran talent!");
+				Main.talentHashMap.put(p.getUniqueId().toString(), "Terran");
+				Main.playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".talent", "Terran");
+				p.closeInventory();
+				
+				// set health (really just for testers since the max health doesn't change back when swapping talents)
+				p.setMaxHealth(20);
+			}
+			
+			// Biokinetic selected
+			if (event.getSlot() == 23) {
+				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "You chose the Biokinetic talent!");
+				Main.talentHashMap.put(p.getUniqueId().toString(), "Biokinetic");
+				Main.playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".talent", "Biokinetic");
+				p.closeInventory();
+				p.getInventory().addItem(ItemsPlus.arcaneCrystal);
+				
+				// set health (really just for testers since the max health doesn't change back when swapping talents)
+				p.setMaxHealth(20);
+			}
+			
+			// Enderian selected
+			if (event.getSlot() == 24) {
+				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "You chose the Enderian talent!");
+				Main.talentHashMap.put(p.getUniqueId().toString(), "Enderian");
+				Main.playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".talent", "Enderian");
+				p.closeInventory();
+				
+				// set health (really just for testers since the max health doesn't change back when swapping talents)
+				p.setMaxHealth(20);
+				
+				// Start particle effects
+				trails.startEnderianParticles();
+			}
+			
+			// Cobble Man selected
+			if (event.getSlot() == 25) {
+				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "OH LAWD HE COMIN!");
+				for (Player online : Bukkit.getOnlinePlayers()) {
+					online.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "COBBLE MAN HAS ARRIVED");
+				}
+				Main.talentHashMap.put(p.getUniqueId().toString(), "COBBLE MAN");
+				Main.playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".talent", "COBBLE MAN");
+				p.closeInventory();
+				
+				// set health (really just for testers since the max health doesn't change back when swapping talents)
+				p.setMaxHealth(40);
+			}
+			
+			// Sheriff selected
+			if (event.getSlot() == 26) {
+				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "OH LAWD HE COMIN!");
+				for (Player online : Bukkit.getOnlinePlayers()) {
+					online.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "THE SHERIFF HAS ARRIVED");
+				}
+				Main.talentHashMap.put(p.getUniqueId().toString(), "SHERIFF");
+				Main.playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".talent", "SHERIFF");
+				p.closeInventory();
+				
+				// set health (really just for testers since the max health doesn't change back when swapping talents)
+				p.setMaxHealth(40);
+			}
+			
+			for (PotionEffect effect : p.getActivePotionEffects()) {
+		        p.removePotionEffect(effect.getType());
+			}
+			
+			
+			// save player data file
+			try {
+				Main.playerDataConfig.save(Main.playerData);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} // this is important to have when editing server files, otherwise nothing gets changed
+		}	
 		
 	}
 	
@@ -908,6 +945,15 @@ public class Events implements Listener{
 			Main.combatPointsTracker.put(event.getEntity().getKiller().getUniqueId().toString(), Main.combatPointsTracker.get(event.getEntity().getKiller().getUniqueId().toString()) + 1);
 			if (Main.canSaveDataHashMap.get(event.getEntity().getKiller().getUniqueId().toString())){
 				FunctionsPlus.savePlayerData(event.getEntity().getKiller(), false);
+			}
+		}
+		
+		if (event.getEntity() instanceof Player) {
+			Player p = (Player) event.getEntity();
+			Main.playerDeathsHashMap.put(p.getUniqueId().toString(), Main.playerDeathsHashMap.get(p.getUniqueId().toString()) + 1);
+			
+			if (Main.canSaveDataHashMap.get(p.getUniqueId().toString())){
+				FunctionsPlus.savePlayerData(p, false);
 			}
 		}
 	}

@@ -67,6 +67,7 @@ public class ItemsPlus {
 	public static void init() {
 		// register custom enchants
 		EnchantmentsPlus.register();
+
 		
 		// custom weapons
 		createThugnarsGlock();
@@ -109,6 +110,7 @@ public class ItemsPlus {
 	}
 
 	// item creation functions
+	
 	
 	// custom weapons
 	public static void createThugnarsGlock() {

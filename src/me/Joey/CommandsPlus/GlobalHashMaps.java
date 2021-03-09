@@ -12,7 +12,7 @@ public interface GlobalHashMaps{
 	// player info
 	HashMap<String, String> playerRankHashMap = new HashMap<String, String>();
 	HashMap<String, String> factionHashMap = new HashMap<String, String>();
-	
+	HashMap<String, Integer> playerDeathsHashMap = new HashMap<String, Integer>();
 	
 	
 	// ----------------------------------------------------------------------------------------

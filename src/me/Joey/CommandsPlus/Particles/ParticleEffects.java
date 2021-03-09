@@ -1,4 +1,4 @@
-package me.Joey.CommandsPlus;
+package me.Joey.CommandsPlus.Particles;
 
 import java.util.Random;
 
@@ -11,6 +11,9 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+
+import me.Joey.CommandsPlus.FunctionsPlus;
+import me.Joey.CommandsPlus.Main;
 
 public class ParticleEffects {
 	

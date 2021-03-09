@@ -1,5 +1,7 @@
 package me.Joey.CommandsPlus.CustomInventories;
 
+import me.Joey.CommandsPlus.*;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,19 +10,25 @@ import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
-import me.Joey.CommandsPlus.Main;
 import net.md_5.bungee.api.ChatColor;
 
 public class TalentsInventory {
 	public static void createTalentSelectionInventory() {
-		Main.talentInventory = Bukkit.createInventory(null, 27, ChatColor.DARK_GRAY + "Pick a talent! Choose wisely!");
+		Main.talentInventory = Bukkit.createInventory(null, 54, ChatColor.DARK_GRAY + "Pick a talent! Choose wisely!");
 		
-		
-		ItemStack item = new ItemStack(Material.FEATHER);
+		ItemStack item = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
 		ItemMeta meta = item.getItemMeta();
+		meta.setDisplayName("");
+		item.setItemMeta(meta);
+		
+		
+		for (int i = 0; i < 54; i++) {
+			Main.talentInventory.setItem(i, item);
+		}
 		
 		
 		// Avian class item
+		item = new ItemStack(Material.FEATHER);
 		meta.setDisplayName(ChatColor.GOLD + "Avian");
 		List<String> lore = new ArrayList <>();
 		lore.add(ChatColor.WHITE + "Description:");
@@ -41,7 +49,7 @@ public class TalentsInventory {
 		lore.add(ChatColor.YELLOW + "you have 2 less hearts of health.");
 		meta.setLore(lore);
 		item.setItemMeta(meta);
-		Main.talentInventory.setItem(0, item);
+		Main.talentInventory.setItem(18, item);
 		
 		// Pyrokinetic class item
 		item.setType(Material.BLAZE_POWDER);
@@ -63,7 +71,7 @@ public class TalentsInventory {
 		lore.add(ChatColor.BLUE + "Water" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you take more damage in water and rain.");
 		meta.setLore(lore);
 		item.setItemMeta(meta);
-		Main.talentInventory.setItem(1, item);
+		Main.talentInventory.setItem(19, item);
 		
 		// Hydrokinetic class item
 		item.setType(Material.COD);
@@ -83,7 +91,7 @@ public class TalentsInventory {
 		lore.add(ChatColor.DARK_RED + "Fire" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you take more damage in the Nether and from fire.");
 		meta.setLore(lore);
 		item.setItemMeta(meta);
-		Main.talentInventory.setItem(2, item);
+		Main.talentInventory.setItem(20, item);
 		
 		// Frostbender class item
 		item.setType(Material.BLUE_ICE);
@@ -105,7 +113,7 @@ public class TalentsInventory {
 		lore.add(ChatColor.DARK_RED + "Fire" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you take more damage in the Nether and from fire.");
 		meta.setLore(lore);
 		item.setItemMeta(meta);
-		Main.talentInventory.setItem(3, item);
+		Main.talentInventory.setItem(21, item);
 		
 		// Terran class item
 		item.setType(Material.GRASS_BLOCK);
@@ -125,7 +133,7 @@ public class TalentsInventory {
 		lore.add(ChatColor.DARK_AQUA + "Heights" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you take 30% more fall damage.");
 		meta.setLore(lore);
 		item.setItemMeta(meta);
-		Main.talentInventory.setItem(4, item);
+		Main.talentInventory.setItem(22, item);
 		
 		// Biokinetic class item
 		item.setType(Material.RED_TULIP);
@@ -148,7 +156,7 @@ public class TalentsInventory {
 		lore.add(ChatColor.DARK_GREEN + "Poison" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you take more damage from poison sources.");
 		meta.setLore(lore);
 		item.setItemMeta(meta);
-		Main.talentInventory.setItem(5, item);
+		Main.talentInventory.setItem(23, item);
 		
 		// Enderian class item
 		item.setType(Material.ENDER_PEARL);
@@ -168,7 +176,7 @@ public class TalentsInventory {
 		lore.add(ChatColor.BLUE + "Water" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you take more damage in water and rain.");
 		meta.setLore(lore);
 		item.setItemMeta(meta);
-		Main.talentInventory.setItem(6, item);
+		Main.talentInventory.setItem(24, item);
 		
 		
 		// Cobble man class item
@@ -185,7 +193,7 @@ public class TalentsInventory {
 		lore.add(ChatColor.WHITE + "(" + ChatColor.RED + "Active" + ChatColor.WHITE + ") " + ChatColor.DARK_RED + "Imopster" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "killing someone grants you a minute of invisibility.");
 		meta.setLore(lore);
 		item.setItemMeta(meta);
-		Main.talentInventory.setItem(18, item);
+		Main.talentInventory.setItem(25, item);
 		
 		// Sheriff class item
 		item.setType(Material.STICK);
@@ -200,7 +208,7 @@ public class TalentsInventory {
 		lore.add(ChatColor.WHITE + "(" + ChatColor.RED + "Active" + ChatColor.WHITE + ") " + ChatColor.DARK_RED + "The Jail" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you can put players in The Jail.");
 		meta.setLore(lore);
 		item.setItemMeta(meta);
-		Main.talentInventory.setItem(19, item);
+		Main.talentInventory.setItem(26, item);
 				
 		
 		// close menu button
@@ -209,7 +217,15 @@ public class TalentsInventory {
 		lore.clear();
 		meta.setLore(lore);
 		item.setItemMeta(meta);
-		Main.talentInventory.setItem(26, item);
+		Main.talentInventory.setItem(49, item);
+		
+		// back button
+		item.setType(Material.ARROW);
+		meta.setDisplayName(ChatColor.GOLD + "Go Back");
+		lore.clear();
+		meta.setLore(lore);
+		item.setItemMeta(meta);
+		Main.talentInventory.setItem(48, item);
 		
 	}
 }

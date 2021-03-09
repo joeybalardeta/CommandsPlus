@@ -44,6 +44,8 @@ public class FunctionsPlus {
 	}
 	
 	// player data fetch functions
+	
+	// get player level
 	public static int getLevel(Player p) {
 		return 0;
 	}
@@ -106,6 +108,9 @@ public class FunctionsPlus {
 	}
 	
 	public static void savePlayerData(Player playerSave, boolean isLeaving) {
+		// save player deaths
+		Main.playerDataConfig.set("Users." + playerSave.getUniqueId() + ".stats" + ".deaths", Main.playerDeathsHashMap.get(playerSave.getUniqueId().toString()));
+		
 		// save mining points
 		Main.playerDataConfig.set("Users." + playerSave.getUniqueId() + ".stats" + ".miningPoints", Main.miningPointsTracker.get(playerSave.getUniqueId().toString()));
 		

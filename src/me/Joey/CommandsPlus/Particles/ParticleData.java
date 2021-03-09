@@ -1,4 +1,4 @@
-package me.Joey.CommandsPlus;
+package me.Joey.CommandsPlus.Particles;
 
 import java.util.HashMap;
 import java.util.Map;

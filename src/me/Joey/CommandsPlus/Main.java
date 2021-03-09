@@ -1,6 +1,7 @@
 package me.Joey.CommandsPlus;
 
-import me.Joey.CommandsPlus.CustomInventories.TalentsInventory;
+import me.Joey.CommandsPlus.CustomInventories.*;
+import me.Joey.CommandsPlus.Particles.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -8,6 +9,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
@@ -64,8 +66,10 @@ import net.md_5.bungee.api.chat.TextComponent;
 public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 	
 	// some variable declarations
+	public static Inventory masterMenuInventory;
 	public static Inventory talentInventory;
 	public static List<Material> avianHeadroomBlocks = new ArrayList <>();
+	public static HashMap<String, ItemStack[]> factionStorage = new HashMap<String, ItemStack[]>();
 	
 	// initialize taskID variables
 	int t50msTask = 0;
@@ -154,6 +158,7 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 		// player info
 		playerRankHashMap.put(online.getUniqueId().toString(), playerDataConfig.getString("Users." + online.getUniqueId() + ".stats" + ".rank"));
 		factionHashMap.put(online.getUniqueId().toString(), playerDataConfig.getString("Users." + online.getUniqueId() + ".stats" + ".faction"));
+		playerDeathsHashMap.put(online.getUniqueId().toString(), 0 + playerDataConfig.getInt("Users." + online.getUniqueId() + ".stats" + ".deaths"));
 		
 		
 		// player weapon data
@@ -218,7 +223,8 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 		EnchantmentsPlus.register();
 		
 		
-		// construct talent inventory
+		// construct menu inventories
+		TalentsInventory.createTalentSelectionInventory();
 		TalentsInventory.createTalentSelectionInventory();
 		
 		
@@ -686,7 +692,7 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 		
 		score3.setScore(4);
 		
-		Score score4 = obj.getScore("Level: " + ChatColor.AQUA + 0);
+		Score score4 = obj.getScore("Deaths: " + ChatColor.AQUA + Main.playerDeathsHashMap.get(player.getUniqueId().toString()));
 		score4.setScore(3);
 		
 		Score score5 = obj.getScore("");
@@ -721,7 +727,7 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 	
 	// draws chunkmap
 	public void chunkMapDraw(Player p) {
-		String playerUUID = p.getUniqueId().toString();
+		String playerFaction = factionHashMap.get(p.getUniqueId().toString());
 		int mapSize = 3;
 		p.sendMessage("-");
 		p.sendMessage("-");
@@ -753,11 +759,11 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 			
 			
 			for (int j = -mapSize; j < (mapSize + 1); j++) {
-				String chunkOwnerUUID = chunkClaimDataConfig.getString("ClaimedChunks." + ".X: " + (p.getLocation().getChunk().getX() + j) + ", Z: " + (p.getLocation().getChunk().getZ() + i) + ".belongsToUUID");
-				if (chunkOwnerUUID == null) {
+				String chunkName = chunkClaimDataConfig.getString("ClaimedChunks." + ".X: " + (p.getLocation().getChunk().getX() + j) + ", Z: " + (p.getLocation().getChunk().getZ() + i) + ".appearsAs");
+				if (chunkName == null) {
 					lineMessage += "&f* ";
 				}
-				else if (chunkOwnerUUID.equals(playerUUID)) {
+				else if (chunkName.equals(playerFaction)) {
 					lineMessage += "&b* ";
 				}
 				else {
@@ -1678,6 +1684,20 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 				return true;
 			}
 			
+			if (args.length == 0) {
+				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "Invalid faction command! The available faction commands are:");
+				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "/faction create <name> - " + ChatColor.YELLOW + "creates a faction with the specified name.");
+				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "/faction invite <player> - " + ChatColor.YELLOW + "invites the specified player to your faction.");
+				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "/faction remove <player> - " + ChatColor.YELLOW + "removes the specified player from your faction.");
+				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "/faction accept - " + ChatColor.YELLOW + "accept faction invite.");
+				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "/faction decline - " + ChatColor.YELLOW + "decline faction invite.");
+				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "/faction promote <player> - " + ChatColor.YELLOW + "promote the specified player in your faction");
+				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "/faction demote <player> - " + ChatColor.YELLOW + "demote the specified player in your faction");
+				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "/faction info - " + ChatColor.YELLOW + "gives info about the faction you're currently in.");
+				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "/faction info <name> - " + ChatColor.YELLOW + "gives info about the faction specified.");
+				return true;
+			}
+			
 			// variable grabbing
 			String playerFaction = playerDataConfig.getString("Users." + p.getUniqueId() + ".stats" + ".faction");
 			
@@ -2045,6 +2065,7 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 						factionMembers += faction.get(s + ".name") + ", ";
 					}
 				}
+				
 				factionMembers = factionMembers.substring(0, factionMembers.length() - 2);
 				
 				// Commands+ System Messages
@@ -2228,7 +2249,12 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 		
 		
 		//-----------------------------------------------------------------------------------------------------------------------------------------------
-		// Talent Commands
+		// Menu Commands
+		if (label.equalsIgnoreCase("menu")){
+			MasterMenu.createMasterMenuInventory(p);
+			p.openInventory(masterMenuInventory);
+		}
+		
 		if (label.equalsIgnoreCase("talents")){
 			p.openInventory(talentInventory);
 		}
