@@ -61,11 +61,13 @@ public class TalentsInventory {
 		lore.add("");
 		lore.add(ChatColor.WHITE + "Abilities:");
 		lore.add(ChatColor.WHITE + "(" + ChatColor.BLUE + "Passive" + ChatColor.WHITE + ") " + ChatColor.LIGHT_PURPLE + "Obsidian Skin" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you're immune to fire and take");
-		lore.add(ChatColor.YELLOW + "less damage in the Nether, you take no fall damage in lava.");
-		lore.add(ChatColor.WHITE + "(" + ChatColor.BLUE + "Passive" + ChatColor.WHITE + ") " + ChatColor.RED + "Fire Storm" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you deal 40% more damage while on fire.");
+		lore.add(ChatColor.YELLOW + "less damage in the Nether, you take no fall damage on obsidian.");
+		lore.add(ChatColor.WHITE + "(" + ChatColor.BLUE + "Passive" + ChatColor.WHITE + ") " + ChatColor.RED + "Fire Storm" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you deal 30% more damage while on fire.");
 		lore.add(ChatColor.YELLOW + "(does not stack with strength)");
 		lore.add(ChatColor.WHITE + "(" + ChatColor.BLUE + "Passive" + ChatColor.WHITE + ") " + ChatColor.DARK_RED + "Blazing Fists" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you have a small chance of lighting");
 		lore.add(ChatColor.YELLOW + "enemies on fire by hitting them. (5% for players, 100% for mobs)");
+		lore.add(ChatColor.WHITE + "(" + ChatColor.BLUE + "Passive" + ChatColor.WHITE + ") " + ChatColor.DARK_PURPLE + "Molten Movement" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "lava you walk on temporarily");
+		lore.add(ChatColor.YELLOW + "turns into obsidian.");
 		lore.add("");
 		lore.add(ChatColor.WHITE + "Weaknesses:");
 		lore.add(ChatColor.BLUE + "Water" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you take more damage in water and rain.");
@@ -82,7 +84,7 @@ public class TalentsInventory {
 		lore.add(ChatColor.YELLOW + "gained the ocean's favor and can command its power at will.");
 		lore.add("");
 		lore.add(ChatColor.WHITE + "Abilities:");
-		lore.add(ChatColor.WHITE + "(" + ChatColor.BLUE + "Passive" + ChatColor.WHITE + ") " + ChatColor.AQUA + "Waterwheel" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you dig faster in water.");
+		lore.add(ChatColor.WHITE + "(" + ChatColor.BLUE + "Passive" + ChatColor.WHITE + ") " + ChatColor.AQUA + "Waterwheel" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you dig and swim faster in water.");
 		lore.add(ChatColor.WHITE + "(" + ChatColor.BLUE + "Passive" + ChatColor.WHITE + ") " + ChatColor.DARK_AQUA + "Cyclone" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you deal 30% more damage in water.");
 		lore.add(ChatColor.WHITE + "(" + ChatColor.BLUE + "Passive" + ChatColor.WHITE + ") " + ChatColor.BLUE + "Hydrokinetic Regeneration" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you regenerate");
 		lore.add(ChatColor.YELLOW + "health in water and can't drown.");
@@ -174,6 +176,8 @@ public class TalentsInventory {
 		lore.add("");
 		lore.add(ChatColor.WHITE + "Weaknesses:");
 		lore.add(ChatColor.BLUE + "Water" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you take more damage in water and rain.");
+		lore.add(ChatColor.DARK_GREEN + "Low Defense" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you cannot equip chestplates"); 
+		lore.add(ChatColor.YELLOW + "and you have 2 less hearts of health.");
 		meta.setLore(lore);
 		item.setItemMeta(meta);
 		Main.talentInventory.setItem(24, item);

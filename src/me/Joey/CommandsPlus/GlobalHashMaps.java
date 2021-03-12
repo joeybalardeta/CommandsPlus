@@ -4,6 +4,7 @@ import java.util.HashMap;
 
 import org.bukkit.entity.Entity;
 
+
 public interface GlobalHashMaps{
 	// creates global interface to hashmaps for player/plugin data tracking
 	
@@ -13,6 +14,8 @@ public interface GlobalHashMaps{
 	HashMap<String, String> playerRankHashMap = new HashMap<String, String>();
 	HashMap<String, String> factionHashMap = new HashMap<String, String>();
 	HashMap<String, Integer> playerDeathsHashMap = new HashMap<String, Integer>();
+	HashMap<String, Float> playerYawHashMap = new HashMap<String, Float>();
+	HashMap<String, Integer> playerUnchangedLookDirHashMap = new HashMap<String, Integer>();
 	
 	
 	// ----------------------------------------------------------------------------------------

@@ -39,6 +39,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.inventory.meta.SkullMeta;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionEffect;
@@ -52,6 +53,8 @@ import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.ScoreboardManager;
 import org.bukkit.util.Vector;
 
+import com.sun.org.apache.bcel.internal.generic.RETURN;
+
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
@@ -62,7 +65,7 @@ import net.md_5.bungee.api.chat.TextComponent;
 // TODO: Faction messaging system
 // TODO: Hashmap for event handlers
 
-@SuppressWarnings("deprecation")
+@SuppressWarnings({ "deprecation", "unused" })
 public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 	
 	// some variable declarations
@@ -70,6 +73,8 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 	public static Inventory talentInventory;
 	public static List<Material> avianHeadroomBlocks = new ArrayList <>();
 	public static HashMap<String, ItemStack[]> factionStorage = new HashMap<String, ItemStack[]>();
+	public static HashMap<String, Location> fireWalkerLocs = new HashMap<String, Location>();
+	public static List<ItemStack> unrenameableItems = new ArrayList <>();
 	
 	// initialize taskID variables
 	int t50msTask = 0;
@@ -80,6 +85,8 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 	
 	
 	// initialize plugin data files
+	public static File master;
+	public static FileConfiguration masterConfig;
 	public static File playerLogs;
 	public static FileConfiguration playerLogsConfig;
 	public static File playerData;
@@ -95,12 +102,21 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 	public static ArrayList<ItemStack> bloodMoonLootTable = new ArrayList<>();
 	
 	public static void loadBloodMoonLootTable() {
+		// Blocks
+		bloodMoonLootTable.add(new ItemStack(Material.OBSIDIAN));
+		
+		// Mining
 		bloodMoonLootTable.add(new ItemStack(Material.GOLD_INGOT));
+		bloodMoonLootTable.add(new ItemStack(Material.EMERALD));
 		bloodMoonLootTable.add(new ItemStack(Material.IRON_INGOT));
-		bloodMoonLootTable.add(new ItemStack(Material.GOLDEN_APPLE));
+		
+		// Foodstuffs
+		bloodMoonLootTable.add(new ItemStack(Material.APPLE));
 		
 		
-		PotionType[] effects = new PotionType[]{PotionType.STRENGTH, PotionType.FIRE_RESISTANCE, PotionType.INVISIBILITY, PotionType.JUMP, PotionType.INSTANT_HEAL};
+		
+		// Potions
+		PotionType[] effects = new PotionType[]{PotionType.INSTANT_DAMAGE, PotionType.NIGHT_VISION, PotionType.FIRE_RESISTANCE, PotionType.INVISIBILITY, PotionType.JUMP, PotionType.INSTANT_HEAL};
 		for (PotionType effect : effects) {
 			ItemStack potion = new ItemStack(Material.POTION);
 			PotionMeta potionMeta = (PotionMeta) potion.getItemMeta();
@@ -109,10 +125,31 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 			bloodMoonLootTable.add(potion);
 		}
 		
+		
+		// Arrows
+		PotionType[] arrowEffects = new PotionType[]{PotionType.NIGHT_VISION, PotionType.FIRE_RESISTANCE, PotionType.POISON, PotionType.JUMP, PotionType.INSTANT_HEAL};
+		for (PotionType effect : arrowEffects) {
+			ItemStack arrow = new ItemStack(Material.TIPPED_ARROW);
+			PotionMeta potionMeta = (PotionMeta) arrow.getItemMeta();
+			potionMeta.setBasePotionData(new PotionData(effect));
+			arrow.setItemMeta(potionMeta);
+			bloodMoonLootTable.add(arrow);
+		}
+		
+		
+		// Brewing ingredients
+		bloodMoonLootTable.add(new ItemStack(Material.FERMENTED_SPIDER_EYE));
+		bloodMoonLootTable.add(new ItemStack(Material.SUGAR));
+		bloodMoonLootTable.add(new ItemStack(Material.RABBIT_FOOT));
+		
+		
+		// Miscellaneous
+		bloodMoonLootTable.add(new ItemStack(Material.FLINT));
 	}
 	
 	public static void loadAvianHeadroomBlocks() {
 		avianHeadroomBlocks.add(Material.LADDER);
+		avianHeadroomBlocks.add(Material.SUGAR_CANE);
 		avianHeadroomBlocks.add(Material.AIR);
 		avianHeadroomBlocks.add(Material.CAVE_AIR);
 		avianHeadroomBlocks.add(Material.WATER);
@@ -151,14 +188,38 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 		
 	}
 	
+	public static void loadUnrenameableItems() {
+		unrenameableItems.add(ItemsPlus.arcaneCrystal);
+		unrenameableItems.add(ItemsPlus.stasisCrystal);
+		unrenameableItems.add(ItemsPlus.timberAxe);
+		unrenameableItems.add(ItemsPlus.replantingHoe);
+		unrenameableItems.add(ItemsPlus.trackingBow);
+		unrenameableItems.add(ItemsPlus.bonkStick);
+		unrenameableItems.add(ItemsPlus.dashSword);
+		unrenameableItems.add(ItemsPlus.thugnarsGlock);
+		unrenameableItems.add(ItemsPlus.telekinesisBook);
+		unrenameableItems.add(ItemsPlus.smeltingBook);
+		unrenameableItems.add(ItemsPlus.absorbtionPotion);
+		unrenameableItems.add(ItemsPlus.hastePotion);
+		
+	}
+	
 	
 	// HashMap loader function
 	public static void loadHashMaps(Player online) {
 		
 		// player info
 		playerRankHashMap.put(online.getUniqueId().toString(), playerDataConfig.getString("Users." + online.getUniqueId() + ".stats" + ".rank"));
+		
+		if (playerRankHashMap.get(online.getUniqueId().toString()) == null) {
+			playerDataConfig.set("Users." + online.getUniqueId() + ".stats" + ".rank", "Member");
+			playerRankHashMap.put(online.getUniqueId().toString(), "Member");
+		}
+		
 		factionHashMap.put(online.getUniqueId().toString(), playerDataConfig.getString("Users." + online.getUniqueId() + ".stats" + ".faction"));
 		playerDeathsHashMap.put(online.getUniqueId().toString(), 0 + playerDataConfig.getInt("Users." + online.getUniqueId() + ".stats" + ".deaths"));
+		playerYawHashMap.put(online.getUniqueId().toString(), 0f);
+		playerUnchangedLookDirHashMap.put(online.getUniqueId().toString(), 0);
 		
 		
 		// player weapon data
@@ -236,6 +297,9 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 		loadBloodMoonLootTable();
 		
 		
+		// load unrenamable items (it's really just all of the custom items)
+		loadUnrenameableItems();
+		
 		
 		
 		// register valid log materials HashSet for Timber Axe
@@ -246,6 +310,18 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 				logMaterials.add(material);
 			}
 		}
+		
+		// create/open player log file
+		master = new File(getDataFolder(), "config.yml");
+		if (!master.exists()) { 
+			master.getParentFile().mkdirs();
+	      try {
+	    	  master.createNewFile();
+	      } catch (IOException ex) {
+	         ex.printStackTrace();
+	      }
+	    }
+		masterConfig = YamlConfiguration.loadConfiguration(master);
 		
 		// create/open player log file
 		playerLogs = new File(getDataFolder(), "playerLogs.yml");
@@ -315,6 +391,8 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 				loadHashMaps(online);
 			}
 			
+			FunctionsPlus.restoreTalentEffects(online, talentHashMap.get(online.getUniqueId().toString()));
+			
 		}
 		hashMapsCreated = true;
 
@@ -345,41 +423,6 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 				getLogger().log(Level.SEVERE, "Player rank is null!");
 				
 			}
-			
-			String talent = Main.talentHashMap.get(online.getUniqueId().toString());
-			
-			if (talent != null) {
-				ParticleData particle = new ParticleData(online.getUniqueId());
-				ParticleEffects trails = new ParticleEffects(online);
-				
-				if (particle.hasID()) {
-					particle.endTask();
-					particle.removeID();
-				}
-				
-				if (talent.equals("Avian")) {
-					
-				}
-				if (talent.equals("Pyrokinetic")) {
-					trails.startPyrokineticParticles();	
-				}
-				
-				if (talent.equals("Hydrokinetic")) {
-					
-				}
-				if (talent.equals("Frostbender")) {
-					trails.startFrostbenderParticles();
-				}
-				if (talent.equals("Terran")) {
-					
-				}
-				if (talent.equals("Biokinetic")) {
-					
-				}
-				if (talent.equals("Enderian")) {
-					trails.startEnderianParticles();
-				}
-			}
 		
 		
 		}
@@ -395,12 +438,25 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
             public void run() {
             	if (!Bukkit.getOnlinePlayers().isEmpty()) {
             		World world = null;
+            		
+            		
             		for (Player online : Bukkit.getOnlinePlayers()) {
+            			String talent = talentHashMap.get(online.getUniqueId().toString());
+        				Location location = online.getLocation();
+            			
             			world = online.getWorld();
             			if (playerFrozenHashMap.get(online.getUniqueId().toString()) > 0) {
             				online.setVelocity(online.getVelocity().multiply(new Vector(0, 1, 0)));
             				online.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 2, 1));
             				playerFrozenHashMap.put(online.getUniqueId().toString(), playerFrozenHashMap.get(online.getUniqueId().toString()) - 1);
+            			}
+            			
+            			if (talent.equals("Pyrokinetic")) {
+        					Material m1 = location.subtract(0, 1, 0).getBlock().getType();
+        					if (m1 == Material.LAVA && online.getInventory().getBoots() != null) {
+        						fireWalk(online);
+        						
+        					}
             			}
             			
             			
@@ -510,11 +566,10 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
             				}
             				
             				if (talent.equals("Hydrokinetic")) {
-            					Material m1 = online.getPlayer().getLocation().getBlock().getType();
-            					Material m2 = online.getPlayer().getLocation().add(0, 1, 0).getBlock().getType();
+            					online.addPotionEffect(new PotionEffect(PotionEffectType.CONDUIT_POWER, 100000, 0));
+            					Material m1 = online.getLocation().getBlock().getType();
+            					Material m2 = online.getLocation().add(0, 1, 0).getBlock().getType();
             				    if (m1 == Material.WATER || m2 == Material.WATER || m1 == Material.SEAGRASS || m2 == Material.SEAGRASS || m1 == Material.TALL_SEAGRASS || m2 == Material.TALL_SEAGRASS || m1 == Material.KELP || m2 == Material.KELP) {
-                					online.addPotionEffect(new PotionEffect(PotionEffectType.WATER_BREATHING, 30, 0));
-                					online.addPotionEffect(new PotionEffect(PotionEffectType.FAST_DIGGING, 30, 1));
                 					boolean regenFound = false;
                 					for (PotionEffect potionEffect : online.getActivePotionEffects()) {
                 						if (potionEffect.getType().equals(PotionEffectType.REGENERATION)) {
@@ -559,6 +614,21 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
             		killPhantoms();
             		
         			for (Player online : Bukkit.getOnlinePlayers()) {
+        				// if player look direction (really just yaw) is the same as a second ago, increment their value for how many seconds they haven't looked in a new direction
+        				// if it returns false, the valuke for how long they haven't looked somewhere is reset to 0 and the look direction value is set to the new value
+        				if (playerYawHashMap.get(online.getUniqueId().toString()) == online.getLocation().getYaw()) {
+        					playerUnchangedLookDirHashMap.put(online.getUniqueId().toString(), playerUnchangedLookDirHashMap.get(online.getUniqueId().toString()) + 1);
+        				}
+        				else {
+        					playerYawHashMap.put(online.getUniqueId().toString(), online.getLocation().getYaw());
+        					playerUnchangedLookDirHashMap.put(online.getUniqueId().toString(), 0);
+        				}
+        				
+        				
+        				if (playerUnchangedLookDirHashMap.get(online.getUniqueId().toString()) > 599) {
+        					online.kickPlayer("AFK");
+        				}
+        				
         				if (scoreboardHashMap.get(online.getUniqueId().toString())) {
         					createBoard(online);
         				}
@@ -569,7 +639,7 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
         				
         				
         				if (!isBloodMoon && (FunctionsPlus.getTime(getServer(), online) % 24000) >= 13000 && ((FunctionsPlus.getTime(getServer(), online) % 24000) < 13020)) {
-        					if (((int) (Math.random() * 20)) == 7) {
+        					if (((int) (Math.random() * 50)) == 7) {
         						isBloodMoon = true;
         						for (Player online_copy : Bukkit.getOnlinePlayers()) {
         							online_copy.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "A blood moon is rising!");
@@ -585,14 +655,13 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
         				
         				String talent = Main.talentHashMap.get(online.getUniqueId().toString());
         				
-        				
-        				if (!talent.equals("Avian")) {
-        					if (online.getInventory().getChestplate() != null && online.getInventory().getChestplate().getItemMeta().isUnbreakable()) {
-        						online.getInventory().setChestplate(null);
-        					}
+        				if (talent != null) {
+        					if (!talent.equals("Avian")) {
+            					if (online.getInventory().getChestplate() != null && online.getInventory().getChestplate().getItemMeta().isUnbreakable()) {
+            						online.getInventory().setChestplate(null);
+            					}
+            				}
         				}
-        				
-        				
         			}
             	}
             }
@@ -952,10 +1021,12 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 			
 			Player target = Bukkit.getServer().getPlayer(playerName);
 			
-			playerRankHashMap.put(target.getUniqueId().toString(), "" + rank);
-			playerDataConfig.set("Users." + target.getUniqueId() + ".stats" + ".rank", rank);
-			p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "Set rank of " + ChatColor.BLUE + target.getName() + ChatColor.WHITE + " to " + ChatColor.RED + rank);
-			target.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "Your rank was changed to " + ChatColor.RED + rank);
+			if (target == null) {
+				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "Player does not exist!");
+				return true;
+			}
+			
+			FunctionsPlus.setRank(p, target, rank);
 		}
 
 		//-----------------------------------------------------------------------------------------------------------------------------------------------
@@ -963,7 +1034,7 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 		
 		//-----------------------------------------------------------------------------------------------------------------------------------------------
 		// commands to edit system and personal preferences
-		if (label.equalsIgnoreCase("vanillamode") && p.hasPermission("CommandsPlus.superuser")) {
+		if (label.equalsIgnoreCase("vanillamode") && playerRankHashMap.get(p.getUniqueId().toString()) != null && playerRankHashMap.get(p.getUniqueId().toString()).equals("Superuser")) {
 			
 			if (getConfig().getBoolean("System." + "settings" + ".vanillaMode") == true) {
 				getConfig().set("System." + "settings" + ".vanillaMode", false);
@@ -979,9 +1050,6 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 		// enable or disable scoreboard
 		if (label.equalsIgnoreCase("scoreboard")) {
 			// if vanilla mode is on don't run command
-			if (vanillaMode) {
-				return true;
-			}
 			
 			if (playerDataConfig.getBoolean("Users." + p.getUniqueId() + "." + "preferences" + ".scoreboard")) {
 				playerDataConfig.set("Users." + p.getUniqueId() + "." + "preferences" + ".scoreboard", false);
@@ -1024,7 +1092,7 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 				return true;
 			}
 			
-			if (!talent.equals("Terran") && !playerRankHashMap.get(p.getUniqueId().toString()).equals("Superuser")) {
+			if (!talent.equals("Terran") && (playerRankHashMap.get(p.getUniqueId().toString()) == null || !playerRankHashMap.get(p.getUniqueId().toString()).equals("Superuser"))) {
 				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "Only terrans can use /top!");
 				FunctionsPlus.playSound(p, "actionDenied");
 				return true;
@@ -2312,11 +2380,14 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 		//-----------------------------------------------------------------------------------------------------------------------------------------------
 		// Miscellaneous Commands
 		
-		if (label.equalsIgnoreCase("test")){
-			p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.AQUA + "Frozen!");
-			playerFrozenHashMap.put(p.getUniqueId().toString(), 100);
-		}
 		
+		if (label.equalsIgnoreCase("cobble")){
+			if (playerRankHashMap.get(p.getUniqueId().toString()).equalsIgnoreCase("COBBLE MAN")) {
+				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "mmmmmmmmmmmmmmmm Cobble");
+				p.getInventory().addItem(new ItemStack(Material.COBBLESTONE, 64));
+			}
+			
+		}
 		
 		
 		if (label.equalsIgnoreCase("credits")){
@@ -2452,6 +2523,31 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 		
 	}
 	
+	public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args){
+		List<String> tabComplete = new ArrayList<>();
+		if (label.equalsIgnoreCase("namecolor")){
+			for (ChatColor color : ChatColor.values()) {
+				if (color.toString().startsWith(args[0])) {
+					tabComplete.add(color.toString());
+				}
+			}
+		}
+		
+		return tabComplete;
+	}
+	
+	public void fireWalk(Player p) {
+		final Location location = p.getLocation().subtract(0, 1, 0);
+		location.getBlock().setType(Material.OBSIDIAN);
+		
+		BukkitScheduler scheduler = p.getServer().getScheduler();
+		scheduler.scheduleSyncDelayedTask(this, new Runnable() {
+            public void run() {
+            	location.getBlock().setType(Material.LAVA);
+            	
+            }
+        }, 60L);
+	}
 }
 
 

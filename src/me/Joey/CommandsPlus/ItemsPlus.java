@@ -32,6 +32,7 @@ public class ItemsPlus {
 	// custom tools
 	public static ItemStack timberAxe;
 	public static ItemStack redstonePickaxe;
+	public static ItemStack replantingHoe;
 	
 	
 	// custom potions
@@ -81,6 +82,7 @@ public class ItemsPlus {
 		// custom tools
 		createTimberAxe();
 		createRestonePickaxe();
+		createReplantingHoe();
 		
 		
 		// custom potions
@@ -279,6 +281,41 @@ public class ItemsPlus {
 		
 		// set ItemStack item to the item that was created in this function
 		redstonePickaxe = item;
+	}
+	
+	public static void createReplantingHoe() {
+		// create item
+		ItemStack item = new ItemStack(Material.GOLDEN_HOE, 1);
+		
+		
+		// set item metadata
+		ItemMeta meta = item.getItemMeta();
+		meta.setDisplayName(ChatColor.GREEN + "Replanting Hoe");
+		List<String> lore = new ArrayList <>();
+		lore.add(ChatColor.WHITE + "Replants harvested crops!");
+		meta.setLore(lore);
+		meta.addEnchant(Enchantment.DIG_SPEED, 5, true);
+		meta.setUnbreakable(true);
+		meta.addItemFlags(ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_UNBREAKABLE);
+		
+		item.setItemMeta(meta);
+		
+		
+		// create crafting recipe
+		
+		// shaped recipe
+		ShapedRecipe SR = new ShapedRecipe(NamespacedKey.minecraft("replanting_hoe"), item);
+		SR.shape("BBB",
+				 "BHB",
+				 "BBB");
+		
+		SR.setIngredient('H', Material.WOODEN_HOE);
+		SR.setIngredient('B', Material.BONE_MEAL);
+		Bukkit.getServer().addRecipe(SR);
+		
+		
+		// set ItemStack item to the item that was created in this function
+		replantingHoe = item;
 	}
 	
 	
@@ -570,10 +607,9 @@ public class ItemsPlus {
 		ItemMeta meta = item.getItemMeta();
 		meta.setDisplayName(ChatColor.RED + "Bonk Stick");
 		List<String> lore = new ArrayList<String>();
-		lore.add(ChatColor.GRAY + "Knockback XXV");
+		lore.add(ChatColor.YELLOW + "Punish them for their actions.");
+		lore.add(ChatColor.YELLOW + "Send them to fart castle.");
 		meta.setLore(lore);
-		meta.addEnchant(Enchantment.KNOCKBACK, 25, true);
-		meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
 		
 		
 		item.setItemMeta(meta);

@@ -17,11 +17,17 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
+import org.bukkit.plugin.Plugin;
 
+import me.Joey.CommandsPlus.Particles.ParticleData;
+import me.Joey.CommandsPlus.Particles.ParticleEffects;
 import net.md_5.bungee.api.ChatColor;
 
 // this class is for big functions used in the main loop
 public class FunctionsPlus {
+	static Plugin plugin;
+	
+	
 	public static boolean day(Server server, Player p) {
 	    String worldName = p.getServer().getName();
 	    long time = server.getWorld(worldName).getTime();
@@ -42,6 +48,8 @@ public class FunctionsPlus {
 	    return time;
 
 	}
+	
+
 	
 	// player data fetch functions
 	
@@ -208,6 +216,73 @@ public class FunctionsPlus {
         }
         return amount;
     }
+	
+	// set a player's rank
+	public static void setRank(Player p, Player target, String rank) { 
+		Main.playerRankHashMap.put(target.getUniqueId().toString(), "" + rank);
+		Main.playerDataConfig.set("Users." + target.getUniqueId() + ".stats" + ".rank", rank);
+		if (p != null) {
+			p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "Set rank of " + ChatColor.BLUE + target.getName() + ChatColor.WHITE + " to " + ChatColor.RED + rank);
+			target.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "Your rank was changed to " + ChatColor.RED + rank);
+		}
+	}
+	
+	
+	// restore all talent health sets and particles
+	@SuppressWarnings("deprecation")
+	public static void restoreTalentEffects(Player online, String talent) {
+		ParticleData particle = new ParticleData(online.getUniqueId());
+		ParticleEffects trails = new ParticleEffects(online);
+		
+		if (particle.hasID()) {
+			particle.endTask();
+			particle.removeID();
+		}
+		
+		if (talent == null) {
+			online.setMaxHealth(20);
+		}
+		
+		if (talent.equals("Avian")) {
+			online.setMaxHealth(16);
+			online.getInventory().setChestplate(ItemsPlus.avianElytra);
+		}
+		
+		if (talent.equals("Pyrokinetic")) {
+			online.setMaxHealth(20);
+			trails.startPyrokineticParticles();
+		}
+		
+		if (talent.equals("Hydrokinetic")) {
+			online.setMaxHealth(20);
+		}
+		
+		if (talent.equals("Frostbender")) {
+			online.setMaxHealth(20);
+		}
+		
+		if (talent.equals("Terran")) {
+			online.setMaxHealth(20);
+		}
+		
+		if (talent.equals("Biokinetic")) {
+			online.setMaxHealth(20);
+		}
+		
+		if (talent.equals("Enderian")) {
+			online.setMaxHealth(16);
+			trails.startEnderianParticles();
+		}
+		
+		if (talent.equals("SHERIFF")) {
+			online.setMaxHealth(40);
+		}
+		
+		if (talent.equals("COBBLE MAN")) {
+			online.setMaxHealth(40);
+		}
+	}
+	
 	
 	
 	@SuppressWarnings("deprecation")

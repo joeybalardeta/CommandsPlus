@@ -2,6 +2,7 @@ package me.Joey.CommandsPlus;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
@@ -12,10 +13,12 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
+import org.bukkit.World;
 import org.bukkit.World.Environment;
 import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
 import org.bukkit.block.Container;
+import org.bukkit.block.data.Ageable;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Animals;
 import org.bukkit.entity.Creeper;
@@ -49,6 +52,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryInteractEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerBedEnterEvent;
+import org.bukkit.event.player.PlayerChatEvent;
 import org.bukkit.event.player.PlayerFishEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerItemConsumeEvent;
@@ -57,6 +61,8 @@ import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.event.player.PlayerShearEntityEvent;
+import org.bukkit.event.player.PlayerTeleportEvent;
+import org.bukkit.event.player.PlayerTeleportEvent.TeleportCause;
 import org.bukkit.inventory.BrewerInventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
@@ -75,6 +81,9 @@ import net.md_5.bungee.api.ChatColor;
 
 @SuppressWarnings("deprecation")
 public class Events implements Listener{
+	
+	
+	
 	
 	@EventHandler
 	public void onJoin(PlayerJoinEvent event) {
@@ -121,41 +130,7 @@ public class Events implements Listener{
 			Main.createBoard(event.getPlayer());
 		}
 		
-		
-		String talent = Main.talentHashMap.get(online.getUniqueId().toString());
-		
-		if (talent != null) {
-			ParticleData particle = new ParticleData(online.getUniqueId());
-			ParticleEffects trails = new ParticleEffects(online);
-			
-			if (particle.hasID()) {
-				particle.endTask();
-				particle.removeID();
-			}
-			
-			if (talent.equals("Avian")) {
-				
-			}
-			if (talent.equals("Pyrokinetic")) {
-				trails.startPyrokineticParticles();	
-			}
-			
-			if (talent.equals("Hydrokinetic")) {
-				
-			}
-			if (talent.equals("Frostbender")) {
-				trails.startFrostbenderParticles();
-			}
-			if (talent.equals("Terran")) {
-				
-			}
-			if (talent.equals("Biokinetic")) {
-				
-			}
-			if (talent.equals("Enderian")) {
-				trails.startEnderianParticles();
-			}
-		}
+		FunctionsPlus.restoreTalentEffects(online, Main.talentHashMap.get(online.getUniqueId().toString()));
 	}
 	
 	@EventHandler
@@ -181,47 +156,7 @@ public class Events implements Listener{
 	public void onPlayerRespawn(PlayerRespawnEvent event) {
 		Player p = event.getPlayer();
 
-		String talent = Main.talentHashMap.get(p.getUniqueId().toString());
-		
-		if (talent != null) {
-			
-			if (talent.equals("Avian")) {
-				p.setMaxHealth(16);
-				p.getInventory().setChestplate(ItemsPlus.avianElytra);
-			}
-			
-			if (talent.equals("Pyrokinetic")) {
-				p.setMaxHealth(20);
-			}
-			
-			if (talent.equals("Hydrokinetic")) {
-				p.setMaxHealth(20);
-			}
-			
-			if (talent.equals("Frostbender")) {
-				p.setMaxHealth(20);
-			}
-			
-			if (talent.equals("Terran")) {
-				p.setMaxHealth(20);
-			}
-			
-			if (talent.equals("Biokinetic")) {
-				p.setMaxHealth(20);
-			}
-			
-			if (talent.equals("Enderian")) {
-				p.setMaxHealth(20);
-			}
-			
-			if (talent.equals("SHERIFF")) {
-				p.setMaxHealth(40);
-			}
-			
-			if (talent.equals("COBBLE MAN")) {
-				p.setMaxHealth(40);
-			}
-		}
+		FunctionsPlus.restoreTalentEffects(p, Main.talentHashMap.get(p.getUniqueId().toString()));
 	}
 	
 	
@@ -300,8 +235,9 @@ public class Events implements Listener{
 			}
 			
 			/*
-			if (Main.playerDataConfig.contains("Users." + p.getUniqueId() + ".stats" + ".talent") && !p.hasPermission("commandsPlus.tester")) {
+			if (Main.playerDataConfig.contains("Users." + p.getUniqueId() + ".stats" + ".talent")) {
 				p.closeInventory();
+				FunctionsPlus.playSound(p, "actionDenied");
 				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "You have already picked a talent!");
 				return;
 			}
@@ -390,7 +326,7 @@ public class Events implements Listener{
 				p.closeInventory();
 				
 				// set health (really just for testers since the max health doesn't change back when swapping talents)
-				p.setMaxHealth(20);
+				p.setMaxHealth(16);
 				
 				// Start particle effects
 				trails.startEnderianParticles();
@@ -398,6 +334,11 @@ public class Events implements Listener{
 			
 			// Cobble Man selected
 			if (event.getSlot() == 25) {
+				if (!Main.playerRankHashMap.get(p.getUniqueId().toString()).equalsIgnoreCase("Cobble Man")) {
+					FunctionsPlus.playSound(p, "actionDenied");
+					return;
+				}
+				
 				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "OH LAWD HE COMIN!");
 				for (Player online : Bukkit.getOnlinePlayers()) {
 					online.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "COBBLE MAN HAS ARRIVED");
@@ -412,9 +353,13 @@ public class Events implements Listener{
 			
 			// Sheriff selected
 			if (event.getSlot() == 26) {
+				if (!Main.playerRankHashMap.get(p.getUniqueId().toString()).equalsIgnoreCase("Sheriff")) {
+					FunctionsPlus.playSound(p, "actionDenied");
+					return;
+				}
 				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "OH LAWD HE COMIN!");
 				for (Player online : Bukkit.getOnlinePlayers()) {
-					online.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "THE SHERIFF HAS ARRIVED");
+					online.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "THE SHERIFF IS IN TOWN");
 				}
 				Main.talentHashMap.put(p.getUniqueId().toString(), "SHERIFF");
 				Main.playerDataConfig.set("Users." + p.getUniqueId() + ".stats" + ".talent", "SHERIFF");
@@ -476,13 +421,55 @@ public class Events implements Listener{
 	}
 	
 	
-	
 	@EventHandler
-	public void playerRightClick(PlayerInteractEvent event) {
+	public void playerClick(PlayerInteractEvent event) {
 		Player p = event.getPlayer();
         PlayerInventory inv = p.getInventory();
 	    Action action = event.getAction();
 	    String talent = Main.talentHashMap.get(p.getUniqueId().toString());
+	    
+	    if (action.equals(Action.RIGHT_CLICK_BLOCK)) {
+	    	if (inv.getItemInMainHand() != null && inv.getItemInMainHand().equals(ItemsPlus.bonkStick)) {
+	    		int x = event.getClickedBlock().getLocation().getBlockX();
+	    		int y = event.getClickedBlock().getLocation().getBlockY();
+	    		int z = event.getClickedBlock().getLocation().getBlockZ();
+	    		
+	          	Main.masterConfig.set("System." + ".miscellaneousData" + ".bonkStickTPLocation" + ".X", x);
+	          	Main.masterConfig.set("System." + ".miscellaneousData" + ".bonkStickTPLocation" + ".Y", y);
+	          	Main.masterConfig.set("System." + ".miscellaneousData" + ".bonkStickTPLocation" + ".Z", z);
+	          	
+	          	p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "Set bonk stick teleport location to: " + x + ", " + y + ", " + z);
+	          	
+	          	try {
+	          		Main.masterConfig.save(Main.master);
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+	        }
+	    }
+	    
+	    if (action.equals(Action.LEFT_CLICK_AIR) || action.equals(Action.LEFT_CLICK_BLOCK)) {
+	    	if (inv.getItemInMainHand() != null && inv.getItemInMainHand().equals(ItemsPlus.bonkStick)) {
+	    		Entity entity = FunctionsPlus.getNearestEntityInSight(p, 20, 4);
+		    	if (entity instanceof Player) {
+		    		Player victim = (Player) entity;
+		    		p.getWorld().strikeLightningEffect(victim.getLocation());
+		    		for (Player online : Bukkit.getOnlinePlayers()) {
+		    			online.playSound(online.getLocation(), Sound.ENTITY_LIGHTNING_BOLT_THUNDER, 1.0f, 1.0f);
+		    			online.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.AQUA + victim.getName() + ChatColor.WHITE + " has been banished to " + ChatColor.RED + "Fart Castle");
+		    		}
+		    		int x = Main.masterConfig.getInt("System." + ".miscellaneousData" + ".bonkStickTPLocation" + ".X");
+		          	int y = Main.masterConfig.getInt("System." + ".miscellaneousData" + ".bonkStickTPLocation" + ".Y");
+		          	int z = Main.masterConfig.getInt("System." + ".miscellaneousData" + ".bonkStickTPLocation" + ".Z");
+		          	
+		          	Location loc = new Location(Bukkit.getWorld("world"), x, y + 1, z);
+		    		
+		    		victim.teleport(loc);
+		    	}
+	    	}
+	    }
+	    
 	    
 	    
 	    
@@ -530,6 +517,8 @@ public class Events implements Listener{
 	         if (inv.getItemInMainHand() != null && inv.getItemInMainHand().equals(ItemsPlus.thugnarsGlock)) {
 	        	 p.getWorld().createExplosion(p.getLocation(), 5, true);
 	         }
+	         
+	         
 	         
 	         if (inv.getItemInMainHand() != null && inv.getItemInMainHand().equals(ItemsPlus.dashSword)) {
 	        	 Location loc = p.getPlayer().getLocation();
@@ -608,6 +597,11 @@ public class Events implements Listener{
 				}
 				if(event.getCause() == DamageCause.FIRE || event.getCause() == DamageCause.FIRE_TICK || event.getCause() == DamageCause.HOT_FLOOR || event.getCause() == DamageCause.LAVA || event.getCause() == DamageCause.MELTING) {
 					event.setCancelled(true);
+				}
+				if (event.getCause() == DamageCause.FALL) {
+					if (p.getLocation().subtract(0, 1, 0).getBlock().getType() == Material.OBSIDIAN) {
+						event.setCancelled(true);
+					}
 				}
 				if (p.getWorld().getEnvironment() == Environment.NETHER) {
 					event.setDamage(event.getDamage() * 0.7);
@@ -690,7 +684,7 @@ public class Events implements Listener{
 			
 			if (talent.equals("Pyrokinetic")) {
 				if (p.getFireTicks() !=  0 && !p.hasPotionEffect(PotionEffectType.INCREASE_DAMAGE)) {
-					event.setDamage(event.getDamage() * 1.4);
+					event.setDamage(event.getDamage() * 1.3);
 				}
 				if (event.getEntity() instanceof Player) {
 					if (((int) (Math.random() * 20)) == 7) {
@@ -777,6 +771,44 @@ public class Events implements Listener{
 	    		blocks = null;
 	            return;
 	        }  
+	        
+	        if (inv.getItemInMainHand().equals(ItemsPlus.replantingHoe)) {
+	        	Block block = event.getBlock();
+		    	Material material = block.getType();
+		    	World world = block.getWorld();
+		    	
+	        	if (block.getType() == Material.WHEAT) {
+	        		Ageable crop = (Ageable) block.getBlockData();
+	        		if (crop.getAge() != crop.getMaximumAge()) {
+						return;	
+					}
+	        		
+	        		world.dropItemNaturally(block.getLocation(), new ItemStack(Material.WHEAT));
+	        		world.dropItemNaturally(block.getLocation(), new ItemStack(Material.WHEAT_SEEDS));
+	        		Bukkit.getScheduler().scheduleSyncDelayedTask(Bukkit.getPluginManager().getPlugin("Commands_Plus"), new Runnable() {
+	                    @Override
+	                    public void run() {
+	                    	block.setType(material);
+	                    }
+	                }, 10L);
+	        	}
+	        	else if (event.getBlock().getType() == Material.POTATOES) {
+	        		Ageable crop = (Ageable) block.getBlockData();
+	        		if (crop.getAge() != crop.getMaximumAge()) {
+						return;	
+					}
+	        		
+	        		world.dropItemNaturally(block.getLocation(), new ItemStack(Material.POTATO));
+	        		
+	        		Bukkit.getScheduler().scheduleSyncDelayedTask(Bukkit.getPluginManager().getPlugin("Commands_Plus"), new Runnable() {
+	                    @Override
+	                    public void run() {
+	                    	block.setType(material);
+	                    }
+	                }, 10L);
+	        	}
+
+	        }
 	        
 	        if (inv.getItemInMainHand().equals(redstonePickaxe)) {
 	        	
@@ -1031,7 +1063,8 @@ public class Events implements Listener{
 	@EventHandler
 	public void onPlayerMove(PlayerMoveEvent event) {
 		if (false) {
-			event.getPlayer().setVelocity(new Vector().zero());
+			// event.getPlayer().setVelocity(new Vector().zero());
+			//event.getPlayer().sendMessage(event.getPlayer().getLocation().getBlock().getType().toString());
 		}
 		// snow walking
 		// event.getPlayer().getWorld().getBlockAt(new Location(event.getPlayer().getWorld(), event.getPlayer().getLocation().getBlockX(), event.getPlayer().getLocation().getBlockY(), event.getPlayer().getLocation().getBlockZ())).setType(Material.SNOW);
@@ -1040,12 +1073,21 @@ public class Events implements Listener{
 	
 	// Talent Events
 	
+	
+	@EventHandler
+	public void onTeleport(PlayerTeleportEvent event) {
+		if (event.getCause() == TeleportCause.ENDER_PEARL && Main.talentHashMap.get(event.getPlayer().getUniqueId().toString()) != null && Main.talentHashMap.get(event.getPlayer().getUniqueId().toString()).equals("Enderian")) {
+			event.getPlayer().getInventory().addItem(new ItemStack(Material.ENDER_PEARL));
+		}
+	}
+	
 	// Item Rename Preventer
 	@EventHandler
 	public void renameCancel(InventoryClickEvent event) {
 		if (event.getCurrentItem() == null){
 			return;
 		}
+		
 		
 		if (event.getClickedInventory().getType() == InventoryType.ANVIL && event.getSlotType() == InventoryType.SlotType.RESULT) {
 			if (event.getCurrentItem().equals(new ItemStack(Material.PLAYER_HEAD))){
@@ -1054,12 +1096,31 @@ public class Events implements Listener{
 				event.getWhoClicked().sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "You cannot rename that item!");
 				return;
 			}
-			String itemName = event.getCurrentItem().getItemMeta().getDisplayName();
-            if (itemName.equals("Arcane Crystal") || itemName.equals("Stasis Crystal")) {
-            	event.setCancelled(true);
-            	FunctionsPlus.playSound((Player) event.getWhoClicked(), "actionDenied");
-            	event.getWhoClicked().sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "You cannot use that name on an item!");
-            }
+			ItemStack[] contents = event.getInventory().getContents();
+			for (ItemStack item : Main.unrenameableItems) {
+				if (Arrays.stream(contents) != null && Arrays.stream(contents).anyMatch(item::equals)) {
+					event.setCancelled(true);
+	            	FunctionsPlus.playSound((Player) event.getWhoClicked(), "actionDenied");
+					return;
+				}
+			}
+		}
+		
+		if (event.getClickedInventory().getType() == InventoryType.GRINDSTONE && event.getSlotType() == InventoryType.SlotType.RESULT) {
+			Player p = (Player) event.getWhoClicked();
+			ItemStack[] contents = event.getInventory().getContents();
+			for (ItemStack item : Main.unrenameableItems) {
+				if (Arrays.stream(contents) != null && Arrays.stream(contents).anyMatch(item::equals)) {
+					event.setCancelled(true);
+	            	FunctionsPlus.playSound(p, "actionDenied");
+					return;
+				}
+			}
+		}
+		
+		if (event.getClickedInventory().getType() == InventoryType.CRAFTING && event.getSlotType() == InventoryType.SlotType.RESULT) {
+			// Player p = (Player) event.getWhoClicked();
+			
 		}
 	}
 	
@@ -1177,49 +1238,35 @@ public class Events implements Listener{
 	@EventHandler
 	public void onCreatureSpawn(CreatureSpawnEvent event) {
 		if (Main.isBloodMoon) {
-			if (event.getEntityType() == EntityType.CREEPER) {
-				Creeper creeper = (Creeper) event.getEntity();
-				if (((int) (Math.random() * 5)) == 3) {
-					creeper.setPowered(true);
-					creeper.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 6000, 0));
-				}
-				
-			}
-			else if (event.getEntityType() == EntityType.ZOMBIE) {
+			if (event.getEntityType() == EntityType.ZOMBIE) {
 				Zombie zombie = (Zombie) event.getEntity();
 				zombie.getEquipment().setChestplate(new ItemStack(Material.GOLDEN_CHESTPLATE));
 				zombie.getEquipment().setLeggings(new ItemStack(Material.CHAINMAIL_LEGGINGS));
-				zombie.getEquipment().setBoots(new ItemStack(Material.NETHERITE_BOOTS));
 				zombie.getEquipment().setBootsDropChance(0);
-				zombie.getEquipment().setItemInMainHand(new ItemStack(Material.IRON_AXE));
-				zombie.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 6000, 0));
+				if (((int) (Math.random() * 3)) == 2) {
+					zombie.getEquipment().setItemInMainHand(new ItemStack(Material.IRON_AXE));
+				}
+				
 			}
 			else if (event.getEntityType() == EntityType.SKELETON) {
 				Skeleton skeleton = (Skeleton) event.getEntity();
 				ItemStack bow = new ItemStack(Material.BOW);
 				
-				// THEY HIT LIKE TRUCKS
 				bow.addEnchantment(Enchantment.ARROW_FIRE, 1);
-				bow.addEnchantment(Enchantment.ARROW_DAMAGE, 1);
-				bow.addEnchantment(Enchantment.ARROW_KNOCKBACK, 1);
 				
 				skeleton.getEquipment().setChestplate(new ItemStack(Material.CHAINMAIL_CHESTPLATE));
-				skeleton.getEquipment().setLeggings(new ItemStack(Material.IRON_LEGGINGS));
 				skeleton.getEquipment().setBoots(new ItemStack(Material.GOLDEN_BOOTS));
 				skeleton.getEquipment().setItemInMainHand(bow);
 				skeleton.getEquipment().setItemInMainHandDropChance(0);
 				
-				
-				skeleton.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 6000, 0));
 			}
 			else if (event.getEntityType() == EntityType.SPIDER) {
 				Spider spider = (Spider) event.getEntity();
-				spider.addPotionEffect(new PotionEffect(PotionEffectType.INCREASE_DAMAGE, 6000, 0));
 				spider.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 6000, 0));
 			}
 			else if (event.getEntityType() == EntityType.DROWNED) {
 				Zombie zombie = (Zombie) event.getEntity();
-				zombie.getEquipment().setChestplate(new ItemStack(Material.NETHERITE_CHESTPLATE));
+				zombie.getEquipment().setChestplate(new ItemStack(Material.CHAINMAIL_CHESTPLATE));
 				zombie.getEquipment().setChestplateDropChance(0);
 				if (((int) (Math.random() * 10)) >= 7) {
 					zombie.getEquipment().setItemInMainHand(new ItemStack(Material.TRIDENT));
@@ -1238,7 +1285,7 @@ public class Events implements Listener{
 		if (Main.isBloodMoon) {
 			if (event.getEntity() instanceof Player && (event.getDamager() instanceof Zombie || event.getDamager() instanceof Spider || event.getDamager() instanceof Drowned)) {
 				Player p = (Player) event.getEntity();
-				if (((int) (Math.random() * 5)) == 3) {
+				if (((int) (Math.random() * 10)) == 7) {
 					p.addPotionEffect(new PotionEffect(PotionEffectType.POISON, 60, 0));
 				}
 			}
@@ -1255,6 +1302,10 @@ public class Events implements Listener{
 					int range = Main.bloodMoonLootTable.size();
 					drops.add(Main.bloodMoonLootTable.get((int) (Math.random() * range)));
 				}
+				if (((int) (Math.random() * 4)) == 1) {
+					int range = Main.bloodMoonLootTable.size();
+					drops.add(Main.bloodMoonLootTable.get((int) (Math.random() * range)));
+				}
 				
 			}
 		}
@@ -1266,6 +1317,62 @@ public class Events implements Listener{
 		if (Main.isBloodMoon) {
 			event.setCancelled(true);
 			event.getPlayer().sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "You do not feel tired.");
+		}
+	}
+	
+	
+	
+	// Custom Messaging
+	@EventHandler
+	public void onPlayerPublicMessage(PlayerChatEvent event) {
+		event.setCancelled(true);
+		Player p = event.getPlayer();
+		String rank = Main.playerRankHashMap.get(p.getUniqueId().toString());
+		
+		if (rank == null) {
+			for (Player online : Bukkit.getOnlinePlayers()) {
+				online.sendMessage(ChatColor.WHITE + "[" + ChatColor.BLUE + "Member" + ChatColor.WHITE + "] " + p.getName() + ": " + event.getMessage());
+			}
+		}
+		else if (rank.equals("Member")) {
+			for (Player online : Bukkit.getOnlinePlayers()) {
+				online.sendMessage(ChatColor.WHITE + "[" + ChatColor.BLUE + rank + ChatColor.WHITE + "] " + p.getName() + ": " + event.getMessage());
+			}
+		}
+		else if (rank.equals("Streamer")) {
+			for (Player online : Bukkit.getOnlinePlayers()) {
+				online.sendMessage(ChatColor.WHITE + "[" + ChatColor.LIGHT_PURPLE + rank + ChatColor.WHITE + "] " + p.getName() + ": " + event.getMessage());
+			}
+		}
+		else if (rank.equals("Admin")) {
+			for (Player online : Bukkit.getOnlinePlayers()) {
+				online.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + rank + ChatColor.WHITE + "] " + p.getName() + ": " + event.getMessage());
+			}
+		}
+		else if (rank.equals("Superuser")) {
+			for (Player online : Bukkit.getOnlinePlayers()) {
+				online.sendMessage(ChatColor.WHITE + "[" + ChatColor.DARK_RED + rank + ChatColor.WHITE + "] " + p.getName() + ": " + event.getMessage());
+			}
+		}
+		else if (rank.equals("Extremely Talented Gamer")) {
+			for (Player online : Bukkit.getOnlinePlayers()) {
+				online.sendMessage(ChatColor.WHITE + "[" + ChatColor.AQUA + rank + ChatColor.WHITE + "] " + p.getName() + ": " + event.getMessage());
+			}
+		}
+		else if (rank.equals("Sheriff")) {
+			for (Player online : Bukkit.getOnlinePlayers()) {
+				online.sendMessage(ChatColor.WHITE + "[" + ChatColor.GOLD + rank + ChatColor.WHITE + "] " + p.getName() + ": " + event.getMessage());
+			}
+		}
+		else if (rank.equals("Cobble Man")) {
+			for (Player online : Bukkit.getOnlinePlayers()) {
+				online.sendMessage(ChatColor.GRAY + "[" + ChatColor.GRAY + rank + ChatColor.WHITE + "] " + p.getName() + ": " + event.getMessage());
+			}
+		}
+		else {
+			for (Player online : Bukkit.getOnlinePlayers()) {
+				online.sendMessage(ChatColor.WHITE + "[" + ChatColor.GREEN + rank + ChatColor.WHITE + "] " + p.getName() + ": " + event.getMessage());
+			}
 		}
 	}
 	
