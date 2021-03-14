@@ -75,6 +75,10 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
 import org.bukkit.util.Vector;
 
+import me.Joey.CommandsPlus.CustomEnchantments.EnchantmentsPlus;
+import me.Joey.CommandsPlus.CustomInventories.FactionOptionsInventory;
+import me.Joey.CommandsPlus.CustomInventories.InventoryManager;
+import me.Joey.CommandsPlus.CustomItems.ItemsPlus;
 import me.Joey.CommandsPlus.Particles.ParticleData;
 import me.Joey.CommandsPlus.Particles.ParticleEffects;
 import net.md_5.bungee.api.ChatColor;
@@ -88,7 +92,6 @@ public class Events implements Listener{
 	@EventHandler
 	public void onJoin(PlayerJoinEvent event) {
 		Player online = event.getPlayer();
-		
 		
 		if (!online.hasPlayedBefore()) {
 			Main.playerDataConfig.set("Users." + event.getPlayer().getUniqueId() + "." + "preferences" + ".hasPlayedBefore", true);
@@ -123,14 +126,17 @@ public class Events implements Listener{
 		
 		
 		// load in player stats to respective HashMaps
-		Main.loadHashMaps(online);
+		FunctionsPlus.loadHashMaps(online);
 		
 		
 		if (Main.scoreboardHashMap.get(online.getUniqueId().toString())) {
-			Main.createBoard(event.getPlayer());
+			FunctionsPlus.createBoard(event.getPlayer());
 		}
 		
 		FunctionsPlus.restoreTalentEffects(online, Main.talentHashMap.get(online.getUniqueId().toString()));
+		
+		// set custom tab presence
+		FunctionsPlus.setTabList(online);
 	}
 	
 	@EventHandler
@@ -163,7 +169,7 @@ public class Events implements Listener{
 	// Inventory Interaction Events
 	@EventHandler
 	public void onInventoryClick(InventoryClickEvent event) {
-		if (event.getInventory().equals(Main.masterMenuInventory)) {
+		if (event.getInventory().equals(InventoryManager.masterMenuInventory)) {
 			if (event.getCurrentItem() == null) {
 				return;
 			}
@@ -188,14 +194,99 @@ public class Events implements Listener{
 				return;
 			}
 			
+			// Commands+ Crafts Menu selected
+			if (event.getSlot() == 20) {
+				p.openInventory(InventoryManager.masterCraftsInventory);
+				return;
+			}
+			
 			// Talent Menu selected
 			if (event.getSlot() == 21) {
-				p.openInventory(Main.talentInventory);
+				p.openInventory(InventoryManager.talentInventory);
+				return;
+			}
+			
+			// Faction Options Menu Selected
+			if (event.getSlot() == 24) {
+				FactionOptionsInventory.createFactionOptionsInventory(p);
+				p.openInventory(InventoryManager.factionOptionsInventory);
 				return;
 			}
 		}
 		
-		if (event.getInventory().equals(Main.talentInventory)) {
+		else if (event.getInventory().equals(InventoryManager.masterCraftsInventory)) {
+			if (event.getCurrentItem() == null) {
+				return;
+			}
+			
+			if (event.getCurrentItem().getItemMeta() == null) {
+				return;		
+			}
+			
+			if (event.getCurrentItem().getItemMeta().getDisplayName() == null) {
+				return;
+			}
+			
+			event.setCancelled(true);
+			
+			
+			Player p = (Player) event.getWhoClicked();
+			
+			// Go Back selected
+			if (event.getSlot() == 48) {
+				p.openInventory(InventoryManager.masterMenuInventory);
+				return;
+			}
+			
+			
+			// Close Menu selected
+			if (event.getSlot() == 49) {
+				p.closeInventory();
+				
+				return;
+			}
+			
+			
+			
+		}
+		
+		else if (event.getInventory().equals(InventoryManager.factionOptionsInventory)) {
+			if (event.getCurrentItem() == null) {
+				return;
+			}
+			
+			if (event.getCurrentItem().getItemMeta() == null) {
+				return;		
+			}
+			
+			if (event.getCurrentItem().getItemMeta().getDisplayName() == null) {
+				return;
+			}
+			
+			event.setCancelled(true);
+			
+			
+			Player p = (Player) event.getWhoClicked();
+			
+			// Go Back selected
+			if (event.getSlot() == 48) {
+				p.openInventory(InventoryManager.masterMenuInventory);
+				return;
+			}
+			
+			
+			// Close Menu selected
+			if (event.getSlot() == 49) {
+				p.closeInventory();
+				
+				return;
+			}
+			
+			
+			
+		}
+		
+		else if (event.getInventory().equals(InventoryManager.talentInventory)) {
 			if (event.getCurrentItem() == null) {
 				return;
 			}
@@ -224,7 +315,7 @@ public class Events implements Listener{
 			
 			// Go Back selected
 			if (event.getSlot() == 48) {
-				p.openInventory(Main.masterMenuInventory);
+				p.openInventory(InventoryManager.masterMenuInventory);
 				return;
 			}
 						
@@ -447,6 +538,13 @@ public class Events implements Listener{
 					e.printStackTrace();
 				}
 	        }
+	    	
+	    	
+	    	if (p.getWorld().getEnvironment() == Environment.NETHER && p.getInventory().getItemInMainHand().equals(ItemsPlus.obsidianInfusedWater)) {
+	    		event.setCancelled(true);
+	    		p.getInventory().setItem(p.getInventory().getHeldItemSlot(), new ItemStack(Material.AIR));
+	    		event.getClickedBlock().getRelative(event.getBlockFace()).setType(Material.WATER);
+	    	}
 	    }
 	    
 	    if (action.equals(Action.LEFT_CLICK_AIR) || action.equals(Action.LEFT_CLICK_BLOCK)) {
@@ -497,7 +595,7 @@ public class Events implements Listener{
 		     		 inv.getItemInOffHand().setItemMeta(meta);
 	        	 }
 	        	 
-	        	 if (inv.getItemInMainHand().equals(ItemsPlus.smeltingBook) && !inv.getItemInOffHand().containsEnchantment(EnchantmentsPlus.SMELTING) && (inv.getItemInOffHand().getType().toString().contains("PICKAXE"))) {
+	    		else if (inv.getItemInMainHand().equals(ItemsPlus.smeltingBook) && !inv.getItemInOffHand().containsEnchantment(EnchantmentsPlus.SMELTING) && (inv.getItemInOffHand().getType().toString().contains("AXE") || inv.getItemInOffHand().getType().toString().contains("SHOVEL"))) {
 	        		 inv.getItemInMainHand().setAmount(0); 
 		        	 inv.getItemInOffHand().addUnsafeEnchantment(EnchantmentsPlus.SMELTING, 1);
 		        	 ItemMeta meta = inv.getItemInOffHand().getItemMeta();
@@ -509,6 +607,21 @@ public class Events implements Listener{
 		     		 }
 		     		
 		     		 lore.add(ChatColor.GRAY + "Smelting I");
+		     		 meta.setLore(lore);
+		     		 inv.getItemInOffHand().setItemMeta(meta);
+	        	 }
+	    		else if (inv.getItemInMainHand().equals(ItemsPlus.experienceBook) && !inv.getItemInOffHand().containsEnchantment(EnchantmentsPlus.EXPERIENCE) && (inv.getItemInOffHand().getType().toString().contains("BOW") ||inv.getItemInOffHand().getType().toString().contains("TRIDENT") || inv.getItemInOffHand().getType().toString().contains("SWORD") || inv.getItemInOffHand().getType().toString().contains("AXE") || inv.getItemInOffHand().getType().toString().contains("SHOVEL"))) {
+	        		 inv.getItemInMainHand().setAmount(0); 
+		        	 inv.getItemInOffHand().addUnsafeEnchantment(EnchantmentsPlus.EXPERIENCE, 3);
+		        	 ItemMeta meta = inv.getItemInOffHand().getItemMeta();
+		     		 List<String> lore = new ArrayList<String>();
+		     		 if (meta.hasLore()) {
+		     			 for (String s : meta.getLore()) {
+			     			 lore.add(s);
+			     		 }
+		     		 }
+		     		
+		     		 lore.add(ChatColor.GRAY + "Experience III");
 		     		 meta.setLore(lore);
 		     		 inv.getItemInOffHand().setItemMeta(meta);
 	        	 }
@@ -567,6 +680,11 @@ public class Events implements Listener{
 	    }
 	}
 	
+	
+	
+	
+	// -------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+	// Player Damage Events
 	@EventHandler
 	public void onPlayerDamage(EntityDamageEvent event){
 		if (event.getEntity() instanceof Player) {
@@ -598,17 +716,13 @@ public class Events implements Listener{
 				if(event.getCause() == DamageCause.FIRE || event.getCause() == DamageCause.FIRE_TICK || event.getCause() == DamageCause.HOT_FLOOR || event.getCause() == DamageCause.LAVA || event.getCause() == DamageCause.MELTING) {
 					event.setCancelled(true);
 				}
-				if (event.getCause() == DamageCause.FALL) {
-					if (p.getLocation().subtract(0, 1, 0).getBlock().getType() == Material.OBSIDIAN) {
-						event.setCancelled(true);
-					}
-				}
-				if (p.getWorld().getEnvironment() == Environment.NETHER) {
-					event.setDamage(event.getDamage() * 0.7);
-				}
 				
 				if (event.getCause() == DamageCause.FALL) {
-					if (event.getDamage() > 4.0) {
+					if (p.getLocation().getBlock().getType() == Material.LAVA) {
+						event.setCancelled(true);
+					}
+					
+					if (event.getDamage() >= 4.0) {
 						ParticleEffects trails = new ParticleEffects(p);
 						trails.damagingFireBurst();
 						p.getWorld().playSound(p.getLocation(), Sound.ENTITY_BLAZE_SHOOT, 1.0f, 0.6f);
@@ -678,7 +792,7 @@ public class Events implements Listener{
 			String talent = Main.talentHashMap.get(p.getUniqueId().toString());
 			if (talent.equals("Avian")) {
 				if (p.isGliding()) {
-					event.setDamage(event.getDamage() * 2);
+					event.setDamage(event.getDamage() * 1.6);
 				}
 			}
 			
@@ -719,7 +833,7 @@ public class Events implements Listener{
 				if (event.getDamager() instanceof Player) {
 					Player p = (Player) event.getDamager();
 					if (p.getInventory().getItemInMainHand().getType().toString().contains("PICKAXE")) {
-						event.setDamage(1000);
+						event.setDamage(200);
 					}
 					else {
 						event.setCancelled(true);
@@ -861,51 +975,96 @@ public class Events implements Listener{
 			        // checks if item in player's hand has enchantment TELEKINESIS
 		        	if (!(event.getBlock().getState() instanceof Container)) {
 		        		Collection<ItemStack> drops = event.getBlock().getDrops(inv.getItemInMainHand());
+		        		Collection<ItemStack> dropsEdited = event.getBlock().getDrops(inv.getItemInMainHand());
 			        	if (inv.getItemInMainHand().getItemMeta().hasEnchant(EnchantmentsPlus.SMELTING)) {
 		        			if (drops.isEmpty()) {
 			        			return;
 			        		}
 		        			
 		        			boolean smeltable = false;
+		        			int expFromMining = 0;
+		        			ItemStack[] dropsArray = drops.toArray(new ItemStack[drops.size()]);
 		        			
-		        			
-			        		for (ItemStack item : drops) {
-			        			if (item.getType().toString().equals("IRON_ORE")) {
-			        				ItemStack oldItem = new ItemStack(Material.IRON_ORE);
-			        				item = new ItemStack(Material.IRON_INGOT);
-			        				drops.remove(oldItem);
-			        				drops.add(item);
-			        				smeltable = true;
-			        			}
-			        			if (item.getType().toString().equals("GOLD_ORE")) {
-			        				ItemStack oldItem = new ItemStack(Material.GOLD_ORE);
-			        				item = new ItemStack(Material.GOLD_INGOT);
-			        				drops.remove(oldItem);
-			        				drops.add(item);
-			        				smeltable = true;
-			        			}
+			        		for (int i = 0; i < dropsArray.length; i++) {
+			        			ItemStack item = dropsArray[i];
 			        			if (item.getType().toString().equals("COBBLESTONE")) {
 			        				ItemStack oldItem = new ItemStack(Material.COBBLESTONE);
 			        				item = new ItemStack(Material.STONE);
-			        				drops.remove(oldItem);
-			        				drops.add(item);
+			        				dropsEdited.remove(oldItem);
+			        				dropsEdited.add(item);
 			        				smeltable = true;
 			        			}
-			        			if (item.getType().toString().equals("STONE")) {
+			        			else if (item.getType().toString().equals("STONE")) {
 			        				ItemStack oldItem = new ItemStack(Material.STONE);
 			        				item = new ItemStack(Material.STONE);
-			        				drops.remove(oldItem);
-			        				drops.add(item);
+			        				dropsEdited.remove(oldItem);
+			        				dropsEdited.add(item);
 			        				smeltable = true;
 			        			}
+			        			else if (item.getType().toString().equals("NETHERRACK")) {
+			        				ItemStack oldItem = new ItemStack(item.getType());
+			        				item = new ItemStack(Material.NETHER_BRICK);
+			        				dropsEdited.remove(oldItem);
+			        				dropsEdited.add(item);
+			        				smeltable = true;
+			        			}
+			        			else if (item.getType().toString().equals("SAND")) {
+			        				ItemStack oldItem = new ItemStack(Material.SAND);
+			        				item = new ItemStack(Material.GLASS);
+			        				dropsEdited.remove(oldItem);
+			        				dropsEdited.add(item);
+			        				smeltable = true;
+			        			}
+			        			else if (item.getType().toString().equals("CLAY_BALL")) {
+			        				int amount = item.getAmount();
+			        				ItemStack oldItem = new ItemStack(item.getType());
+			        				oldItem.setAmount(amount);
+			        				item = new ItemStack(Material.BRICK);
+			        				item.setAmount(amount);
+			        				dropsEdited.remove(oldItem);
+			        				dropsEdited.add(item);
+			        				smeltable = true;
+			        			}
+			        			else if (item.getType().toString().equals("IRON_ORE")) {
+			        				ItemStack oldItem = new ItemStack(Material.IRON_ORE);
+			        				item = new ItemStack(Material.IRON_INGOT);
+			        				dropsEdited.remove(oldItem);
+			        				dropsEdited.add(item);
+			        				smeltable = true;
+			        				expFromMining += 1;
+			        			}
+			        			else if (item.getType().toString().equals("GOLD_ORE")) {
+			        				ItemStack oldItem = new ItemStack(Material.GOLD_ORE);
+			        				item = new ItemStack(Material.GOLD_INGOT);
+			        				dropsEdited.remove(oldItem);
+			        				dropsEdited.add(item);
+			        				smeltable = true;
+			        				expFromMining += 2;
+			        			}
+			        			else if (item.getType().toString().contains("LOG")) {
+			        				ItemStack oldItem = new ItemStack(item.getType());
+			        				item = new ItemStack(Material.CHARCOAL);
+			        				dropsEdited.remove(oldItem);
+			        				dropsEdited.add(item);
+			        				smeltable = true;
+			        			}
+			        			else if (item.getType().toString().equals("CACTUS")) {
+			        				ItemStack oldItem = new ItemStack(item.getType());
+			        				item = new ItemStack(Material.GREEN_DYE);
+			        				dropsEdited.remove(oldItem);
+			        				dropsEdited.add(item);
+			        				smeltable = true;
+			        			}
+			        			
 			        		}
 			        		
 			        		if (smeltable) {
 			        			event.setDropItems(false);
-			        			if (!inv.getItemInMainHand().getItemMeta().hasEnchant(EnchantmentsPlus.TELEKINESIS)) {
-			        				event.getBlock().getWorld().dropItemNaturally(event.getBlock().getLocation(), new ItemStack(drops.iterator().next()));
+			        			if (!inv.getItemInMainHand().getItemMeta().hasEnchant(EnchantmentsPlus.TELEKINESIS) || inv.firstEmpty() == -1) {
+			        				event.getBlock().getWorld().dropItemNaturally(event.getBlock().getLocation(), new ItemStack(dropsEdited.iterator().next()));
 			        			}
 			        			p.getWorld().playEffect(event.getBlock().getLocation(), Effect.MOBSPAWNER_FLAMES, 12);
+			        			event.setExpToDrop(expFromMining);
 			        		}
 			        	}
 				        if (inv.getItemInMainHand().getItemMeta().hasEnchant(EnchantmentsPlus.TELEKINESIS)) {
@@ -913,10 +1072,15 @@ public class Events implements Listener{
 				        	if (inv.firstEmpty() != -1) {
 				        		event.setDropItems(false);
 				        		
-				        		inv.addItem(drops.iterator().next());
+				        		inv.addItem(dropsEdited.iterator().next());
 				        	}
 				        }
 		        	}
+		        	
+		        	if (p.getInventory().getItemInMainHand().getItemMeta().hasEnchants() && p.getInventory().getItemInMainHand().getItemMeta().hasEnchant(EnchantmentsPlus.EXPERIENCE)) {
+						int level = p.getInventory().getItemInMainHand().getItemMeta().getEnchants().get(EnchantmentsPlus.EXPERIENCE);
+						event.setExpToDrop((int) ((event.getExpToDrop() * (1 + 0.5 * level)) + 0.5));
+					}
 		        }
 	        }
 
@@ -974,9 +1138,17 @@ public class Events implements Listener{
 	@EventHandler
 	public void mobKillEvent(EntityDeathEvent event) {
 		if (event.getEntity().getKiller() != null) {
-			Main.combatPointsTracker.put(event.getEntity().getKiller().getUniqueId().toString(), Main.combatPointsTracker.get(event.getEntity().getKiller().getUniqueId().toString()) + 1);
-			if (Main.canSaveDataHashMap.get(event.getEntity().getKiller().getUniqueId().toString())){
-				FunctionsPlus.savePlayerData(event.getEntity().getKiller(), false);
+			if (event.getEntity().getKiller() instanceof Player) {
+				Player p = event.getEntity().getKiller();
+				Main.combatPointsTracker.put(p.getUniqueId().toString(), Main.combatPointsTracker.get(event.getEntity().getKiller().getUniqueId().toString()) + 1);
+				if (Main.canSaveDataHashMap.get(event.getEntity().getKiller().getUniqueId().toString())){
+					FunctionsPlus.savePlayerData(event.getEntity().getKiller(), false);
+				}
+				
+				if (p.getInventory().getItemInMainHand().getItemMeta().hasEnchants() && p.getInventory().getItemInMainHand().getItemMeta().hasEnchant(EnchantmentsPlus.EXPERIENCE)) {
+					int level = p.getInventory().getItemInMainHand().getItemMeta().getEnchants().get(EnchantmentsPlus.EXPERIENCE);
+					event.setDroppedExp((int) ((event.getDroppedExp() * (1 + 0.5 * level)) + 0.5));
+				}
 			}
 		}
 		
@@ -1011,7 +1183,12 @@ public class Events implements Listener{
         if (event.getItem() != null && event.getItem().hasItemMeta()) {
             if (event.getItem().getItemMeta() instanceof PotionMeta) {
            
-            	
+            	if (event.getItem().equals(ItemsPlus.hastePotion)) {
+            		p.addPotionEffect(new PotionEffect(PotionEffectType.FAST_DIGGING, 20 * 60 * 5, 1));
+            	}
+            	else if (event.getItem().equals(ItemsPlus.absorptionPotion)) {
+            		p.addPotionEffect(new PotionEffect(PotionEffectType.ABSORPTION, 20 * 60 * 10, 1));
+            	}
             	
             	
                 final PotionMeta meta = (PotionMeta) event.getItem().getItemMeta();
@@ -1026,7 +1203,7 @@ public class Events implements Listener{
                 	Main.alchemyPointsTracker.put(p.getUniqueId().toString(), Main.alchemyPointsTracker.get(p.getUniqueId().toString()) + 5);
                 }
                 else {
-                	
+                	Main.alchemyPointsTracker.put(p.getUniqueId().toString(), Main.alchemyPointsTracker.get(p.getUniqueId().toString()) + 4);
                 }            
                 
                 
@@ -1110,7 +1287,7 @@ public class Events implements Listener{
 			Player p = (Player) event.getWhoClicked();
 			ItemStack[] contents = event.getInventory().getContents();
 			for (ItemStack item : Main.unrenameableItems) {
-				if (Arrays.stream(contents) != null && Arrays.stream(contents).anyMatch(item::equals)) {
+				if (contents != null && Arrays.stream(contents).anyMatch(item::equals)) {
 					event.setCancelled(true);
 	            	FunctionsPlus.playSound(p, "actionDenied");
 					return;
@@ -1129,7 +1306,8 @@ public class Events implements Listener{
 	public void onEntityTarget(EntityTargetLivingEntityEvent event) {
 		if (event.getTarget() instanceof Player) {
 			Player p = (Player) event.getTarget();
-			if (Main.talentHashMap.get(p.getUniqueId().toString()).equals("Enderian")){
+			String talent = Main.talentHashMap.get(p.getUniqueId().toString());
+			if (talent != null && talent.equals("Enderian")){
 				event.setTarget(null);
 			}
 		}
@@ -1329,51 +1507,10 @@ public class Events implements Listener{
 		Player p = event.getPlayer();
 		String rank = Main.playerRankHashMap.get(p.getUniqueId().toString());
 		
-		if (rank == null) {
-			for (Player online : Bukkit.getOnlinePlayers()) {
-				online.sendMessage(ChatColor.WHITE + "[" + ChatColor.BLUE + "Member" + ChatColor.WHITE + "] " + p.getName() + ": " + event.getMessage());
-			}
+		for (Player online : Bukkit.getOnlinePlayers()) {
+		online.sendMessage(ChatColor.WHITE + "[" + FunctionsPlus.getRankColor(p) + rank + ChatColor.WHITE + "] " + p.getName() + ": " + event.getMessage());
 		}
-		else if (rank.equals("Member")) {
-			for (Player online : Bukkit.getOnlinePlayers()) {
-				online.sendMessage(ChatColor.WHITE + "[" + ChatColor.BLUE + rank + ChatColor.WHITE + "] " + p.getName() + ": " + event.getMessage());
-			}
-		}
-		else if (rank.equals("Streamer")) {
-			for (Player online : Bukkit.getOnlinePlayers()) {
-				online.sendMessage(ChatColor.WHITE + "[" + ChatColor.LIGHT_PURPLE + rank + ChatColor.WHITE + "] " + p.getName() + ": " + event.getMessage());
-			}
-		}
-		else if (rank.equals("Admin")) {
-			for (Player online : Bukkit.getOnlinePlayers()) {
-				online.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + rank + ChatColor.WHITE + "] " + p.getName() + ": " + event.getMessage());
-			}
-		}
-		else if (rank.equals("Superuser")) {
-			for (Player online : Bukkit.getOnlinePlayers()) {
-				online.sendMessage(ChatColor.WHITE + "[" + ChatColor.DARK_RED + rank + ChatColor.WHITE + "] " + p.getName() + ": " + event.getMessage());
-			}
-		}
-		else if (rank.equals("Extremely Talented Gamer")) {
-			for (Player online : Bukkit.getOnlinePlayers()) {
-				online.sendMessage(ChatColor.WHITE + "[" + ChatColor.AQUA + rank + ChatColor.WHITE + "] " + p.getName() + ": " + event.getMessage());
-			}
-		}
-		else if (rank.equals("Sheriff")) {
-			for (Player online : Bukkit.getOnlinePlayers()) {
-				online.sendMessage(ChatColor.WHITE + "[" + ChatColor.GOLD + rank + ChatColor.WHITE + "] " + p.getName() + ": " + event.getMessage());
-			}
-		}
-		else if (rank.equals("Cobble Man")) {
-			for (Player online : Bukkit.getOnlinePlayers()) {
-				online.sendMessage(ChatColor.GRAY + "[" + ChatColor.GRAY + rank + ChatColor.WHITE + "] " + p.getName() + ": " + event.getMessage());
-			}
-		}
-		else {
-			for (Player online : Bukkit.getOnlinePlayers()) {
-				online.sendMessage(ChatColor.WHITE + "[" + ChatColor.GREEN + rank + ChatColor.WHITE + "] " + p.getName() + ": " + event.getMessage());
-			}
-		}
+		
 	}
 	
 }

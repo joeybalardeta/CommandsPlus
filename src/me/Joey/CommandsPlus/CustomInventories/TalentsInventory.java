@@ -1,7 +1,5 @@
 package me.Joey.CommandsPlus.CustomInventories;
 
-import me.Joey.CommandsPlus.*;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,16 +12,16 @@ import net.md_5.bungee.api.ChatColor;
 
 public class TalentsInventory {
 	public static void createTalentSelectionInventory() {
-		Main.talentInventory = Bukkit.createInventory(null, 54, ChatColor.DARK_GRAY + "Pick a talent! Choose wisely!");
+		InventoryManager.talentInventory = Bukkit.createInventory(null, 54, ChatColor.DARK_GRAY + "Pick a talent! Choose wisely!");
 		
 		ItemStack item = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
 		ItemMeta meta = item.getItemMeta();
-		meta.setDisplayName("");
+		meta.setDisplayName(" ");
 		item.setItemMeta(meta);
 		
 		
 		for (int i = 0; i < 54; i++) {
-			Main.talentInventory.setItem(i, item);
+			InventoryManager.talentInventory.setItem(i, item);
 		}
 		
 		
@@ -39,17 +37,18 @@ public class TalentsInventory {
 		lore.add(ChatColor.WHITE + "(" + ChatColor.BLUE + "Passive" + ChatColor.WHITE + ") " + ChatColor.GOLD + "Angel Wings" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you always have an Elytra equipped.");
 		lore.add(ChatColor.WHITE + "(" + ChatColor.BLUE + "Passive" + ChatColor.WHITE + ") " + ChatColor.GREEN + "Blessed Wind" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you take no fall damage and");
 		lore.add(ChatColor.YELLOW + "regenerate health at high altitudes.");
-		lore.add(ChatColor.WHITE + "(" + ChatColor.BLUE + "Passive" + ChatColor.WHITE + ") " + ChatColor.AQUA + "Hurricane Momentum" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you deal double");
+		lore.add(ChatColor.WHITE + "(" + ChatColor.BLUE + "Passive" + ChatColor.WHITE + ") " + ChatColor.AQUA + "Hurricane Momentum" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you deal 60% more");
 		lore.add(ChatColor.YELLOW + "damage while flying.");
 		lore.add("");
 		lore.add(ChatColor.WHITE + "Weaknesses:");
 		lore.add(ChatColor.GRAY + "Head Room" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you become weak and slow while under");
 		lore.add(ChatColor.YELLOW + "low ceilings.");
+		lore.add(ChatColor.RED + "Arrows" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you take extra damage from arrows.");
 		lore.add(ChatColor.DARK_GREEN + "Low Defense" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you cannot equip chestplates and"); 
 		lore.add(ChatColor.YELLOW + "you have 2 less hearts of health.");
 		meta.setLore(lore);
 		item.setItemMeta(meta);
-		Main.talentInventory.setItem(18, item);
+		InventoryManager.talentInventory.setItem(18, item);
 		
 		// Pyrokinetic class item
 		item.setType(Material.BLAZE_POWDER);
@@ -60,20 +59,18 @@ public class TalentsInventory {
 		lore.add(ChatColor.YELLOW + "the power of fire to fuel themselves in battle.");
 		lore.add("");
 		lore.add(ChatColor.WHITE + "Abilities:");
-		lore.add(ChatColor.WHITE + "(" + ChatColor.BLUE + "Passive" + ChatColor.WHITE + ") " + ChatColor.LIGHT_PURPLE + "Obsidian Skin" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you're immune to fire and take");
-		lore.add(ChatColor.YELLOW + "less damage in the Nether, you take no fall damage on obsidian.");
+		lore.add(ChatColor.WHITE + "(" + ChatColor.BLUE + "Passive" + ChatColor.WHITE + ") " + ChatColor.LIGHT_PURPLE + "Obsidian Skin" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you're immune to fire and");
+		lore.add(ChatColor.YELLOW + "regenerate health in the Nether");
 		lore.add(ChatColor.WHITE + "(" + ChatColor.BLUE + "Passive" + ChatColor.WHITE + ") " + ChatColor.RED + "Fire Storm" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you deal 30% more damage while on fire.");
 		lore.add(ChatColor.YELLOW + "(does not stack with strength)");
-		lore.add(ChatColor.WHITE + "(" + ChatColor.BLUE + "Passive" + ChatColor.WHITE + ") " + ChatColor.DARK_RED + "Blazing Fists" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you have a small chance of lighting");
-		lore.add(ChatColor.YELLOW + "enemies on fire by hitting them. (5% for players, 100% for mobs)");
-		lore.add(ChatColor.WHITE + "(" + ChatColor.BLUE + "Passive" + ChatColor.WHITE + ") " + ChatColor.DARK_PURPLE + "Molten Movement" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "lava you walk on temporarily");
-		lore.add(ChatColor.YELLOW + "turns into obsidian.");
+		lore.add(ChatColor.WHITE + "(" + ChatColor.BLUE + "Passive" + ChatColor.WHITE + ") " + ChatColor.DARK_RED + "Blazing Fists" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you have a small chance of sending");
+		lore.add(ChatColor.YELLOW + "out a fiery explosion when meleeing enemies.");
 		lore.add("");
 		lore.add(ChatColor.WHITE + "Weaknesses:");
 		lore.add(ChatColor.BLUE + "Water" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you take more damage in water and rain.");
 		meta.setLore(lore);
 		item.setItemMeta(meta);
-		Main.talentInventory.setItem(19, item);
+		InventoryManager.talentInventory.setItem(19, item);
 		
 		// Hydrokinetic class item
 		item.setType(Material.COD);
@@ -84,16 +81,16 @@ public class TalentsInventory {
 		lore.add(ChatColor.YELLOW + "gained the ocean's favor and can command its power at will.");
 		lore.add("");
 		lore.add(ChatColor.WHITE + "Abilities:");
-		lore.add(ChatColor.WHITE + "(" + ChatColor.BLUE + "Passive" + ChatColor.WHITE + ") " + ChatColor.AQUA + "Waterwheel" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you dig and swim faster in water.");
+		lore.add(ChatColor.WHITE + "(" + ChatColor.BLUE + "Passive" + ChatColor.WHITE + ") " + ChatColor.AQUA + "Conduit Flux" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you have permanent Conduit Power.");
 		lore.add(ChatColor.WHITE + "(" + ChatColor.BLUE + "Passive" + ChatColor.WHITE + ") " + ChatColor.DARK_AQUA + "Cyclone" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you deal 30% more damage in water.");
 		lore.add(ChatColor.WHITE + "(" + ChatColor.BLUE + "Passive" + ChatColor.WHITE + ") " + ChatColor.BLUE + "Hydrokinetic Regeneration" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you regenerate");
-		lore.add(ChatColor.YELLOW + "health in water and can't drown.");
+		lore.add(ChatColor.YELLOW + "health in water.");
 		lore.add("");
 		lore.add(ChatColor.WHITE + "Weaknesses:");
 		lore.add(ChatColor.DARK_RED + "Fire" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you take more damage in the Nether and from fire.");
 		meta.setLore(lore);
 		item.setItemMeta(meta);
-		Main.talentInventory.setItem(20, item);
+		InventoryManager.talentInventory.setItem(20, item);
 		
 		// Frostbender class item
 		item.setType(Material.BLUE_ICE);
@@ -110,12 +107,14 @@ public class TalentsInventory {
 		lore.add(ChatColor.WHITE + "(" + ChatColor.BLUE + "Passive" + ChatColor.WHITE + ") " + ChatColor.WHITE + "Snowshoes" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you move faster on ice and snow.");
 		lore.add(ChatColor.WHITE + "(" + ChatColor.RED + "Active" + ChatColor.WHITE + ") " + ChatColor.DARK_PURPLE + "Black Ice" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you have the ability to freeze others");
 		lore.add(ChatColor.YELLOW + "at will.");
+		lore.add(ChatColor.WHITE + "(" + ChatColor.BLUE + "Passive" + ChatColor.WHITE + ") " + ChatColor.AQUA + "Frosty Wind" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you regenerate health at");
+		lore.add(ChatColor.YELLOW + "high altitudes.");
 		lore.add("");
 		lore.add(ChatColor.WHITE + "Weaknesses:");
 		lore.add(ChatColor.DARK_RED + "Fire" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you take more damage in the Nether and from fire.");
 		meta.setLore(lore);
 		item.setItemMeta(meta);
-		Main.talentInventory.setItem(21, item);
+		InventoryManager.talentInventory.setItem(21, item);
 		
 		// Terran class item
 		item.setType(Material.GRASS_BLOCK);
@@ -128,14 +127,16 @@ public class TalentsInventory {
 		lore.add(ChatColor.WHITE + "Abilities:");
 		lore.add(ChatColor.WHITE + "(" + ChatColor.RED + "Active" + ChatColor.WHITE + ") " + ChatColor.DARK_GREEN + "Terraportation" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you can teleport");
 		lore.add(ChatColor.YELLOW + "vertically through the ground.");
-		lore.add(ChatColor.WHITE + "(" + ChatColor.BLUE + "Passive" + ChatColor.WHITE + ") " + ChatColor.GRAY + "Tough Skin" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you take 20% less damage");
+		lore.add(ChatColor.WHITE + "(" + ChatColor.BLUE + "Passive" + ChatColor.WHITE + ") " + ChatColor.GRAY + "Tough Skin" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you have permanent Resistance I");
 		lore.add(ChatColor.YELLOW + "from all sources, except falling.");
+		lore.add(ChatColor.WHITE + "(" + ChatColor.BLUE + "Passive" + ChatColor.WHITE + ") " + ChatColor.DARK_RED + "Geothermic Regeneration" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you gain");
+		lore.add(ChatColor.YELLOW + "regeneration while deep underground.");
 		lore.add("");
 		lore.add(ChatColor.WHITE + "Weaknesses:");
 		lore.add(ChatColor.DARK_AQUA + "Heights" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you take 30% more fall damage.");
 		meta.setLore(lore);
 		item.setItemMeta(meta);
-		Main.talentInventory.setItem(22, item);
+		InventoryManager.talentInventory.setItem(22, item);
 		
 		// Biokinetic class item
 		item.setType(Material.RED_TULIP);
@@ -158,7 +159,7 @@ public class TalentsInventory {
 		lore.add(ChatColor.DARK_GREEN + "Poison" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you take more damage from poison sources.");
 		meta.setLore(lore);
 		item.setItemMeta(meta);
-		Main.talentInventory.setItem(23, item);
+		InventoryManager.talentInventory.setItem(23, item);
 		
 		// Enderian class item
 		item.setType(Material.ENDER_PEARL);
@@ -173,14 +174,15 @@ public class TalentsInventory {
 		lore.add(ChatColor.YELLOW + "consume ender pearls when teleporting.");
 		lore.add(ChatColor.WHITE + "(" + ChatColor.BLUE + "Passive" + ChatColor.WHITE + ") " + ChatColor.DARK_PURPLE + "Voidwalker" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "all mobs ignore you.");
 		lore.add(ChatColor.WHITE + "(" + ChatColor.RED + "Active" + ChatColor.WHITE + ") " + ChatColor.DARK_RED + "Dual-Phase Matter" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you can't get hit by arrows.");
+		lore.add(ChatColor.WHITE + "(" + ChatColor.BLUE + "Passive" + ChatColor.WHITE + ") " + ChatColor.DARK_GREEN + "Antimatter Synthesis" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you regenerate health");
+		lore.add(ChatColor.YELLOW + "in the end.");
 		lore.add("");
 		lore.add(ChatColor.WHITE + "Weaknesses:");
 		lore.add(ChatColor.BLUE + "Water" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you take more damage in water and rain.");
-		lore.add(ChatColor.DARK_GREEN + "Low Defense" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you cannot equip chestplates"); 
-		lore.add(ChatColor.YELLOW + "and you have 2 less hearts of health.");
+		lore.add(ChatColor.DARK_GREEN + "Low Defense" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you have 2 less hearts of health.");
 		meta.setLore(lore);
 		item.setItemMeta(meta);
-		Main.talentInventory.setItem(24, item);
+		InventoryManager.talentInventory.setItem(24, item);
 		
 		
 		// Cobble man class item
@@ -197,7 +199,7 @@ public class TalentsInventory {
 		lore.add(ChatColor.WHITE + "(" + ChatColor.RED + "Active" + ChatColor.WHITE + ") " + ChatColor.DARK_RED + "Imopster" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "killing someone grants you a minute of invisibility.");
 		meta.setLore(lore);
 		item.setItemMeta(meta);
-		Main.talentInventory.setItem(25, item);
+		InventoryManager.talentInventory.setItem(25, item);
 		
 		// Sheriff class item
 		item.setType(Material.STICK);
@@ -212,7 +214,7 @@ public class TalentsInventory {
 		lore.add(ChatColor.WHITE + "(" + ChatColor.RED + "Active" + ChatColor.WHITE + ") " + ChatColor.DARK_RED + "The Jail" + ChatColor.WHITE + " - " + ChatColor.YELLOW + "you can put players in The Jail.");
 		meta.setLore(lore);
 		item.setItemMeta(meta);
-		Main.talentInventory.setItem(26, item);
+		InventoryManager.talentInventory.setItem(26, item);
 				
 		
 		// close menu button
@@ -221,7 +223,7 @@ public class TalentsInventory {
 		lore.clear();
 		meta.setLore(lore);
 		item.setItemMeta(meta);
-		Main.talentInventory.setItem(49, item);
+		InventoryManager.talentInventory.setItem(49, item);
 		
 		// back button
 		item.setType(Material.ARROW);
@@ -229,7 +231,7 @@ public class TalentsInventory {
 		lore.clear();
 		meta.setLore(lore);
 		item.setItemMeta(meta);
-		Main.talentInventory.setItem(48, item);
+		InventoryManager.talentInventory.setItem(48, item);
 		
 	}
 }

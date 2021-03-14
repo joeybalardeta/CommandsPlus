@@ -20,15 +20,15 @@ public class MasterMenu {
 		String talent = Main.talentHashMap.get(p.getUniqueId().toString());
 		
 		
-		Main.masterMenuInventory = Bukkit.createInventory(null, 54, ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.DARK_GRAY + " Menu");
+		InventoryManager.masterMenuInventory = Bukkit.createInventory(null, 54, ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.DARK_GRAY + " Menu");
 		ItemStack item = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
 		ItemMeta meta = item.getItemMeta();
-		meta.setDisplayName("");
+		meta.setDisplayName(" ");
 		item.setItemMeta(meta);
 		
 		
 		for (int i = 0; i < 54; i++) {
-			Main.masterMenuInventory.setItem(i, item);
+			InventoryManager.masterMenuInventory.setItem(i, item);
 		}
 		
 		
@@ -40,6 +40,7 @@ public class MasterMenu {
 		skullMeta.setDisplayName(ChatColor.GOLD + "Player Info");
 		List<String> lore = new ArrayList <>();
 		lore.add(ChatColor.WHITE + "Name - " + ChatColor.YELLOW + p.getName());
+		
 		if (talent == null) {
 			lore.add(ChatColor.WHITE + "Talent - " + ChatColor.YELLOW + "None");
 		}
@@ -47,12 +48,29 @@ public class MasterMenu {
 			lore.add(ChatColor.WHITE + "Talent - " + ChatColor.YELLOW + talent);
 		}
 		
+		if (Main.factionHashMap.get(p.getUniqueId().toString()) == null || Main.factionHashMap.get(p.getUniqueId().toString()).equals("")) {
+			lore.add(ChatColor.WHITE + "Faction - " + ChatColor.YELLOW + "None");
+		}
+		else {
+			lore.add(ChatColor.WHITE + "Faction - " + ChatColor.YELLOW + Main.factionHashMap.get(p.getUniqueId().toString()));
+		}
+		
 		skullMeta.setLore(lore);
 		skullMeta.setOwner(p.getName());
 		item.setItemMeta(skullMeta);
 		
-		Main.masterMenuInventory.setItem(22, item);
+		InventoryManager.masterMenuInventory.setItem(22, item);
 		
+		
+		// Talent Menu item
+		item.setType(Material.SMITHING_TABLE);
+		meta.setDisplayName(ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+ " + ChatColor.WHITE + "Crafting Recipes");
+		lore.clear();
+		lore.add(ChatColor.YELLOW + "Click here for all crafting recipes!");
+	
+		meta.setLore(lore);
+		item.setItemMeta(meta);
+		InventoryManager.masterMenuInventory.setItem(20, item);
 		
 		
 		// Talent Menu item
@@ -60,14 +78,14 @@ public class MasterMenu {
 		meta.setDisplayName(ChatColor.RED + "Talents");
 		lore.clear();
 		if (talent == null) {
-			lore.add(ChatColor.WHITE + "Current Talent - " + ChatColor.YELLOW + "None");
+			lore.add(ChatColor.WHITE + "Talent - " + ChatColor.YELLOW + "None");
 		}
 		else {
-			lore.add(ChatColor.WHITE + "Current Talent - " + ChatColor.YELLOW + talent);
+			lore.add(ChatColor.WHITE + "Talent - " + ChatColor.YELLOW + talent);
 		}
 		meta.setLore(lore);
 		item.setItemMeta(meta);
-		Main.masterMenuInventory.setItem(21, item);
+		InventoryManager.masterMenuInventory.setItem(21, item);
 		
 		
 		// Skills Menu item
@@ -81,16 +99,26 @@ public class MasterMenu {
 		lore.add(ChatColor.WHITE + "Alchemy Points - " + ChatColor.YELLOW + Main.alchemyPointsTracker.get(p.getUniqueId().toString()));
 		meta.setLore(lore);
 		item.setItemMeta(meta);
-		Main.masterMenuInventory.setItem(23, item);
+		InventoryManager.masterMenuInventory.setItem(23, item);
 		
 		
-		// Faction Storage item
-		item.setType(Material.CHEST);
-		meta.setDisplayName(ChatColor.YELLOW + "Faction Storage");
+		// Faction Options Menu item
+		item = FunctionsPlus.getPlayerHead("r04dk1ll");
+		
+		
+		// set item metadata
+		skullMeta = (SkullMeta) item.getItemMeta();
+		skullMeta.setDisplayName(ChatColor.AQUA + "Faction ");
 		lore.clear();
-		meta.setLore(lore);
-		item.setItemMeta(meta);
-		Main.masterMenuInventory.setItem(31, item);
+		if (Main.factionHashMap.get(p.getUniqueId().toString()) == null || Main.factionHashMap.get(p.getUniqueId().toString()).equals("")) {
+			lore.add(ChatColor.WHITE + "Faction - " + ChatColor.YELLOW + "None");
+		}
+		else {
+			lore.add(ChatColor.WHITE + "Faction - " + ChatColor.YELLOW + Main.factionHashMap.get(p.getUniqueId().toString()));
+		}
+		skullMeta.setLore(lore);
+		item.setItemMeta(skullMeta);
+		InventoryManager.masterMenuInventory.setItem(24, item);
 		
 		
 		// close menu button
@@ -99,7 +127,7 @@ public class MasterMenu {
 		lore.clear();
 		meta.setLore(lore);
 		item.setItemMeta(meta);
-		Main.masterMenuInventory.setItem(49, item);
+		InventoryManager.masterMenuInventory.setItem(49, item);
 				
 	}
 	

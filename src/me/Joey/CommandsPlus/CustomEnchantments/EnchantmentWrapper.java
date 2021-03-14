@@ -1,4 +1,4 @@
-package me.Joey.CommandsPlus;
+package me.Joey.CommandsPlus.CustomEnchantments;
 
 
 import org.bukkit.NamespacedKey;

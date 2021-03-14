@@ -1,4 +1,4 @@
-package me.Joey.CommandsPlus;
+package me.Joey.CommandsPlus.CustomEnchantments;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
@@ -10,6 +10,7 @@ public class EnchantmentsPlus{
 
 	public static final Enchantment TELEKINESIS = new EnchantmentWrapper("telekinesis", "Telekinesis", 1);
 	public static final Enchantment SMELTING = new EnchantmentWrapper("smelting", "Smelting", 1);
+	public static final Enchantment EXPERIENCE = new EnchantmentWrapper("experience", "Experience", 3);
 	
 	public static void register() {
 		boolean registered = Arrays.stream(Enchantment.values()).collect(Collectors.toList()).contains(TELEKINESIS);
@@ -22,6 +23,12 @@ public class EnchantmentsPlus{
 		
 		if (!registered) {
 			registerEnchantment(SMELTING);
+		}
+		
+		registered = Arrays.stream(Enchantment.values()).collect(Collectors.toList()).contains(EXPERIENCE);
+		
+		if (!registered) {
+			registerEnchantment(EXPERIENCE);
 		}
 	}
 	
