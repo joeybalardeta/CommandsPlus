@@ -220,7 +220,7 @@ public class Events implements Listener{
 			}
 			
 			if (event.getCurrentItem().getItemMeta() == null) {
-				return;		
+				return;
 			}
 			
 			if (event.getCurrentItem().getItemMeta().getDisplayName() == null) {
@@ -231,6 +231,12 @@ public class Events implements Listener{
 			
 			
 			Player p = (Player) event.getWhoClicked();
+			
+			if (event.getSlot() == 19) {
+				p.openInventory(InventoryManager.weaponCraftsInventory);
+				return;
+			}
+			
 			
 			// Go Back selected
 			if (event.getSlot() == 48) {
@@ -472,7 +478,40 @@ public class Events implements Listener{
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} // this is important to have when editing server files, otherwise nothing gets changed
-		}	
+		}
+		
+		else if (event.getInventory().equals(InventoryManager.weaponCraftsInventory)) {
+			if (event.getCurrentItem() == null) {
+				return;
+			}
+			
+			if (event.getCurrentItem().getItemMeta() == null) {
+				return;		
+			}
+			
+			if (event.getCurrentItem().getItemMeta().getDisplayName() == null) {
+				return;
+			}
+			
+			event.setCancelled(true);
+			
+			Player p = (Player) event.getWhoClicked();
+			
+			// Go Back selected
+			if (event.getSlot() == 48) {
+				p.openInventory(InventoryManager.masterCraftsInventory);
+				return;
+			}
+			
+			
+			// Close Menu selected
+			if (event.getSlot() == 49) {
+				p.closeInventory();
+				
+				return;
+			}
+		}
+		
 		
 	}
 	

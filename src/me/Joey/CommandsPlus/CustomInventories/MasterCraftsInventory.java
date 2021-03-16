@@ -102,6 +102,17 @@ public class MasterCraftsInventory {
 		item.setItemMeta(meta);
 		InventoryManager.masterCraftsInventory.setItem(25, item);
 		
+		
+		// Enchantment Crafts Menu item
+		item.setType(Material.ENCHANTING_TABLE);
+		meta.setDisplayName(ChatColor.YELLOW + "Enchanting Crafting Recipes");
+		lore.clear();
+
+		meta.setLore(lore);
+		item.setItemMeta(meta);
+		InventoryManager.masterCraftsInventory.setItem(31, item);
+		
+		
 		// close menu button
 		item.setType(Material.BARRIER);
 		meta.setDisplayName(ChatColor.RED + "Close Menu");
