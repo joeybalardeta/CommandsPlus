@@ -342,6 +342,10 @@ public class FunctionsPlus {
 		Main.playerDataConfig.set("Users." + playerSave.getUniqueId() + ".stats" + ".alchemyPoints", Main.alchemyPointsTracker.get(playerSave.getUniqueId().toString()));
 		
 		
+		// player cooldowns
+		
+		
+		
 		// set data save cooldown
 		Main.canSaveDataHashMap.put(playerSave.getUniqueId().toString(), false);
 		try {
@@ -664,6 +668,7 @@ public class FunctionsPlus {
 		Main.playerDeathsHashMap.put(online.getUniqueId().toString(), 0 + Main.playerDataConfig.getInt("Users." + online.getUniqueId() + ".stats" + ".deaths"));
 		Main.playerYawHashMap.put(online.getUniqueId().toString(), 0f);
 		Main.playerUnchangedLookDirHashMap.put(online.getUniqueId().toString(), 0);
+		Main.currentOpenInventory.put(online.getUniqueId().toString(), "None");
 		
 		
 		// player weapon data
@@ -693,8 +698,29 @@ public class FunctionsPlus {
 		
 		
 		// player cooldowns
+		
+		// pyrokinetic
+		Main.fireBurstCooldown.put(online.getUniqueId().toString(), 0);
+		
+		// frostbender
+		Main.cryoCooldown.put(online.getUniqueId().toString(), 0);
+		Main.stasisCrystalEnergy.put(online.getUniqueId().toString(), 0);
+		
+		// biokinetic
+		Main.arcaneCrystalEnergy.put(online.getUniqueId().toString(), 0);
+		
+		// general
 		Main.canTpHashMap.put(online.getUniqueId().toString(), false);
+		
+		
+		
+		
+		
+		// data cooldown
 		Main.canSaveDataHashMap.put(online.getUniqueId().toString(), false);
+		
+		
+		
 		
 		
 		// player settings

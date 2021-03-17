@@ -16,6 +16,9 @@ public class InventoryManager {
 	// categorized crafting menus
 	public static Inventory weaponCraftsInventory;
 	
+	// recipe crafting inventory
+	public static Inventory recipeInventory;
+	
 	
 	
 	

@@ -26,14 +26,17 @@ public class ItemsPlus {
 	public static ItemStack hastePotion;
 	
 	
+	// custom enchanted books
+	public static ItemStack telekinesisBook;
+	public static ItemStack smeltingBook;
+	public static ItemStack experienceBook;
+	
+	
 	// custom crafts
 	public static ItemStack bottleOfXP;
 	public static ItemStack slimeBall;
 	public static ItemStack quickPick;
 	public static ItemStack gunpowder;
-	public static ItemStack telekinesisBook;
-	public static ItemStack smeltingBook;
-	public static ItemStack experienceBook;
 	
 	
 	// talent items
@@ -62,8 +65,13 @@ public class ItemsPlus {
 		// initialize custom armor
 		CustomArmor.init();
 		
+		
 		// initialize custom tools
 		CustomTools.init();
+		
+		
+		// initialize custom enchanted books
+		CustomEnchantedBooks.init();
 		
 		
 		// initialize custom potions
@@ -73,15 +81,13 @@ public class ItemsPlus {
 		// initialize custom class items
 		TalentItems.init();
 		
+		
 		// initialize custom crafts
 		CustomCrafts.init();
 		
+		
 		// initialize custom miscellaneous
 		CustomMiscellaneous.init();
-
-		
-		
-		
 		
 	}
 	

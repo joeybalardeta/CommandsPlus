@@ -19,6 +19,7 @@ import org.bukkit.block.Biome;
 import org.bukkit.block.Block;
 import org.bukkit.block.Container;
 import org.bukkit.block.data.Ageable;
+import org.bukkit.craftbukkit.v1_16_R3.inventory.CraftInventoryCustom;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Creeper;
 import org.bukkit.entity.Drowned;
@@ -48,6 +49,7 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryInteractEvent;
+import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerBedEnterEvent;
 import org.bukkit.event.player.PlayerChatEvent;
@@ -76,6 +78,7 @@ import org.bukkit.util.Vector;
 import me.Joey.CommandsPlus.CustomEnchantments.EnchantmentsPlus;
 import me.Joey.CommandsPlus.CustomInventories.FactionOptionsInventory;
 import me.Joey.CommandsPlus.CustomInventories.InventoryManager;
+import me.Joey.CommandsPlus.CustomInventories.RecipeInventoryCreator;
 import me.Joey.CommandsPlus.CustomItems.ItemsPlus;
 import me.Joey.CommandsPlus.Particles.ParticleData;
 import me.Joey.CommandsPlus.Particles.ParticleEffects;
@@ -166,8 +169,27 @@ public class Events implements Listener{
 	
 	// Inventory Interaction Events
 	@EventHandler
+	public void onInventoryOpen(InventoryOpenEvent event) {
+		
+		
+		if (event.getInventory() instanceof CraftInventoryCustom) {
+			
+		}
+		else {
+			Main.currentOpenInventory.put(event.getPlayer().getUniqueId().toString(), "None");
+		}
+	}
+	
+	
+	@EventHandler
 	public void onInventoryClick(InventoryClickEvent event) {
-		if (event.getInventory().equals(InventoryManager.masterMenuInventory)) {
+		
+		
+		if (Main.currentOpenInventory.get(event.getWhoClicked().getUniqueId().toString()).equals("None")) {
+			return;
+		}
+		
+		if (Main.currentOpenInventory.get(event.getWhoClicked().getUniqueId().toString()).equals("Master Menu")) {
 			if (event.getCurrentItem() == null) {
 				return;
 			}
@@ -187,6 +209,7 @@ public class Events implements Listener{
 			
 			// Close Menu selected
 			if (event.getSlot() == 49) {
+				Main.currentOpenInventory.put(p.getUniqueId().toString(), "None");
 				p.closeInventory();
 				
 				return;
@@ -194,25 +217,28 @@ public class Events implements Listener{
 			
 			// Commands+ Crafts Menu selected
 			if (event.getSlot() == 20) {
+				Main.currentOpenInventory.put(p.getUniqueId().toString(), "Master Crafts Menu");
 				p.openInventory(InventoryManager.masterCraftsInventory);
 				return;
 			}
 			
 			// Talent Menu selected
 			if (event.getSlot() == 21) {
+				Main.currentOpenInventory.put(p.getUniqueId().toString(), "Talent Menu");
 				p.openInventory(InventoryManager.talentInventory);
 				return;
 			}
 			
 			// Faction Options Menu Selected
 			if (event.getSlot() == 24) {
+				Main.currentOpenInventory.put(p.getUniqueId().toString(), "Faction Menu");
 				FactionOptionsInventory.createFactionOptionsInventory(p);
 				p.openInventory(InventoryManager.factionOptionsInventory);
 				return;
 			}
 		}
 		
-		else if (event.getInventory().equals(InventoryManager.masterCraftsInventory)) {
+		else if (Main.currentOpenInventory.get(event.getWhoClicked().getUniqueId().toString()).equals("Master Crafts Menu")) {
 			if (event.getCurrentItem() == null) {
 				return;
 			}
@@ -231,6 +257,7 @@ public class Events implements Listener{
 			Player p = (Player) event.getWhoClicked();
 			
 			if (event.getSlot() == 19) {
+				Main.currentOpenInventory.put(p.getUniqueId().toString(), "Weapon Crafts Menu");
 				p.openInventory(InventoryManager.weaponCraftsInventory);
 				return;
 			}
@@ -238,6 +265,7 @@ public class Events implements Listener{
 			
 			// Go Back selected
 			if (event.getSlot() == 48) {
+				Main.currentOpenInventory.put(p.getUniqueId().toString(), "Master Menu");
 				p.openInventory(InventoryManager.masterMenuInventory);
 				return;
 			}
@@ -245,6 +273,7 @@ public class Events implements Listener{
 			
 			// Close Menu selected
 			if (event.getSlot() == 49) {
+				Main.currentOpenInventory.put(p.getUniqueId().toString(), "None");
 				p.closeInventory();
 				
 				return;
@@ -254,7 +283,7 @@ public class Events implements Listener{
 			
 		}
 		
-		else if (event.getInventory().equals(InventoryManager.factionOptionsInventory)) {
+		else if (Main.currentOpenInventory.get(event.getWhoClicked().getUniqueId().toString()).equals("Faction Menu")) {
 			if (event.getCurrentItem() == null) {
 				return;
 			}
@@ -274,6 +303,7 @@ public class Events implements Listener{
 			
 			// Go Back selected
 			if (event.getSlot() == 48) {
+				Main.currentOpenInventory.put(p.getUniqueId().toString(), "Master Menu");
 				p.openInventory(InventoryManager.masterMenuInventory);
 				return;
 			}
@@ -281,6 +311,7 @@ public class Events implements Listener{
 			
 			// Close Menu selected
 			if (event.getSlot() == 49) {
+				Main.currentOpenInventory.put(p.getUniqueId().toString(), "None");
 				p.closeInventory();
 				
 				return;
@@ -290,7 +321,7 @@ public class Events implements Listener{
 			
 		}
 		
-		else if (event.getInventory().equals(InventoryManager.talentInventory)) {
+		else if (Main.currentOpenInventory.get(event.getWhoClicked().getUniqueId().toString()).equals("Talent Menu")) {
 			if (event.getCurrentItem() == null) {
 				return;
 			}
@@ -319,12 +350,14 @@ public class Events implements Listener{
 			
 			// Go Back selected
 			if (event.getSlot() == 48) {
+				Main.currentOpenInventory.put(p.getUniqueId().toString(), "Master Menu");
 				p.openInventory(InventoryManager.masterMenuInventory);
 				return;
 			}
 						
 			// Close Menu selected
 			if (event.getSlot() == 49) {
+				Main.currentOpenInventory.put(p.getUniqueId().toString(), "None");
 				p.closeInventory();
 				return;
 			}
@@ -478,7 +511,48 @@ public class Events implements Listener{
 			} // this is important to have when editing server files, otherwise nothing gets changed
 		}
 		
-		else if (event.getInventory().equals(InventoryManager.weaponCraftsInventory)) {
+		else if (Main.currentOpenInventory.get(event.getWhoClicked().getUniqueId().toString()).equals("Weapon Crafts Menu")) {
+			if (event.getCurrentItem() == null) {
+				return;
+			}
+			
+			if (event.getCurrentItem().getItemMeta() == null) {
+				return;		
+			}
+			
+			if (event.getCurrentItem().getItemMeta().getDisplayName() == null) {
+				return;
+			}
+			
+			event.setCancelled(true);
+			
+			Player p = (Player) event.getWhoClicked();
+			
+			// Go Back selected
+			if (event.getSlot() == 10 || event.getSlot() == 11 || event.getSlot() == 12) {
+				Main.currentOpenInventory.put(p.getUniqueId().toString(), "Weapon Recipe Menu");
+				p.openInventory(RecipeInventoryCreator.createRecipeInventory("Weapons", event.getCurrentItem()));
+				return;
+			}
+			
+			// Go Back selected
+			if (event.getSlot() == 48) {
+				Main.currentOpenInventory.put(p.getUniqueId().toString(), "Master Crafts Menu");
+				p.openInventory(InventoryManager.masterCraftsInventory);
+				return;
+			}
+			
+			
+			// Close Menu selected
+			if (event.getSlot() == 49) {
+				Main.currentOpenInventory.put(p.getUniqueId().toString(), "None");
+				p.closeInventory();
+				
+				return;
+			}
+		}
+		
+		else if (Main.currentOpenInventory.get(event.getWhoClicked().getUniqueId().toString()).equals("Weapon Recipe Menu")) {
 			if (event.getCurrentItem() == null) {
 				return;
 			}
@@ -497,13 +571,15 @@ public class Events implements Listener{
 			
 			// Go Back selected
 			if (event.getSlot() == 48) {
-				p.openInventory(InventoryManager.masterCraftsInventory);
+				Main.currentOpenInventory.put(p.getUniqueId().toString(), "Weapon Crafts Menu");
+				p.openInventory(InventoryManager.weaponCraftsInventory);
 				return;
 			}
 			
 			
 			// Close Menu selected
 			if (event.getSlot() == 49) {
+				Main.currentOpenInventory.put(p.getUniqueId().toString(), "None");
 				p.closeInventory();
 				
 				return;

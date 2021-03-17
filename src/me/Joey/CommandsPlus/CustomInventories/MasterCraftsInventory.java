@@ -13,7 +13,7 @@ import net.md_5.bungee.api.ChatColor;
 
 public class MasterCraftsInventory {
 	public static void createMasterCraftsInventory() {
-		InventoryManager.masterCraftsInventory = Bukkit.createInventory(null, 54, ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.DARK_GRAY + " Menu");
+		InventoryManager.masterCraftsInventory = Bukkit.createInventory(null, 54, ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.DARK_GRAY + " | Items");
 		ItemStack item = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
 		ItemMeta meta = item.getItemMeta();
 		meta.setDisplayName(" ");
