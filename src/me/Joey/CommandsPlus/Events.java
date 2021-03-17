@@ -20,14 +20,12 @@ import org.bukkit.block.Block;
 import org.bukkit.block.Container;
 import org.bukkit.block.data.Ageable;
 import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.Animals;
 import org.bukkit.entity.Creeper;
 import org.bukkit.entity.Drowned;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Mob;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Skeleton;
 import org.bukkit.entity.Spider;
@@ -632,6 +630,7 @@ public class Events implements Listener{
 		     		 lore.add(ChatColor.GRAY + "Telekinesis I");
 		     		 meta.setLore(lore);
 		     		 inv.getItemInOffHand().setItemMeta(meta);
+		     		 p.playSound(p.getLocation(), Sound.BLOCK_ENCHANTMENT_TABLE_USE, 1.0f, 1.0f);
 	        	 }
 	        	 
 	    		else if (inv.getItemInMainHand().equals(ItemsPlus.smeltingBook) && !inv.getItemInOffHand().containsEnchantment(EnchantmentsPlus.SMELTING) && (inv.getItemInOffHand().getType().toString().contains("AXE") || inv.getItemInOffHand().getType().toString().contains("SHOVEL"))) {
@@ -648,6 +647,7 @@ public class Events implements Listener{
 		     		 lore.add(ChatColor.GRAY + "Smelting I");
 		     		 meta.setLore(lore);
 		     		 inv.getItemInOffHand().setItemMeta(meta);
+		     		 p.playSound(p.getLocation(), Sound.BLOCK_ENCHANTMENT_TABLE_USE, 1.0f, 1.0f);
 	        	 }
 	    		else if (inv.getItemInMainHand().equals(ItemsPlus.experienceBook) && !inv.getItemInOffHand().containsEnchantment(EnchantmentsPlus.EXPERIENCE) && (inv.getItemInOffHand().getType().toString().contains("BOW") ||inv.getItemInOffHand().getType().toString().contains("TRIDENT") || inv.getItemInOffHand().getType().toString().contains("SWORD") || inv.getItemInOffHand().getType().toString().contains("AXE") || inv.getItemInOffHand().getType().toString().contains("SHOVEL"))) {
 	        		 inv.getItemInMainHand().setAmount(0); 
@@ -663,6 +663,7 @@ public class Events implements Listener{
 		     		 lore.add(ChatColor.GRAY + "Experience III");
 		     		 meta.setLore(lore);
 		     		 inv.getItemInOffHand().setItemMeta(meta);
+		     		 p.playSound(p.getLocation(), Sound.BLOCK_ENCHANTMENT_TABLE_USE, 1.0f, 1.0f);
 	        	 }
 	         }
 	         
@@ -690,22 +691,11 @@ public class Events implements Listener{
 	        		 return;
 	        	 }
 	        	 
-	        	 if (victim instanceof Animals) {
-	        		 Animals a = null;
+	        	 if (victim instanceof LivingEntity) {
+	        		 LivingEntity le = null;
 		        	 try {
-		        		 a = (Animals) victim;
-		        		 a.damage(20);
-		        	 } catch(Exception e) {
-		        		 
-		        	 }
-		        	 return;
-	        	 }
-	        	 
-	        	 if (victim instanceof Mob) {
-	        		 Mob m = null;
-		        	 try {
-		        		 m = (Animals) victim;
-		        		 m.damage(20);
+		        		 le = (LivingEntity) victim;
+		        		 le.damage(6);
 		        	 } catch(Exception e) {
 		        		 
 		        	 }
@@ -799,7 +789,12 @@ public class Events implements Listener{
 			
 			if (p.getHealth() - event.getDamage() < 6) {
 				if (talent.equals("Frostbender")) {
-					p.getWorld().getBlockAt(new Location(p.getWorld(), p.getLocation().getBlockX(), p.getLocation().getBlockY() - 1, p.getLocation().getBlockZ())).setType(Material.BLUE_ICE);
+					Location currentLoc = new Location(p.getWorld(), p.getLocation().getBlockX(), p.getLocation().getBlockY() - 1, p.getLocation().getBlockZ());
+					Material m1 = p.getWorld().getBlockAt(currentLoc).getType();
+					if (m1 == Material.AIR || m1 == Material.CAVE_AIR || m1 == Material.WATER || m1 == Material.LAVA) {
+						p.getWorld().getBlockAt(new Location(p.getWorld(), p.getLocation().getBlockX(), p.getLocation().getBlockY() - 1, p.getLocation().getBlockZ())).setType(Material.BLUE_ICE);
+					}
+					
 					p.getWorld().getBlockAt(new Location(p.getWorld(), p.getLocation().getBlockX(), p.getLocation().getBlockY() + 2, p.getLocation().getBlockZ())).setType(Material.BLUE_ICE);
 					p.getWorld().getBlockAt(new Location(p.getWorld(), p.getLocation().getBlockX(), p.getLocation().getBlockY(), p.getLocation().getBlockZ())).setType(Material.AIR);
 					p.getWorld().getBlockAt(new Location(p.getWorld(), p.getLocation().getBlockX(), p.getLocation().getBlockY() + 1, p.getLocation().getBlockZ())).setType(Material.AIR);
@@ -1205,6 +1200,15 @@ public class Events implements Listener{
 	public void fishEvent(PlayerFishEvent event) {
 	    if(event.getCaught() instanceof Item){
 	    	Main.farmingPointsTracker.put(event.getPlayer().getUniqueId().toString(), Main.farmingPointsTracker.get(event.getPlayer().getUniqueId().toString()) + 1);
+	    	if (((int) (Math.random() * 20)) == 7) {
+	    		Vector velocity = event.getCaught().getVelocity();
+	    		Location itemLoc = event.getCaught().getLocation();
+	    		Entity entity = event.getPlayer().getWorld().spawnEntity(itemLoc, EntityType.DROPPED_ITEM);
+	    		entity.setVelocity(velocity);
+	    		entity.teleport(itemLoc);
+	    		Item item = (Item) entity;
+	    		item.setItemStack(Main.betterFishingLootTable.get(0));
+	    	}
 	    }
 		
 	}

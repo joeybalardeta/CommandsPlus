@@ -49,6 +49,8 @@ public interface GlobalHashMaps{
 	
 	// Frostbender
 	HashMap<String, Integer> stasisCrystalEnergy = new HashMap<String, Integer>();
+	HashMap<String, Integer> cryoCooldown = new HashMap<String, Integer>();
+	
 	
 	// Biokinetic
 	HashMap<String, Integer> arcaneCrystalEnergy = new HashMap<String, Integer>();

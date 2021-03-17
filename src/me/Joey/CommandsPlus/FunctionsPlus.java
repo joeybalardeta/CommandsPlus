@@ -643,7 +643,9 @@ public class FunctionsPlus {
 	}
 	
 	
-	
+	public static void loadBetterFishingLootTable() {
+		Main.betterFishingLootTable.add(new ItemStack(Material.GUNPOWDER));
+	}
 	
 	
 	

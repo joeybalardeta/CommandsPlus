@@ -60,8 +60,6 @@ import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.ScoreboardManager;
 import org.bukkit.util.Vector;
 
-import com.sun.org.apache.bcel.internal.generic.RETURN;
-
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.ComponentBuilder;
@@ -80,6 +78,7 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 	public static HashMap<String, ItemStack[]> factionStorage = new HashMap<String, ItemStack[]>();
 	public static HashMap<String, Location> fireWalkerLocs = new HashMap<String, Location>();
 	public static List<ItemStack> unrenameableItems = new ArrayList <>();
+	public static List<ItemStack> betterFishingLootTable = new ArrayList<>();
 	public TabManager tab;
 	
 	
@@ -148,6 +147,10 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 		
 		// load unrenamable items (it's really just all of the custom items)
 		FunctionsPlus.loadUnrenameableItems();
+		
+		
+		// load better fishing loot table
+		FunctionsPlus.loadBetterFishingLootTable();
 		
 		
 		// load custom tab
@@ -322,6 +325,23 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
             			}
             			
             			
+            			// cooldowns
+            			
+            			// frostbender
+            			if (stasisCrystalEnergy.get(online.getUniqueId().toString()) < 12000) {
+            				stasisCrystalEnergy.put(online.getUniqueId().toString(), stasisCrystalEnergy.get(online.getUniqueId().toString()) + 1);
+            			}
+            			cryoCooldown.put(online.getUniqueId().toString(), cryoCooldown.get(online.getUniqueId().toString()) + 1);
+            			
+            			
+            			// biokinetic
+            			if (arcaneCrystalEnergy.get(online.getUniqueId().toString()) < 12000) {
+            				arcaneCrystalEnergy.put(online.getUniqueId().toString(), arcaneCrystalEnergy.get(online.getUniqueId().toString()) + 1);
+            			}
+            			
+            			
+            			
+            			
             			
             			
             			for (ItemStack item : online.getInventory().getContents()) {
@@ -488,6 +508,22 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
             				
             				if (talent.equals("Terran")) {
             					online.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 100000, 0));
+            					if (location.getBlockY() < 65) {
+            						boolean regenFound = false;
+                					for (PotionEffect potionEffect : online.getActivePotionEffects()) {
+                						if (potionEffect.getType().equals(PotionEffectType.REGENERATION)) {
+                							regenFound = true;
+                							int duration = potionEffect.getDuration();
+                							if (duration < 10) {
+                								online.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 100, 0));
+                							}
+                						}
+                						
+                					}
+                					if(!regenFound) {
+            							online.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 100, 0));
+            						}
+            					}
             				}
         				}
         				
@@ -506,7 +542,7 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
             		
         			for (Player online : Bukkit.getOnlinePlayers()) {
         				// if player look direction (really just yaw) is the same as a second ago, increment their value for how many seconds they haven't looked in a new direction
-        				// if it returns false, the valuke for how long they haven't looked somewhere is reset to 0 and the look direction value is set to the new value
+        				// if it returns false, the value for how long they haven't looked somewhere is reset to 0 and the look direction value is set to the new value
         				if (playerYawHashMap.get(online.getUniqueId().toString()) == online.getLocation().getYaw()) {
         					playerUnchangedLookDirHashMap.put(online.getUniqueId().toString(), playerUnchangedLookDirHashMap.get(online.getUniqueId().toString()) + 1);
         				}
@@ -2275,10 +2311,38 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps{
 	
 	public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args){
 		List<String> tabComplete = new ArrayList<>();
-		if (label.equalsIgnoreCase("namecolor")){
-			for (ChatColor color : ChatColor.values()) {
-				if (color.toString().startsWith(args[0])) {
-					tabComplete.add(color.toString());
+		String[] factionOptions = {"create", "invite", "remove", "leave", "promote", "demote", "accept", "decline", "info"};
+		String[] rankList = {"Member", "Streamer", "Superuser", "Admin"};
+		if (label.equalsIgnoreCase("faction")){
+			for (String option : factionOptions) {
+				if (option.toString().startsWith(args[0])) {
+					tabComplete.add(option.toString());
+				}
+			}
+		}
+		
+		else if (label.equalsIgnoreCase("setrank")) {
+			for (Player online : Bukkit.getOnlinePlayers()) {
+				if (online.getName().toString().startsWith(args[0])) {
+					tabComplete.add(online.getName().toString());
+				}
+			}
+			for (String rank : rankList) {
+				if (rank.toString().startsWith(args[1])) {
+					tabComplete.add(rank.toString());
+				}
+			}
+			
+		}
+		else if (label.equalsIgnoreCase("cords")) {
+			if ("send".startsWith(args[1])) {
+				tabComplete.add("send");
+			}
+		}
+		else if (label.equalsIgnoreCase("getplayerhead")) {
+			for (Player online : Bukkit.getOnlinePlayers()) {
+				if (online.getName().toString().startsWith(args[0])) {
+					tabComplete.add(online.getName().toString());
 				}
 			}
 		}
