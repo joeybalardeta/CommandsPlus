@@ -17,6 +17,7 @@ public interface GlobalHashMaps{
 	HashMap<String, Float> playerYawHashMap = new HashMap<String, Float>();
 	HashMap<String, Integer> playerUnchangedLookDirHashMap = new HashMap<String, Integer>();
 	HashMap<String, String> currentOpenInventory = new HashMap<String, String>();
+	HashMap<String, Boolean> scoreboardSet = new HashMap<String, Boolean>();
 	
 	
 	// ----------------------------------------------------------------------------------------

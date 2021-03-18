@@ -183,7 +183,8 @@ public class Events implements Listener{
 	
 	@EventHandler
 	public void onInventoryClick(InventoryClickEvent event) {
-		
+		Player p = (Player) event.getWhoClicked();
+		// p.sendMessage(Main.currentOpenInventory.get(event.getWhoClicked().getUniqueId().toString()));
 		
 		if (Main.currentOpenInventory.get(event.getWhoClicked().getUniqueId().toString()).equals("None")) {
 			return;
@@ -205,7 +206,7 @@ public class Events implements Listener{
 			event.setCancelled(true);
 			
 			
-			Player p = (Player) event.getWhoClicked();
+			
 			
 			// Close Menu selected
 			if (event.getSlot() == 49) {
@@ -254,7 +255,6 @@ public class Events implements Listener{
 			event.setCancelled(true);
 			
 			
-			Player p = (Player) event.getWhoClicked();
 			
 			if (event.getSlot() == 19) {
 				Main.currentOpenInventory.put(p.getUniqueId().toString(), "Weapon Crafts Menu");
@@ -299,7 +299,6 @@ public class Events implements Listener{
 			event.setCancelled(true);
 			
 			
-			Player p = (Player) event.getWhoClicked();
 			
 			// Go Back selected
 			if (event.getSlot() == 48) {
@@ -335,9 +334,6 @@ public class Events implements Listener{
 			}
 			
 			event.setCancelled(true);
-			
-			
-			Player p = (Player) event.getWhoClicked();
 			
 			// Instantiate particle data/trails objects for player
 			ParticleData particle = new ParticleData(p.getUniqueId());
@@ -526,7 +522,6 @@ public class Events implements Listener{
 			
 			event.setCancelled(true);
 			
-			Player p = (Player) event.getWhoClicked();
 			
 			// Go Back selected
 			if (event.getSlot() == 10 || event.getSlot() == 11 || event.getSlot() == 12) {
@@ -567,7 +562,6 @@ public class Events implements Listener{
 			
 			event.setCancelled(true);
 			
-			Player p = (Player) event.getWhoClicked();
 			
 			// Go Back selected
 			if (event.getSlot() == 48) {

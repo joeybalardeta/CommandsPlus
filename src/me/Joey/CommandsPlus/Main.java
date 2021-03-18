@@ -227,6 +227,12 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps {
 
 		for (Player online : Bukkit.getOnlinePlayers()) {
 			online.closeInventory();
+			try {
+				online.getScoreboard().getObjective("Scoreboard").unregister();
+			} catch(Exception e) {
+				getLogger().log(Level.INFO, "Player " + online.getName() + " does not have a registered scoreboard!");
+			}
+			
 
 			if (!hashMapsCreated) {
 
@@ -285,6 +291,9 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps {
 					World world = null;
 
 					for (Player online : Bukkit.getOnlinePlayers()) {
+						
+						
+						
 						String talent = talentHashMap.get(online.getUniqueId().toString());
 						Location location = online.getLocation();
 
@@ -523,6 +532,13 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps {
 					FunctionsPlus.killPhantoms();
 
 					for (Player online : Bukkit.getOnlinePlayers()) {
+						if (scoreboardHashMap.get(online.getUniqueId().toString())) {
+							FunctionsPlus.createBoard(online);
+						} else {
+							online.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
+						}
+						
+						
 						// if player look direction (really just yaw) is the same as a second ago,
 						// increment their value for how many seconds they haven't looked in a new
 						// direction
@@ -545,6 +561,7 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps {
 						} else {
 							online.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
 						}
+						
 						endCheck(online);
 
 						if (!isBloodMoon && (FunctionsPlus.getTime(getServer(), online) % 24000) >= 13000
@@ -1372,11 +1389,9 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps {
 				return true;
 			}
 
-			if (factionHashMap.get(p.getUniqueId().toString()) == null) {
+			if (factionHashMap.get(p.getUniqueId().toString()) == null || factionHashMap.get(p.getUniqueId().toString()).equals("")) {
 				FunctionsPlus.playSound(p, "actionDenied");
-				p.sendMessage(
-						ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE
-								+ "] " + ChatColor.RED + "You're not in a faction! Join a faction to claim chunks!");
+				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "You're not in a faction! Join a faction to claim chunks!");
 				return true;
 			}
 
@@ -2267,7 +2282,7 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps {
 		}
 
 		if (label.equalsIgnoreCase("talents")) {
-			currentOpenInventory.get(p.getUniqueId().toString()).equals("Talent Menu");
+			currentOpenInventory.put(p.getUniqueId().toString(), "Talent Menu");
 			p.openInventory(InventoryManager.talentInventory);
 		}
 

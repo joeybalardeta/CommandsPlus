@@ -43,22 +43,63 @@ import net.md_5.bungee.api.ChatColor;
 public class FunctionsPlus {
 	
 	public static void createBoard(Player player) {
-		ScoreboardManager manager = Bukkit.getScoreboardManager();
-		Scoreboard board = manager.getNewScoreboard();
-		Objective obj = board.registerNewObjective("Scoreboard", "dummy", ChatColor.translateAlternateColorCodes('&', "&cCommands&4+"));
-		obj.setDisplaySlot(DisplaySlot.SIDEBAR);
+		ScoreboardManager manager;
+		Scoreboard board;
+		Objective obj;
 		
-		String format = "M/d/yyyy";
-		Date date = new Date();
-        SimpleDateFormat ft = new SimpleDateFormat(format);
-		
-		Score score1 = obj.getScore("");
-		score1.setScore(6);
-		
-		Score score2 = obj.getScore("Players Online: " + ChatColor.AQUA + Bukkit.getOnlinePlayers().size());
-		score2.setScore(5);
-		
+		board = player.getScoreboard();
+		Set<String> entries;
+		entries = board.getEntries();
 
+        for(String entry : entries)
+        {
+        	board.resetScores(entry);
+        }
+        
+		obj = player.getScoreboard().getObjective("Scoreboard");
+		
+		if (obj == null) { 
+			manager = Bukkit.getScoreboardManager();
+			board = manager.getNewScoreboard();
+			
+			entries = board.getEntries();
+
+	        for(String entry : entries)
+	        {
+	        	board.resetScores(entry);
+	        }
+	        
+			obj = board.registerNewObjective("Scoreboard", "dummy", ChatColor.translateAlternateColorCodes('&', "&cCommands&4+"));
+			obj.setDisplaySlot(DisplaySlot.SIDEBAR);
+			
+			/*
+			Team talent = board.registerNewTeam("talent");
+			talent.addEntry("Talent: §b");
+			obj.getScore("Talent: §b").setScore(5);
+			
+			Team territory = board.registerNewTeam("territory");
+			territory.addEntry("Territory: §b");
+			obj.getScore("Territory: §b").setScore(4);
+			
+			Team deaths = board.registerNewTeam("deaths");
+			deaths.addEntry("Deaths: §b");
+			obj.getScore("Deaths: §b").setScore(3);
+			
+			Team emptyLine = board.registerNewTeam("emptyLine");
+			emptyLine.addEntry("-");
+			obj.getScore("-").setScore(2);
+			
+			Team date = board.registerNewTeam("date");
+			date.addEntry("§b");
+			obj.getScore("§b").setScore(1);
+			*/
+		}
+		
+		// get talent
+		String talent = Main.talentHashMap.get(player.getUniqueId().toString());
+		
+		
+        // get territory
 		String territoryLookup = "X: " + player.getLocation().getChunk().getX() + ", Z: " + player.getLocation().getChunk().getZ();
 		String territoryName = null;
 		for (int i = 0; i < Main.chunkLocationsRAM.size(); i++) {
@@ -66,19 +107,34 @@ public class FunctionsPlus {
 				territoryName = Main.chunkNamesRAM.get(i);
 			}
 		}
-		if (territoryName == null) {
+		
+		if (territoryName == null || territoryName.equals("")) {
 			territoryName = "Wilderness";
 		}
 
 		if (player.getWorld().getEnvironment() == Environment.NETHER){
 			territoryName = "Nether";
 		}
-		Score score3 = obj.getScore("Territory: " + ChatColor.AQUA + territoryName);
 		
-		score3.setScore(4);
+		// get deaths
+		int deaths = Main.playerDeathsHashMap.get(player.getUniqueId().toString());
 		
-		Score score4 = obj.getScore("Deaths: " + ChatColor.AQUA + Main.playerDeathsHashMap.get(player.getUniqueId().toString()));
-		score4.setScore(3);
+		
+		// get date
+		String format = "M/d/yyyy";
+		Date date = new Date();
+        SimpleDateFormat ft = new SimpleDateFormat(format);
+		
+		
+		
+        Score score1 = obj.getScore("Talent: " + ChatColor.AQUA + talent);
+		score1.setScore(5);
+		
+		Score score2 = obj.getScore("Territory: " + ChatColor.AQUA + territoryName);
+		score2.setScore(4);
+		
+		Score score3 = obj.getScore("Deaths: " + ChatColor.AQUA + deaths);
+		score3.setScore(3);
 		
 		Score score5 = obj.getScore("");
 		score5.setScore(2);
@@ -86,14 +142,33 @@ public class FunctionsPlus {
 		Score score6 = obj.getScore(ChatColor.DARK_GRAY + ft.format(date));
 		score6.setScore(1);
 		
+        
+		/* 
+        Team talentTeam = board.getTeam("talent");
+        talentTeam.setSuffix("" + ChatColor.AQUA + talent + "");
+        
+        
+        Team territoryTeam = board.getTeam("territory");
+        territoryTeam.setSuffix("" + ChatColor.AQUA + territoryName + "");
+        
+        
+        Team deathsTeam = board.getTeam("deaths");
+        deathsTeam.setSuffix("" + ChatColor.AQUA + deaths + "");
+        
+        
+        Team dateTeam = board.getTeam("date");
+        dateTeam.setSuffix("" + ChatColor.DARK_GRAY + ft.format(date) + "");
+        */
 		
-//		obj.setDisplaySlot(DisplaySlot.BELOW_NAME);
-//		Score deathsCounter = obj.getScore(ChatColor.AQUA + "");
-//		deathsCounter.setScore(1);
 		
+		// set scoreboard only once
+		if (!Main.scoreboardSet.get(player.getUniqueId().toString())) {
+			player.setScoreboard(board);
+			Main.scoreboardSet.put(player.getUniqueId().toString(), true);
+		}
 		
-		player.setScoreboard(board);
 	}
+	
 	
 	
 	public static void setTabList(Player online) {
@@ -669,6 +744,7 @@ public class FunctionsPlus {
 		Main.playerYawHashMap.put(online.getUniqueId().toString(), 0f);
 		Main.playerUnchangedLookDirHashMap.put(online.getUniqueId().toString(), 0);
 		Main.currentOpenInventory.put(online.getUniqueId().toString(), "None");
+		Main.scoreboardSet.put(online.getUniqueId().toString(), false);
 		
 		
 		// player weapon data
