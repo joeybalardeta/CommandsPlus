@@ -2,6 +2,7 @@ package me.Joey.CommandsPlus;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
@@ -24,6 +25,7 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Phantom;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.potion.PotionData;
@@ -34,6 +36,7 @@ import org.bukkit.scoreboard.Score;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.ScoreboardManager;
 
+import me.Joey.CommandsPlus.CustomEnchantments.EnchantmentsPlus;
 import me.Joey.CommandsPlus.CustomItems.ItemsPlus;
 import me.Joey.CommandsPlus.Particles.ParticleData;
 import me.Joey.CommandsPlus.Particles.ParticleEffects;
@@ -563,6 +566,66 @@ public class FunctionsPlus {
 		}
 	}
 	
+	
+	public static void addCustomEnchant(Player p, ItemStack item, String enchant, int level) {
+		
+		
+		if (enchant.equals("SMELTING")) {
+			if (!(item.getType().toString().contains("BOW") || item.getType().toString().contains("TRIDENT") || item.getType().toString().contains("SWORD") || item.getType().toString().contains("AXE") || item.getType().toString().contains("SHOVEL")) || item.containsEnchantment(EnchantmentsPlus.SMELTING)) {
+				return;
+			}
+			item.addUnsafeEnchantment(EnchantmentsPlus.SMELTING, 1);
+	   	 	ItemMeta meta = item.getItemMeta();
+			 List<String> lore = new ArrayList<String>();
+			 if (meta.hasLore()) {
+				 for (String s : meta.getLore()) {
+	    			 lore.add(s);
+	    		 }
+			 }
+			
+			 lore.add(ChatColor.GRAY + "Smelting");
+			 meta.setLore(lore);
+			 item.setItemMeta(meta);
+		}
+		else if (enchant.equals("TELEKINESIS")) {
+			if (item.containsEnchantment(EnchantmentsPlus.TELEKINESIS)) {
+				return;
+			}
+			item.addUnsafeEnchantment(EnchantmentsPlus.TELEKINESIS, 1);
+	   	 	ItemMeta meta = item.getItemMeta();
+			 List<String> lore = new ArrayList<String>();
+			 if (meta.hasLore()) {
+				 for (String s : meta.getLore()) {
+	    			 lore.add(s);
+	    		 }
+			 }
+			
+			 lore.add(ChatColor.GRAY + "Telekinesis");
+			 meta.setLore(lore);
+			 item.setItemMeta(meta);
+		}
+		else if (enchant.equals("EXPERIENCE")) {
+			if (item.containsEnchantment(EnchantmentsPlus.EXPERIENCE)) {
+				return;
+			}
+			item.addUnsafeEnchantment(EnchantmentsPlus.EXPERIENCE, level);
+	   	 	ItemMeta meta = item.getItemMeta();
+			 List<String> lore = new ArrayList<String>();
+			 if (meta.hasLore()) {
+				 for (String s : meta.getLore()) {
+	    			 lore.add(s);
+	    		 }
+			 }
+			 String romanLevels = "";
+			 for (int i = 0; i < level; i++) {
+				 romanLevels += "I";
+			 }
+			 lore.add(ChatColor.GRAY + "Experience " + romanLevels);
+			 meta.setLore(lore);
+			 item.setItemMeta(meta);
+		}
+		
+	}
 	
 	
 	@SuppressWarnings("deprecation")

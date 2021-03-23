@@ -5,6 +5,7 @@ import me.Joey.CommandsPlus.CustomInventories.*;
 import me.Joey.CommandsPlus.CustomItems.*;
 import me.Joey.CommandsPlus.CustomItems.ItemsPlus;
 import me.Joey.CommandsPlus.CustomTab.TabManager;
+import me.Joey.CommandsPlus.Events.*;
 import me.Joey.CommandsPlus.Particles.*;
 
 import java.io.File;
@@ -279,8 +280,15 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps {
 			FunctionsPlus.setTabList(online);
 		}
 
-		// scoreboard initialization and End checker
-		this.getServer().getPluginManager().registerEvents(new Events(), this);
+		// registering all event handlers
+		this.getServer().getPluginManager().registerEvents(new BlockEvents(), this);
+		this.getServer().getPluginManager().registerEvents(new EntityEvents(), this);
+		this.getServer().getPluginManager().registerEvents(new InteractionEvents(), this);
+		this.getServer().getPluginManager().registerEvents(new InventoryEvents(), this);
+		this.getServer().getPluginManager().registerEvents(new ItemEvents(), this);
+		this.getServer().getPluginManager().registerEvents(new PlayerEvents(), this);
+		this.getServer().getPluginManager().registerEvents(new TalentEvents(), this);
+		this.getServer().getPluginManager().registerEvents(new WorldEvents(), this);
 		BukkitScheduler scheduler = getServer().getScheduler();
 
 		// check every 50ms
