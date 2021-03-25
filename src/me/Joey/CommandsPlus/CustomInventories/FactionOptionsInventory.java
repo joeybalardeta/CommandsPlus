@@ -16,7 +16,7 @@ import net.md_5.bungee.api.ChatColor;
 
 public class FactionOptionsInventory {
 	public static void createFactionOptionsInventory(Player p) {
-		InventoryManager.factionOptionsInventory = Bukkit.createInventory(null, 54, ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.DARK_GRAY + " Menu");
+		InventoryManager.factionOptionsInventory = Bukkit.createInventory(null, 54, ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.DARK_GRAY + " | Factions");
 		ItemStack item = new ItemStack(Material.BLACK_STAINED_GLASS_PANE);
 		ItemMeta meta = item.getItemMeta();
 		meta.setDisplayName(" ");

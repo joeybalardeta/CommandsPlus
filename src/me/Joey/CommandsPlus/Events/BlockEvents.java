@@ -30,7 +30,6 @@ import net.md_5.bungee.api.ChatColor;
 public class BlockEvents implements Listener {
 	@EventHandler
 	public void blockBreak(BlockBreakEvent event) {
-		
 		if (event.getPlayer() != null) {
 			Main.miningPointsTracker.put(event.getPlayer().getUniqueId().toString(), Main.miningPointsTracker.get(event.getPlayer().getUniqueId().toString()) + 1);
 			if (Main.canSaveDataHashMap.get(event.getPlayer().getUniqueId().toString())){
@@ -40,11 +39,9 @@ public class BlockEvents implements Listener {
 			Player p = event.getPlayer();
 	        PlayerInventory inv = p.getInventory();
 	 
-	        ItemStack timberAxe = new ItemStack (ItemsPlus.timberAxe);
-	        ItemStack redstonePickaxe = new ItemStack (ItemsPlus.redstonePickaxe);
 	        
 	 
-	        if (inv.getItemInMainHand().equals(timberAxe) && Main.logMaterials.contains(event.getBlock().getType())) {
+	        if (inv.getItemInMainHand().equals(ItemsPlus.timberAxe) && Main.logMaterials.contains(event.getBlock().getType())) {
 	            Location location = event.getBlock().getLocation();
 	            LinkedList<Block> blocks = new LinkedList<>();
 	            ItemStack handStack = p.getItemInHand();
@@ -109,7 +106,7 @@ public class BlockEvents implements Listener {
 
 	        }
 	        
-	        if (inv.getItemInMainHand().equals(redstonePickaxe)) {
+	        if (inv.getItemInMainHand().equals(ItemsPlus.redstonePickaxe)) {
 	        	
 	        	Location location = event.getBlock().getLocation();
 	            LinkedList<Block> blocks = new LinkedList<>();

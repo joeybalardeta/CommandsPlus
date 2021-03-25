@@ -8,8 +8,8 @@ import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 
+import me.Joey.CommandsPlus.Main;
 import me.Joey.CommandsPlus.CustomInventories.InventoryManager;
-import me.Joey.CommandsPlus.CustomItems.ItemsPlus;
 import net.md_5.bungee.api.ChatColor;
 
 public class WeaponCraftsInventory {
@@ -27,18 +27,11 @@ public class WeaponCraftsInventory {
 		
 		List<String> lore = new ArrayList <>();
 		
-		// Thugnar's Glock
-		item = new ItemStack(ItemsPlus.thugnarsGlock);
-		InventoryManager.weaponCraftsInventory.setItem(10, item);
-		
-		// Tracking Bow
-		item = new ItemStack(ItemsPlus.trackingBow);
-		InventoryManager.weaponCraftsInventory.setItem(11, item);
-		
-		
-		// Dash Sword
-		item = new ItemStack(ItemsPlus.dashSword);
-		InventoryManager.weaponCraftsInventory.setItem(12, item);
+		int slot = 10;
+		for (ItemStack itemInList : Main.customWeaponList) {
+			InventoryManager.weaponCraftsInventory.setItem(slot, itemInList);
+			slot++;
+		}
 		
 		
 		// close menu button

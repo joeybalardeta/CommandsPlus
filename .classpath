@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="C:/Users/joeyb/Projects/Coding/Java/Minecraft/Spigot Plugin Testing Server 1.16.4/spigot-1.16.4.jar"/>
 	<classpathentry kind="lib" path="C:/Users/joeyb/Projects/Coding/Java/Minecraft/Plugins/Referenced Libraries/commons-io-2.8.0-bin/commons-io-2.8.0/commons-io-2.8.0.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

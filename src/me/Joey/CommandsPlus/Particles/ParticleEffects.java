@@ -105,6 +105,53 @@ public class ParticleEffects {
 		}, 0, 5L);
 	}
 	
+	
+	// Pyrokinetic particles
+		public void startHydrokineticParticles() {
+			
+			
+			// check every 250ms for potion effects
+			taskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(Main.getPlugin(Main.class), new Runnable() {
+				double var = 0;
+				Location loc, first;
+				ParticleData particle = new ParticleData(p.getUniqueId());
+				Random rand = new Random();
+				double lookDirDouble = 0;
+				double lookDirPi = 0;
+	        	double rotation = 0;
+	        	int distanceTemp = 0;
+	        	double distance = 0;
+	        	int heightTemp = 0;
+	        	double height = 0;
+				
+	            @Override
+	            public void run() {
+	            	if (!particle.hasID()) {
+	            		particle.setID(taskID);
+	            	}
+	            	
+	            	
+	        		lookDirDouble = FunctionsPlus.getPlayerDirectionFloat(p);
+	            	lookDirPi = ((lookDirDouble * Math.PI) / 180) + (5 * Math.PI / 6);
+	            	var = rand.nextInt(240);
+	            	rotation = ((var * Math.PI) / 180.0) - Math.PI;
+	            	distanceTemp = rand.nextInt(100) + 50;
+	            	distance = distanceTemp / 100.0;
+	            	heightTemp = rand.nextInt(100) + 150;
+	            	height = heightTemp / 100.0;
+	            	
+	            	
+	            	
+	            	loc = p.getLocation();
+	            	first = loc.clone().add(Math.cos(rotation + lookDirPi) * distance, height, Math.sin(rotation + lookDirPi) * distance);
+	            	
+	            	p.getWorld().spawnParticle(Particle.FALLING_WATER, first, 0);
+
+	            	
+	            }
+			}, 0, 5L);
+		}
+	
 	// Frostbender particles
 	public void startFrostbenderParticles() {
 		

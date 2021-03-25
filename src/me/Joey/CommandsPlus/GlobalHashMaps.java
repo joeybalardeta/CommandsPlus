@@ -46,6 +46,9 @@ public interface GlobalHashMaps{
 	// ----------------------------------------------------------------------------------------
 	// player talent cooldowns
 	
+	// Avian
+	HashMap<String, Integer> avianBurstCooldown = new HashMap<String, Integer>();
+	
 	// Pyrokinetic
 	HashMap<String, Integer> fireBurstCooldown = new HashMap<String, Integer>();
 	

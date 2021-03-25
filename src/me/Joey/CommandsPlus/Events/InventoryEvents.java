@@ -11,6 +11,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.ItemStack;
@@ -33,7 +34,6 @@ public class InventoryEvents implements Listener {
 	@EventHandler
 	public void onInventoryOpen(InventoryOpenEvent event) {
 		
-		
 		if (event.getInventory() instanceof CraftInventoryCustom) {
 			
 		}
@@ -44,9 +44,16 @@ public class InventoryEvents implements Listener {
 	
 	
 	@EventHandler
+	public void onInventoryClose(InventoryCloseEvent event) {
+		Main.currentOpenInventory.put(event.getPlayer().getUniqueId().toString(), "None");
+	}
+	
+	
+	@EventHandler
 	public void onInventoryClick(InventoryClickEvent event) {
 		Player p = (Player) event.getWhoClicked();
-		// p.sendMessage(Main.currentOpenInventory.get(event.getWhoClicked().getUniqueId().toString()));
+		//p.sendMessage(Main.currentOpenInventory.get(event.getWhoClicked().getUniqueId().toString()));
+		//p.sendMessage(event.getInventory().getType().toString());
 		
 		if (Main.currentOpenInventory.get(event.getWhoClicked().getUniqueId().toString()).equals("None")) {
 			return;
@@ -72,31 +79,30 @@ public class InventoryEvents implements Listener {
 			
 			// Close Menu selected
 			if (event.getSlot() == 49) {
-				Main.currentOpenInventory.put(p.getUniqueId().toString(), "None");
 				p.closeInventory();
-				
+				Main.currentOpenInventory.put(p.getUniqueId().toString(), "None");
 				return;
 			}
 			
 			// Commands+ Crafts Menu selected
 			if (event.getSlot() == 20) {
-				Main.currentOpenInventory.put(p.getUniqueId().toString(), "Master Crafts Menu");
 				p.openInventory(InventoryManager.masterCraftsInventory);
+				Main.currentOpenInventory.put(p.getUniqueId().toString(), "Master Crafts Menu");
 				return;
 			}
 			
 			// Talent Menu selected
 			if (event.getSlot() == 21) {
-				Main.currentOpenInventory.put(p.getUniqueId().toString(), "Talent Menu");
 				p.openInventory(InventoryManager.talentInventory);
+				Main.currentOpenInventory.put(p.getUniqueId().toString(), "Talent Menu");
 				return;
 			}
 			
 			// Faction Options Menu Selected
 			if (event.getSlot() == 24) {
-				Main.currentOpenInventory.put(p.getUniqueId().toString(), "Faction Menu");
 				FactionOptionsInventory.createFactionOptionsInventory(p);
 				p.openInventory(InventoryManager.factionOptionsInventory);
+				Main.currentOpenInventory.put(p.getUniqueId().toString(), "Faction Menu");
 				return;
 			}
 		}
@@ -119,25 +125,72 @@ public class InventoryEvents implements Listener {
 			
 			
 			if (event.getSlot() == 19) {
-				Main.currentOpenInventory.put(p.getUniqueId().toString(), "Weapon Crafts Menu");
 				p.openInventory(InventoryManager.weaponCraftsInventory);
+				Main.currentOpenInventory.put(p.getUniqueId().toString(), "Weapon Crafts Menu");
 				return;
 			}
 			
 			
+			if (event.getSlot() == 20) {
+				p.openInventory(InventoryManager.toolCraftsInventory);
+				Main.currentOpenInventory.put(p.getUniqueId().toString(), "Tool Crafts Menu");
+				return;
+			}
+			
+			
+			if (event.getSlot() == 21) {
+				p.openInventory(InventoryManager.armorCraftsInventory);
+				Main.currentOpenInventory.put(p.getUniqueId().toString(), "Armor Crafts Menu");
+				return;
+			}
+			
+			
+			if (event.getSlot() == 22) {
+				p.openInventory(InventoryManager.potionCraftsInventory);
+				Main.currentOpenInventory.put(p.getUniqueId().toString(), "Potion Crafts Menu");
+				return;
+			}
+			
+			
+			if (event.getSlot() == 23) {
+				p.openInventory(InventoryManager.miscellaneousCraftsInventory);
+				Main.currentOpenInventory.put(p.getUniqueId().toString(), "Miscellaneous Crafts Menu");
+				return;
+			}
+			
+			
+			if (event.getSlot() == 24) {
+				p.openInventory(InventoryManager.customCraftsInventory);
+				Main.currentOpenInventory.put(p.getUniqueId().toString(), "Existing Item Crafts Menu");
+				return;
+			}
+			
+			
+			if (event.getSlot() == 25) {
+				p.openInventory(InventoryManager.talentItemCraftsInventory);
+				Main.currentOpenInventory.put(p.getUniqueId().toString(), "Talent Item Crafts Menu");
+				return;
+			}
+			
+			
+			if (event.getSlot() == 31) {
+				p.openInventory(InventoryManager.enchantedBookCraftsInventory);
+				Main.currentOpenInventory.put(p.getUniqueId().toString(), "Enchanted Book Crafts Menu");
+				return;
+			}
+			
 			// Go Back selected
 			if (event.getSlot() == 48) {
-				Main.currentOpenInventory.put(p.getUniqueId().toString(), "Master Menu");
 				p.openInventory(InventoryManager.masterMenuInventory);
+				Main.currentOpenInventory.put(p.getUniqueId().toString(), "Master Menu");
 				return;
 			}
 			
 			
 			// Close Menu selected
 			if (event.getSlot() == 49) {
-				Main.currentOpenInventory.put(p.getUniqueId().toString(), "None");
 				p.closeInventory();
-				
+				Main.currentOpenInventory.put(p.getUniqueId().toString(), "None");
 				return;
 			}
 			
@@ -164,17 +217,16 @@ public class InventoryEvents implements Listener {
 			
 			// Go Back selected
 			if (event.getSlot() == 48) {
-				Main.currentOpenInventory.put(p.getUniqueId().toString(), "Master Menu");
 				p.openInventory(InventoryManager.masterMenuInventory);
+				Main.currentOpenInventory.put(p.getUniqueId().toString(), "Master Menu");
 				return;
 			}
 			
 			
 			// Close Menu selected
 			if (event.getSlot() == 49) {
-				Main.currentOpenInventory.put(p.getUniqueId().toString(), "None");
 				p.closeInventory();
-				
+				Main.currentOpenInventory.put(p.getUniqueId().toString(), "None");
 				return;
 			}
 			
@@ -208,15 +260,15 @@ public class InventoryEvents implements Listener {
 			
 			// Go Back selected
 			if (event.getSlot() == 48) {
-				Main.currentOpenInventory.put(p.getUniqueId().toString(), "Master Menu");
 				p.openInventory(InventoryManager.masterMenuInventory);
+				Main.currentOpenInventory.put(p.getUniqueId().toString(), "Master Menu");
 				return;
 			}
 						
 			// Close Menu selected
 			if (event.getSlot() == 49) {
-				Main.currentOpenInventory.put(p.getUniqueId().toString(), "None");
 				p.closeInventory();
+				Main.currentOpenInventory.put(p.getUniqueId().toString(), "None");
 				return;
 			}
 			
@@ -264,6 +316,9 @@ public class InventoryEvents implements Listener {
 				
 				// set health (really just for testers since the max health doesn't change back when swapping talents)
 				p.setMaxHealth(20);
+				
+				// Start particle effects
+				trails.startHydrokineticParticles();
 			}
 			
 			// Frostbender selected
@@ -369,7 +424,7 @@ public class InventoryEvents implements Listener {
 			} // this is important to have when editing server files, otherwise nothing gets changed
 		}
 		
-		else if (Main.currentOpenInventory.get(event.getWhoClicked().getUniqueId().toString()).equals("Weapon Crafts Menu")) {
+		else if (Main.currentOpenInventory.get(event.getWhoClicked().getUniqueId().toString()).contains("Crafts Menu")) {
 			if (event.getCurrentItem() == null) {
 				return;
 			}
@@ -385,31 +440,69 @@ public class InventoryEvents implements Listener {
 			event.setCancelled(true);
 			
 			
-			// Go Back selected
-			if (event.getSlot() == 10 || event.getSlot() == 11 || event.getSlot() == 12) {
-				Main.currentOpenInventory.put(p.getUniqueId().toString(), "Weapon Recipe Menu");
-				p.openInventory(RecipeInventoryCreator.createRecipeInventory("Weapons", event.getCurrentItem()));
-				return;
+			// Item selected
+			if (event.getSlot() != 48 && event.getSlot() != 49 && event.getSlot() != 50 && !event.getCurrentItem().getType().equals(Material.BLACK_STAINED_GLASS_PANE)) {
+				
+				if (Main.currentOpenInventory.get(event.getWhoClicked().getUniqueId().toString()).contains("Weapon Crafts Menu")) {
+					p.openInventory(RecipeInventoryCreator.createRecipeInventory("Weapons", event.getCurrentItem()));
+					Main.currentOpenInventory.put(p.getUniqueId().toString(), "Weapon Recipe Menu");
+					return;
+				}
+				if (Main.currentOpenInventory.get(event.getWhoClicked().getUniqueId().toString()).contains("Tool Crafts Menu")) {
+					p.openInventory(RecipeInventoryCreator.createRecipeInventory("Tools", event.getCurrentItem()));
+					Main.currentOpenInventory.put(p.getUniqueId().toString(), "Tool Recipe Menu");
+					return;
+				}
+				if (Main.currentOpenInventory.get(event.getWhoClicked().getUniqueId().toString()).contains("Armor Crafts Menu")) {
+					p.openInventory(RecipeInventoryCreator.createRecipeInventory("Armor", event.getCurrentItem()));
+					Main.currentOpenInventory.put(p.getUniqueId().toString(), "Armor Recipe Menu");
+					return;				
+				}
+				if (Main.currentOpenInventory.get(event.getWhoClicked().getUniqueId().toString()).contains("Potion Crafts Menu")) {
+					p.openInventory(RecipeInventoryCreator.createRecipeInventory("Potions", event.getCurrentItem()));
+					Main.currentOpenInventory.put(p.getUniqueId().toString(), "Potion Recipe Menu");
+					return;
+				}
+				if (Main.currentOpenInventory.get(event.getWhoClicked().getUniqueId().toString()).contains("Talent Crafts Menu")) {
+					p.openInventory(RecipeInventoryCreator.createRecipeInventory("Talent Items", event.getCurrentItem()));
+					Main.currentOpenInventory.put(p.getUniqueId().toString(), "Talent Item Recipe Menu");
+					return;
+				}
+				if (Main.currentOpenInventory.get(event.getWhoClicked().getUniqueId().toString()).contains("Miscellaneous Crafts Menu")) {
+					p.openInventory(RecipeInventoryCreator.createRecipeInventory("Miscellaneous", event.getCurrentItem()));
+					Main.currentOpenInventory.put(p.getUniqueId().toString(), "Miscellaneous Recipe Menu");
+					return;			
+				}
+				if (Main.currentOpenInventory.get(event.getWhoClicked().getUniqueId().toString()).contains("Enchanted Book Crafts Menu")) {
+					p.openInventory(RecipeInventoryCreator.createRecipeInventory("Enchanted Books", event.getCurrentItem()));
+					Main.currentOpenInventory.put(p.getUniqueId().toString(), "Enchanted Book Recipe Menu");
+					return;
+				}
+				if (Main.currentOpenInventory.get(event.getWhoClicked().getUniqueId().toString()).contains("Existing Item Crafts Menu")) {
+					p.openInventory(RecipeInventoryCreator.createRecipeInventory("Existing Items", event.getCurrentItem()));
+					Main.currentOpenInventory.put(p.getUniqueId().toString(), "Existing Item Recipe Menu");
+					return;
+				}
+				
 			}
 			
 			// Go Back selected
 			if (event.getSlot() == 48) {
-				Main.currentOpenInventory.put(p.getUniqueId().toString(), "Master Crafts Menu");
 				p.openInventory(InventoryManager.masterCraftsInventory);
+				Main.currentOpenInventory.put(p.getUniqueId().toString(), "Master Crafts Menu");
 				return;
 			}
 			
 			
 			// Close Menu selected
 			if (event.getSlot() == 49) {
-				Main.currentOpenInventory.put(p.getUniqueId().toString(), "None");
 				p.closeInventory();
-				
+				Main.currentOpenInventory.put(p.getUniqueId().toString(), "None");
 				return;
 			}
 		}
 		
-		else if (Main.currentOpenInventory.get(event.getWhoClicked().getUniqueId().toString()).equals("Weapon Recipe Menu")) {
+		else if (Main.currentOpenInventory.get(event.getWhoClicked().getUniqueId().toString()).contains("Recipe Menu")) {
 			if (event.getCurrentItem() == null) {
 				return;
 			}
@@ -427,17 +520,53 @@ public class InventoryEvents implements Listener {
 			
 			// Go Back selected
 			if (event.getSlot() == 48) {
-				Main.currentOpenInventory.put(p.getUniqueId().toString(), "Weapon Crafts Menu");
-				p.openInventory(InventoryManager.weaponCraftsInventory);
-				return;
+				if (Main.currentOpenInventory.get(event.getWhoClicked().getUniqueId().toString()).contains("Weapon Recipe Menu")) {
+					p.openInventory(InventoryManager.weaponCraftsInventory);
+					Main.currentOpenInventory.put(p.getUniqueId().toString(), "Weapon Crafts Menu");
+					return;
+				}
+				if (Main.currentOpenInventory.get(event.getWhoClicked().getUniqueId().toString()).contains("Tool Recipe Menu")) {
+					p.openInventory(InventoryManager.toolCraftsInventory);
+					Main.currentOpenInventory.put(p.getUniqueId().toString(), "Tool Crafts Menu");
+					return;
+				}
+				if (Main.currentOpenInventory.get(event.getWhoClicked().getUniqueId().toString()).contains("Armor Recipe Menu")) {
+					p.openInventory(InventoryManager.armorCraftsInventory);
+					Main.currentOpenInventory.put(p.getUniqueId().toString(), "Armor Crafts Menu");
+					return;				
+				}
+				if (Main.currentOpenInventory.get(event.getWhoClicked().getUniqueId().toString()).contains("Potion Recipe Menu")) {
+					p.openInventory(InventoryManager.potionCraftsInventory);
+					Main.currentOpenInventory.put(p.getUniqueId().toString(), "Potion Crafts Menu");
+					return;
+				}
+				if (Main.currentOpenInventory.get(event.getWhoClicked().getUniqueId().toString()).contains("Talent Item Recipe Menu")) {
+					p.openInventory(InventoryManager.talentItemCraftsInventory);
+					Main.currentOpenInventory.put(p.getUniqueId().toString(), "Talent Crafts Menu");
+					return;
+				}
+				if (Main.currentOpenInventory.get(event.getWhoClicked().getUniqueId().toString()).contains("Miscellaneous Recipe Menu")) {
+					p.openInventory(InventoryManager.miscellaneousCraftsInventory);
+					Main.currentOpenInventory.put(p.getUniqueId().toString(), "Miscellaneous Crafts Menu");
+					return;			
+				}
+				if (Main.currentOpenInventory.get(event.getWhoClicked().getUniqueId().toString()).contains("Enchanted Book Recipe Menu")) {
+					p.openInventory(InventoryManager.enchantedBookCraftsInventory);
+					Main.currentOpenInventory.put(p.getUniqueId().toString(), "Enchanted Book Crafts Menu");
+					return;
+				}
+				if (Main.currentOpenInventory.get(event.getWhoClicked().getUniqueId().toString()).contains("Existing Item Recipe Menu")) {
+					p.openInventory(InventoryManager.customCraftsInventory);
+					Main.currentOpenInventory.put(p.getUniqueId().toString(), "Existing Item Crafts Menu");
+					return;
+				}
 			}
 			
 			
 			// Close Menu selected
 			if (event.getSlot() == 49) {
-				Main.currentOpenInventory.put(p.getUniqueId().toString(), "None");
 				p.closeInventory();
-				
+				Main.currentOpenInventory.put(p.getUniqueId().toString(), "None");
 				return;
 			}
 		}

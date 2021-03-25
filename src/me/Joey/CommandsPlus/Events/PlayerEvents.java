@@ -9,7 +9,6 @@ import org.bukkit.Sound;
 import org.bukkit.World.Environment;
 import org.bukkit.block.Biome;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -34,7 +33,6 @@ import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
-import org.bukkit.util.Vector;
 
 import me.Joey.CommandsPlus.FunctionsPlus;
 import me.Joey.CommandsPlus.Main;
@@ -308,26 +306,26 @@ public class PlayerEvents implements Listener {
 		if (cost > 29) { // max enchant level
 			Main.enchantingPointsTracker.put(event.getEnchanter().getUniqueId().toString(), Main.enchantingPointsTracker.get(event.getEnchanter().getUniqueId().toString()) + 1);
 			
-			if (((int) (Math.random() * 10)) == 7 && (event.getItem().getType().toString().contains("AXE") || event.getItem().getType().toString().contains("SHOVEL"))) {
+			if (((int) (Math.random() * 5)) == 3) {
 				FunctionsPlus.addCustomEnchant(event.getEnchanter(), event.getItem(), "SMELTING", 1);
 			}
 			
-			if (((int) (Math.random() * 10)) == 7) {
+			if (((int) (Math.random() * 5)) == 3) {
 				FunctionsPlus.addCustomEnchant(event.getEnchanter(), event.getItem(), "TELEKINESIS", 1);
 			}
 			
-			if (((int) (Math.random() * 10)) == 7 && (event.getItem().getType().toString().contains("BOW") || event.getItem().getType().toString().contains("TRIDENT") || event.getItem().getType().toString().contains("SWORD") || event.getItem().getType().toString().contains("AXE") || event.getItem().getType().toString().contains("SHOVEL"))) {
+			if (((int) (Math.random() * 5)) == 3) {
 				FunctionsPlus.addCustomEnchant(event.getEnchanter(), event.getItem(), "EXPERIENCE", 3);
 			}
 		}
 		else if (cost > 9) { // middle enchant level
 			Main.enchantingPointsTracker.put(event.getEnchanter().getUniqueId().toString(), Main.enchantingPointsTracker.get(event.getEnchanter().getUniqueId().toString()) + 1);
 			
-			if (((int) (Math.random() * 15)) == 7) {
+			if (((int) (Math.random() * 10)) == 7) {
 				FunctionsPlus.addCustomEnchant(event.getEnchanter(), event.getItem(), "TELEKINESIS", 1);
 			}
 			
-			if (((int) (Math.random() * 15)) == 7 && (event.getItem().getType().toString().contains("BOW") || event.getItem().getType().toString().contains("TRIDENT") || event.getItem().getType().toString().contains("SWORD") || event.getItem().getType().toString().contains("AXE") || event.getItem().getType().toString().contains("SHOVEL"))) {
+			if (((int) (Math.random() * 10)) == 7) {
 				FunctionsPlus.addCustomEnchant(event.getEnchanter(), event.getItem(), "EXPERIENCE", 2);
 			}
 		}
@@ -338,7 +336,7 @@ public class PlayerEvents implements Listener {
 				FunctionsPlus.addCustomEnchant(event.getEnchanter(), event.getItem(), "TELEKINESIS", 1);
 			}
 			
-			if (((int) (Math.random() * 20)) == 7 && (event.getItem().getType().toString().contains("BOW") || event.getItem().getType().toString().contains("TRIDENT") || event.getItem().getType().toString().contains("SWORD") || event.getItem().getType().toString().contains("AXE") || event.getItem().getType().toString().contains("SHOVEL"))) {
+			if (((int) (Math.random() * 20)) == 7) {
 				FunctionsPlus.addCustomEnchant(event.getEnchanter(), event.getItem(), "EXPERIENCE", 1);
 			}
 		}
@@ -352,14 +350,11 @@ public class PlayerEvents implements Listener {
 	public void fishEvent(PlayerFishEvent event) {
 	    if(event.getCaught() instanceof Item){
 	    	Main.farmingPointsTracker.put(event.getPlayer().getUniqueId().toString(), Main.farmingPointsTracker.get(event.getPlayer().getUniqueId().toString()) + 1);
-	    	if (((int) (Math.random() * 20)) == 7) {
-	    		Vector velocity = event.getCaught().getVelocity();
-	    		Location itemLoc = event.getCaught().getLocation();
-	    		Entity entity = event.getPlayer().getWorld().spawnEntity(itemLoc, EntityType.DROPPED_ITEM);
-	    		entity.setVelocity(velocity);
-	    		entity.teleport(itemLoc);
+	    	if (((int) (Math.random() * 10)) == 7) {
+	    		Entity entity = event.getCaught();
 	    		Item item = (Item) entity;
-	    		item.setItemStack(Main.betterFishingLootTable.get(0));
+	    		item.setItemStack(Main.betterFishingLootTable.get(((int) (Math.random() * Main.betterFishingLootTable.size()))));
+	    		
 	    	}
 	    }
 		

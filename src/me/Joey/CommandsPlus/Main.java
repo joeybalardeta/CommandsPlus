@@ -25,6 +25,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.World.Environment;
@@ -82,6 +83,16 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps {
 	public static HashMap<String, Location> fireWalkerLocs = new HashMap<String, Location>();
 	public static List<ItemStack> unrenameableItems = new ArrayList<>();
 	public static List<ItemStack> betterFishingLootTable = new ArrayList<>();
+	
+	public static List<ItemStack> customWeaponList = new ArrayList<>();
+	public static List<ItemStack> customToolList = new ArrayList<>();
+	public static List<ItemStack> customArmorList = new ArrayList<>();
+	public static List<ItemStack> customCraftList = new ArrayList<>();
+	public static List<ItemStack> customEnchantedBookList = new ArrayList<>();
+	public static List<ItemStack> customPotionList = new ArrayList<>();
+	public static List<ItemStack> customMiscellaneousItemsList = new ArrayList<>();
+	public static List<ItemStack> talentItemsList = new ArrayList<>();
+	
 	public TabManager tab;
 
 	// initialize taskID variables
@@ -122,27 +133,46 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps {
 		// load config file
 		loadConfig();
 
+		
 		// enable ItemsPlus
 		ItemsPlus.init();
 
+		
 		// register EnchantsPlus
 		EnchantmentsPlus.register();
 
-		// register all inventories through InventoryManager
-		InventoryManager.init();
-
+		
 		// load avian headroom blocks
 		FunctionsPlus.loadAvianHeadroomBlocks();
 
+		
 		// load blood moon loot table - very descriptive, I know, thank me later
 		FunctionsPlus.loadBloodMoonLootTable();
 
+		
 		// load unrenamable items (it's really just all of the custom items)
 		FunctionsPlus.loadUnrenameableItems();
 
+		
 		// load better fishing loot table
 		FunctionsPlus.loadBetterFishingLootTable();
+		
+		
+		// load item lists for crafting inventories
+		FunctionsPlus.loadCustomWeaponList();
+		FunctionsPlus.loadCustomToolList();
+		FunctionsPlus.loadCustomArmorList();
+		FunctionsPlus.loadCustomPotionList();
+		FunctionsPlus.loadCustomEnchantedBookList();
+		FunctionsPlus.loadCustomCraftList();
+		FunctionsPlus.loadCustomMiscellaneousItemsList();
+		FunctionsPlus.loadTalentItemsList();
+		
+		
+		// register all inventories through InventoryManager
+		InventoryManager.init();
 
+		
 		// load custom tab
 		this.tab = new TabManager(this);
 		tab.addHeader("&cCommands&4+\n&fMade by &aJoey Balardeta");
@@ -300,7 +330,16 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps {
 
 					for (Player online : Bukkit.getOnlinePlayers()) {
 						
+						if (scoreboardHashMap.get(online.getUniqueId().toString())) {
+							FunctionsPlus.createBoard(online);
+						} else {
+							online.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
+						}
 						
+						
+						if (online.getOpenInventory().getType() == null) {
+							currentOpenInventory.put(online.getUniqueId().toString(), "None");
+						}
 						
 						String talent = talentHashMap.get(online.getUniqueId().toString());
 						Location location = online.getLocation();
@@ -314,6 +353,18 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps {
 						}
 
 						if (talent != null) {
+							if (talent.equals("Avian")) {
+								if (online.isGliding() && online.isSneaking()) {
+									if (avianBurstCooldown.get(online.getUniqueId().toString()) >= 1200) {
+										online.setVelocity(new Vector(online.getVelocity().getX(), 100,online.getVelocity().getZ()));
+										avianBurstCooldown.put(online.getUniqueId().toString(), 0);
+										online.getWorld().spawnParticle(Particle.EXPLOSION_HUGE, online.getLocation(), 0);
+									}
+									
+									
+								}
+							}
+							
 							if (talent.equals("Pyrokinetic")) {
 //            					Material m1 = location.subtract(0, 1, 0).getBlock().getType();
 //            					if (m1 == Material.LAVA && online.getInventory().getBoots() != null) {
@@ -325,18 +376,23 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps {
 
 						// cooldowns
 
-						// frostbender
-						if (stasisCrystalEnergy.get(online.getUniqueId().toString()) < 12000) {
-							stasisCrystalEnergy.put(online.getUniqueId().toString(),
-									stasisCrystalEnergy.get(online.getUniqueId().toString()) + 1);
+						// Avian
+						if (avianBurstCooldown.get(online.getUniqueId().toString()) < 1200) {
+							avianBurstCooldown.put(online.getUniqueId().toString(), avianBurstCooldown.get(online.getUniqueId().toString()) + 1);
 						}
-						cryoCooldown.put(online.getUniqueId().toString(),
-								cryoCooldown.get(online.getUniqueId().toString()) + 1);
+						
+						
+						// Frostbender
+						if (stasisCrystalEnergy.get(online.getUniqueId().toString()) < 12000) {
+							stasisCrystalEnergy.put(online.getUniqueId().toString(), stasisCrystalEnergy.get(online.getUniqueId().toString()) + 1);
+						}
+						
+						cryoCooldown.put(online.getUniqueId().toString(), cryoCooldown.get(online.getUniqueId().toString()) + 1);
 
-						// biokinetic
+						
+						// Biokinetic
 						if (arcaneCrystalEnergy.get(online.getUniqueId().toString()) < 12000) {
-							arcaneCrystalEnergy.put(online.getUniqueId().toString(),
-									arcaneCrystalEnergy.get(online.getUniqueId().toString()) + 1);
+							arcaneCrystalEnergy.put(online.getUniqueId().toString(), arcaneCrystalEnergy.get(online.getUniqueId().toString()) + 1);
 						}
 
 						for (ItemStack item : online.getInventory().getContents()) {
@@ -540,11 +596,7 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps {
 					FunctionsPlus.killPhantoms();
 
 					for (Player online : Bukkit.getOnlinePlayers()) {
-						if (scoreboardHashMap.get(online.getUniqueId().toString())) {
-							FunctionsPlus.createBoard(online);
-						} else {
-							online.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
-						}
+						
 						
 						
 						// if player look direction (really just yaw) is the same as a second ago,

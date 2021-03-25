@@ -53,50 +53,6 @@ public class FunctionsPlus {
 		board = player.getScoreboard();
 		Set<String> entries;
 		entries = board.getEntries();
-
-        for(String entry : entries)
-        {
-        	board.resetScores(entry);
-        }
-        
-		obj = player.getScoreboard().getObjective("Scoreboard");
-		
-		if (obj == null) { 
-			manager = Bukkit.getScoreboardManager();
-			board = manager.getNewScoreboard();
-			
-			entries = board.getEntries();
-
-	        for(String entry : entries)
-	        {
-	        	board.resetScores(entry);
-	        }
-	        
-			obj = board.registerNewObjective("Scoreboard", "dummy", ChatColor.translateAlternateColorCodes('&', "&cCommands&4+"));
-			obj.setDisplaySlot(DisplaySlot.SIDEBAR);
-			
-			/*
-			Team talent = board.registerNewTeam("talent");
-			talent.addEntry("Talent: §b");
-			obj.getScore("Talent: §b").setScore(5);
-			
-			Team territory = board.registerNewTeam("territory");
-			territory.addEntry("Territory: §b");
-			obj.getScore("Territory: §b").setScore(4);
-			
-			Team deaths = board.registerNewTeam("deaths");
-			deaths.addEntry("Deaths: §b");
-			obj.getScore("Deaths: §b").setScore(3);
-			
-			Team emptyLine = board.registerNewTeam("emptyLine");
-			emptyLine.addEntry("-");
-			obj.getScore("-").setScore(2);
-			
-			Team date = board.registerNewTeam("date");
-			date.addEntry("§b");
-			obj.getScore("§b").setScore(1);
-			*/
-		}
 		
 		// get talent
 		String talent = Main.talentHashMap.get(player.getUniqueId().toString());
@@ -126,42 +82,117 @@ public class FunctionsPlus {
 		// get date
 		String format = "M/d/yyyy";
 		Date date = new Date();
+		Date prevDate = new Date(date.getTime() - (1000 * 60 * 60 * 24));
         SimpleDateFormat ft = new SimpleDateFormat(format);
 		
 		
 		
-        Score score1 = obj.getScore("Talent: " + ChatColor.AQUA + talent);
-		score1.setScore(5);
+
+//        for(String entry : entries)
+//        {
+//        	player.sendMessage(entry);
+//        	board.resetScores(entry);
+//        }
+        
+		obj = player.getScoreboard().getObjective("Scoreboard");
 		
-		Score score2 = obj.getScore("Territory: " + ChatColor.AQUA + territoryName);
-		score2.setScore(4);
+		if (obj == null) { 
+			manager = Bukkit.getScoreboardManager();
+			board = manager.getNewScoreboard();
+	        
+			obj = board.registerNewObjective("Scoreboard", "dummy", ChatColor.translateAlternateColorCodes('&', "&cCommands&4+"));
+			obj.setDisplaySlot(DisplaySlot.SIDEBAR);
+			
+	        Score score1 = obj.getScore("Talent: " + ChatColor.AQUA + talent);
+			score1.setScore(5);
+			
+			Score score2 = obj.getScore("Territory: " + ChatColor.AQUA + territoryName);
+			score2.setScore(4);
+			
+			Score score3 = obj.getScore("Deaths: " + ChatColor.AQUA + deaths);
+			score3.setScore(3);
+			
+			Score score5 = obj.getScore("");
+			score5.setScore(2);
+			
+			Score score6 = obj.getScore(ChatColor.DARK_GRAY + ft.format(date));
+			score6.setScore(1);
+		}
 		
-		Score score3 = obj.getScore("Deaths: " + ChatColor.AQUA + deaths);
-		score3.setScore(3);
 		
-		Score score5 = obj.getScore("");
-		score5.setScore(2);
 		
-		Score score6 = obj.getScore(ChatColor.DARK_GRAY + ft.format(date));
-		score6.setScore(1);
+	    for(String entry : entries)
+	    {
+	    	String entryOriginal = entry;
+	    	entry = ChatColor.stripColor(entry);
+	  	
+	  		if (entry.contains("Talent:")) {
+	      		if (!entry.equals("Talent: " + talent)) {
+	      			entry = "Talent: " + ChatColor.AQUA + talent;
+	      			Score score = obj.getScore(entry);
+	      			board.resetScores(entryOriginal);
+	      			score.setScore(5);
+	      		}
+	      	}
+	      	else if (entry.contains("Territory:")) {
+	      		if (!entry.equals("Territory: " + territoryName)) {
+	      			entry = "Territory: " + ChatColor.AQUA + territoryName;
+	      			Score score = obj.getScore(entry);
+	      			board.resetScores(entryOriginal);
+	      			score.setScore(4);
+	      		}
+	      		
+	      	}
+	      	else if (entry.contains("Deaths:")) {
+	      		if (!entry.equals("Deaths: " + deaths)) {
+	      			entry = "Deaths: " + ChatColor.AQUA + deaths;
+	      			Score score = obj.getScore(entry);
+	      			board.resetScores(entryOriginal);
+	      			score.setScore(3);
+	      		}
+	      	}
+	      	else if (entry.contains(ft.format(prevDate))) {
+	      		entry = ChatColor.DARK_GRAY + ft.format(date);
+	      		Score score = obj.getScore(entry);
+	      		board.resetScores(entryOriginal);
+	      		score.setScore(1);
+	      	}
+	    }
+	      
+	      
+		
+//      Score score1 = obj.getScore("Talent: " + ChatColor.AQUA + talent);
+//		score1.setScore(5);
+//		
+//		Score score2 = obj.getScore("Territory: " + ChatColor.AQUA + territoryName);
+//		score2.setScore(4);
+//		
+//		Score score3 = obj.getScore("Deaths: " + ChatColor.AQUA + deaths);
+//		score3.setScore(3);
+//		
+//		Score score5 = obj.getScore("");
+//		score5.setScore(2);
+//		
+//		Score score6 = obj.getScore(ChatColor.DARK_GRAY + ft.format(date));
+//		score6.setScore(1);
 		
         
-		/* 
-        Team talentTeam = board.getTeam("talent");
-        talentTeam.setSuffix("" + ChatColor.AQUA + talent + "");
+		
+//        Team talentTeam = board.getTeam("talent");
+//        talentTeam.setSuffix("" + ChatColor.AQUA + talent + "");
+//        
+//        
+//        Team territoryTeam = board.getTeam("territory");
+//        territoryTeam.setSuffix("" + ChatColor.AQUA + territoryName + "");
+//        
+//        
+//        Team deathsTeam = board.getTeam("deaths");
+//        deathsTeam.setSuffix("" + ChatColor.AQUA + deaths + "");
+//        
+//        
+//        Team dateTeam = board.getTeam("date");
+//        dateTeam.setSuffix("" + ChatColor.DARK_GRAY + ft.format(date) + "");
         
-        
-        Team territoryTeam = board.getTeam("territory");
-        territoryTeam.setSuffix("" + ChatColor.AQUA + territoryName + "");
-        
-        
-        Team deathsTeam = board.getTeam("deaths");
-        deathsTeam.setSuffix("" + ChatColor.AQUA + deaths + "");
-        
-        
-        Team dateTeam = board.getTeam("date");
-        dateTeam.setSuffix("" + ChatColor.DARK_GRAY + ft.format(date) + "");
-        */
 		
 		
 		// set scoreboard only once
@@ -544,6 +575,7 @@ public class FunctionsPlus {
 		}
 		else if (talent.equals("Hydrokinetic")) {
 			online.setMaxHealth(20);
+			trails.startHydrokineticParticles();
 		}
 		else if (talent.equals("Frostbender")) {
 			online.setMaxHealth(20);
@@ -571,7 +603,7 @@ public class FunctionsPlus {
 		
 		
 		if (enchant.equals("SMELTING")) {
-			if (!(item.getType().toString().contains("BOW") || item.getType().toString().contains("TRIDENT") || item.getType().toString().contains("SWORD") || item.getType().toString().contains("AXE") || item.getType().toString().contains("SHOVEL")) || item.containsEnchantment(EnchantmentsPlus.SMELTING)) {
+			if (!(item.getType().toString().contains("AXE") || item.getType().toString().contains("SHOVEL")) || item.containsEnchantment(EnchantmentsPlus.SMELTING)) {
 				return;
 			}
 			item.addUnsafeEnchantment(EnchantmentsPlus.SMELTING, 1);
@@ -588,7 +620,9 @@ public class FunctionsPlus {
 			 item.setItemMeta(meta);
 		}
 		else if (enchant.equals("TELEKINESIS")) {
-			if (item.containsEnchantment(EnchantmentsPlus.TELEKINESIS)) {
+			if (!(item.getType().toString().contains("BOW")|| item.getType().toString().contains("TRIDENT") || item.getType().toString().contains("SWORD")
+					|| item.getType().toString().contains("AXE") || item.getType().toString().contains("SHOVEL"))
+					|| item.containsEnchantment(EnchantmentsPlus.TELEKINESIS)) {
 				return;
 			}
 			item.addUnsafeEnchantment(EnchantmentsPlus.TELEKINESIS, 1);
@@ -605,7 +639,9 @@ public class FunctionsPlus {
 			 item.setItemMeta(meta);
 		}
 		else if (enchant.equals("EXPERIENCE")) {
-			if (item.containsEnchantment(EnchantmentsPlus.EXPERIENCE)) {
+			if (!(item.getType().toString().contains("BOW")|| item.getType().toString().contains("TRIDENT") || item.getType().toString().contains("SWORD")
+					|| item.getType().toString().contains("AXE") || item.getType().toString().contains("SHOVEL"))
+					|| item.containsEnchantment(EnchantmentsPlus.EXPERIENCE)) {
 				return;
 			}
 			item.addUnsafeEnchantment(EnchantmentsPlus.EXPERIENCE, level);
@@ -644,25 +680,6 @@ public class FunctionsPlus {
 		
 		return item;
 	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	
 	
 	// plugin startup functions
@@ -786,10 +803,171 @@ public class FunctionsPlus {
 	
 	
 	public static void loadBetterFishingLootTable() {
-		Main.betterFishingLootTable.add(new ItemStack(Material.GUNPOWDER));
+		Main.betterFishingLootTable.add(new ItemStack(Material.GUNPOWDER, 2));
+		Main.bloodMoonLootTable.add(new ItemStack(Material.SUGAR, 3));
+		Main.bloodMoonLootTable.add(new ItemStack(Material.FERMENTED_SPIDER_EYE));
 	}
 	
 	
+	public static void loadCustomWeaponList() {
+		// common items
+		
+		
+		
+		// uncommon items
+		
+		
+		
+		// rare items
+		
+		
+		
+		// epic items
+		
+		
+		
+		// legendary items
+		Main.customWeaponList.add(ItemsPlus.thugnarsGlock);
+		Main.customWeaponList.add(ItemsPlus.trackingBow);
+		Main.customWeaponList.add(ItemsPlus.dashSword);
+	}
+	
+	public static void loadCustomToolList() {
+		// common items
+		
+		
+		
+		// uncommon items
+		
+		
+		
+		// rare items
+		
+		
+		
+		// epic items
+		
+		
+		
+		// legendary items
+		Main.customToolList.add(ItemsPlus.timberAxe);
+		Main.customToolList.add(ItemsPlus.replantingHoe);
+	}
+	
+	public static void loadCustomArmorList() {
+		// common items
+		
+		
+		
+		// uncommon items
+		
+		
+		
+		// rare items
+		
+		
+		
+		// epic items
+		
+		
+		
+		// legendary items
+		
+	}
+	
+	public static void loadCustomCraftList() {
+		// common items
+		
+		
+		
+		// uncommon items
+		
+		
+		
+		// rare items
+		
+		
+		
+		// epic items
+		
+		
+		
+		// legendary items
+		
+	}
+	
+	public static void loadCustomEnchantedBookList() {
+		// common items
+		
+		
+		
+		// uncommon items
+		
+		
+		
+		// rare items
+		
+		
+		
+		// epic items
+		
+		
+		
+		// legendary items
+		Main.customEnchantedBookList.add(ItemsPlus.telekinesisBook);
+		Main.customEnchantedBookList.add(ItemsPlus.smeltingBook);
+		Main.customEnchantedBookList.add(ItemsPlus.experienceBook);
+	}
+	
+	public static void loadCustomPotionList() {
+		Main.customPotionList.add(ItemsPlus.hastePotion);
+		Main.customPotionList.add(ItemsPlus.absorptionPotion);
+	}
+	
+	public static void loadCustomMiscellaneousItemsList() {
+		// common items
+		
+		
+		
+		// uncommon items
+		
+		
+		
+		// rare items
+		
+		
+		
+		// epic items
+		Main.customMiscellaneousItemsList.add(ItemsPlus.obsidianInfusedWater);
+		
+		
+		// legendary items
+		
+	}
+	
+	public static void loadTalentItemsList() {
+		// common items
+		
+		
+		
+		// uncommon items
+		
+		
+		
+		// rare items
+		
+		
+		
+		// epic items
+		
+		
+		
+		// legendary items
+		
+	}
+	
+	
+
 	
 	// HashMap loader function
 	public static void loadHashMaps(Player online) {
@@ -838,18 +1016,28 @@ public class FunctionsPlus {
 		
 		// player cooldowns
 		
-		// pyrokinetic
+		// General
+		Main.canTpHashMap.put(online.getUniqueId().toString(), false);
+		
+		
+		// Avian
+		Main.avianBurstCooldown.put(online.getUniqueId().toString(), 0);
+		
+		
+		// Pyrokinetic
 		Main.fireBurstCooldown.put(online.getUniqueId().toString(), 0);
 		
-		// frostbender
+		
+		// Frostbender
 		Main.cryoCooldown.put(online.getUniqueId().toString(), 0);
 		Main.stasisCrystalEnergy.put(online.getUniqueId().toString(), 0);
 		
-		// biokinetic
+		
+		// Biokinetic
 		Main.arcaneCrystalEnergy.put(online.getUniqueId().toString(), 0);
 		
-		// general
-		Main.canTpHashMap.put(online.getUniqueId().toString(), false);
+		
+		
 		
 		
 		
