@@ -334,6 +334,7 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps {
 							FunctionsPlus.createBoard(online);
 						} else {
 							online.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
+							
 						}
 						
 						
@@ -896,6 +897,7 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps {
 			if (playerDataConfig.getBoolean("Users." + p.getUniqueId() + "." + "preferences" + ".scoreboard")) {
 				playerDataConfig.set("Users." + p.getUniqueId() + "." + "preferences" + ".scoreboard", false);
 				scoreboardHashMap.put(p.getUniqueId().toString(), false);
+				scoreboardSet.put(p.getUniqueId().toString(), false);
 
 				// Commands+ System Message
 				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+"
@@ -1687,10 +1689,10 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps {
 								+ "] " + "/faction decline - " + ChatColor.YELLOW + "decline faction invite.");
 				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+"
 						+ ChatColor.WHITE + "] " + "/faction promote <player> - " + ChatColor.YELLOW
-						+ "promote the specified player in your faction");
+						+ "promote the specified player in your faction.");
 				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+"
 						+ ChatColor.WHITE + "] " + "/faction demote <player> - " + ChatColor.YELLOW
-						+ "demote the specified player in your faction");
+						+ "demote the specified player in your faction.");
 				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+"
 						+ ChatColor.WHITE + "] " + "/faction info - " + ChatColor.YELLOW
 						+ "gives info about the faction you're currently in.");

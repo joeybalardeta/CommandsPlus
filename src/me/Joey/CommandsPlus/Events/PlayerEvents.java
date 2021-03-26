@@ -33,6 +33,7 @@ import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.potion.PotionType;
+import org.bukkit.scheduler.BukkitScheduler;
 
 import me.Joey.CommandsPlus.FunctionsPlus;
 import me.Joey.CommandsPlus.Main;
@@ -46,6 +47,17 @@ public class PlayerEvents implements Listener {
 	@EventHandler
 	public void onJoin(PlayerJoinEvent event) {
 		Player online = event.getPlayer();
+		
+		
+		// send welcome message
+		BukkitScheduler scheduler = Bukkit.getServer().getScheduler();
+		scheduler.scheduleSyncDelayedTask(Bukkit.getPluginManager().getPlugin("Commands_Plus"), new Runnable() {
+			public void run() {
+
+				FunctionsPlus.welcomePlayer(online);
+			}
+		}, 20L);
+		
 		
 		if (!online.hasPlayedBefore()) {
 			Main.playerDataConfig.set("Users." + event.getPlayer().getUniqueId() + "." + "preferences" + ".hasPlayedBefore", true);

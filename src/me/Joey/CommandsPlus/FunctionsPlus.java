@@ -45,6 +45,16 @@ import net.md_5.bungee.api.ChatColor;
 // this class is for big functions used in the main loop
 public class FunctionsPlus {
 	
+	
+	public static void welcomePlayer(Player p) {
+		p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.YELLOW + "Welcome, " + ChatColor.AQUA + p.getName() + ChatColor.YELLOW + "!");
+		p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.YELLOW + "Type /menu to explore " + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.YELLOW + "!");
+		p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.YELLOW + "Players Online: " + ChatColor.AQUA + Bukkit.getOnlinePlayers().size());
+		p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.YELLOW + "World Time: " + ChatColor.AQUA + getFormattedTime(Bukkit.getServer(), p));
+		p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 0.0f);
+	}
+	
+	
 	public static void createBoard(Player player) {
 		ScoreboardManager manager;
 		Scoreboard board;
@@ -53,10 +63,6 @@ public class FunctionsPlus {
 		board = player.getScoreboard();
 		Set<String> entries;
 		entries = board.getEntries();
-		
-		// get talent
-		String talent = Main.talentHashMap.get(player.getUniqueId().toString());
-		
 		
         // get territory
 		String territoryLookup = "X: " + player.getLocation().getChunk().getX() + ", Z: " + player.getLocation().getChunk().getZ();
@@ -96,14 +102,14 @@ public class FunctionsPlus {
         
 		obj = player.getScoreboard().getObjective("Scoreboard");
 		
-		if (obj == null) { 
+		if (obj == null) {
 			manager = Bukkit.getScoreboardManager();
 			board = manager.getNewScoreboard();
 	        
 			obj = board.registerNewObjective("Scoreboard", "dummy", ChatColor.translateAlternateColorCodes('&', "&cCommands&4+"));
 			obj.setDisplaySlot(DisplaySlot.SIDEBAR);
 			
-	        Score score1 = obj.getScore("Talent: " + ChatColor.AQUA + talent);
+	        Score score1 = obj.getScore("Time: " + ChatColor.AQUA + getFormattedTime(Bukkit.getServer(), player));
 			score1.setScore(5);
 			
 			Score score2 = obj.getScore("Territory: " + ChatColor.AQUA + territoryName);
@@ -126,9 +132,9 @@ public class FunctionsPlus {
 	    	String entryOriginal = entry;
 	    	entry = ChatColor.stripColor(entry);
 	  	
-	  		if (entry.contains("Talent:")) {
-	      		if (!entry.equals("Talent: " + talent)) {
-	      			entry = "Talent: " + ChatColor.AQUA + talent;
+	  		if (entry.contains("Time:")) {
+	      		if (!entry.equals("Time: " + getFormattedTime(Bukkit.getServer(), player))) {
+	      			entry = "Time: " + ChatColor.AQUA + getFormattedTime(Bukkit.getServer(), player);
 	      			Score score = obj.getScore(entry);
 	      			board.resetScores(entryOriginal);
 	      			score.setScore(5);
@@ -357,11 +363,34 @@ public class FunctionsPlus {
 	    long time = server.getWorld(worldName).getTime();
 
 
-	    return time;
+	    return time % 24000;
 
 	}
 	
 
+	public static String getFormattedTime(Server server, Player p) {
+		int time = (int) getTime(server, p);
+		String timeAddOn = "am";
+		int hours = (time / 1000) + 6;
+		int minutes = ((time % 1000) / 167) * 10;
+		
+		if (hours > 11) {
+			timeAddOn = "pm";
+			if (hours > 12) {
+				hours -= 12;
+			}
+		}
+		
+		if (hours > 12) {
+			timeAddOn = "am";
+			hours -= 12;
+		}
+		
+		String formattedTime = "" + hours + ":" + String.format("%02d", minutes) + timeAddOn;
+		return formattedTime;
+	}
+	
+	
 	
 	// player data fetch functions
 	

@@ -39,7 +39,7 @@ public class WorldEvents implements Listener{
 					FunctionsPlus.savePlayerData(event.getEntity().getKiller(), false);
 				}
 				
-				if (p.getInventory().getItemInMainHand().getItemMeta().hasEnchants() && p.getInventory().getItemInMainHand().getItemMeta().hasEnchant(EnchantmentsPlus.EXPERIENCE)) {
+				if (!p.getInventory().getItemInMainHand().hasItemMeta() && p.getInventory().getItemInMainHand().getItemMeta().hasEnchants() && p.getInventory().getItemInMainHand().getItemMeta().hasEnchant(EnchantmentsPlus.EXPERIENCE)) {
 					int level = p.getInventory().getItemInMainHand().getItemMeta().getEnchants().get(EnchantmentsPlus.EXPERIENCE);
 					event.setDroppedExp((int) ((event.getDroppedExp() * (1 + 0.5 * level)) + 0.5));
 				}
