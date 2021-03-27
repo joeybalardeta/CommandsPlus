@@ -170,7 +170,7 @@ public class NPC {
 		}
 		
 		if (isFalling) {
-			npcRelMoveAbsLook(npc, 0, -0.5, 0, npc.yaw, npc.pitch);
+			npcRelMoveAbsLook(npc, 0, -0.4, 0, npc.yaw, npc.pitch);
 		}
 	}
 	
