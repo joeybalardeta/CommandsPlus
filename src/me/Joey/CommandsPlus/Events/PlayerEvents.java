@@ -38,6 +38,7 @@ import org.bukkit.scheduler.BukkitScheduler;
 import me.Joey.CommandsPlus.FunctionsPlus;
 import me.Joey.CommandsPlus.Main;
 import me.Joey.CommandsPlus.CustomItems.ItemsPlus;
+import me.Joey.CommandsPlus.NPC.NPC;
 import me.Joey.CommandsPlus.Particles.ParticleData;
 import me.Joey.CommandsPlus.Particles.ParticleEffects;
 import net.md_5.bungee.api.ChatColor;
@@ -47,6 +48,11 @@ public class PlayerEvents implements Listener {
 	@EventHandler
 	public void onJoin(PlayerJoinEvent event) {
 		Player online = event.getPlayer();
+		
+		if (NPC.getNPCs() != null && !NPC.getNPCs().isEmpty()) {
+			NPC.addJoinPacket(online);
+		}
+
 		
 		
 		// send welcome message

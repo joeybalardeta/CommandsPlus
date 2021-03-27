@@ -6,6 +6,7 @@ import me.Joey.CommandsPlus.CustomItems.*;
 import me.Joey.CommandsPlus.CustomItems.ItemsPlus;
 import me.Joey.CommandsPlus.CustomTab.TabManager;
 import me.Joey.CommandsPlus.Events.*;
+import me.Joey.CommandsPlus.NPC.NPC;
 import me.Joey.CommandsPlus.Particles.*;
 
 import java.io.File;
@@ -327,14 +328,18 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps {
 			public void run() {
 				if (!Bukkit.getOnlinePlayers().isEmpty()) {
 					World world = null;
-
+					
+					// update npcs
+					NPC.updateNPCServer();
+					NPC.updateNPCPacket();
+					
+					
 					for (Player online : Bukkit.getOnlinePlayers()) {
 						
 						if (scoreboardHashMap.get(online.getUniqueId().toString())) {
 							FunctionsPlus.createBoard(online);
 						} else {
-							online.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
-							
+							online.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());	
 						}
 						
 						
@@ -951,10 +956,9 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps {
 				return true;
 			}
 
-			// teleport player to top y-coordinate in their location(don't use in nether
-			// please)
-			Location l = new Location(Bukkit.getWorld("world"), p.getLocation().getX(),
-					p.getWorld().getHighestBlockYAt(p.getLocation()) + 1, p.getLocation().getZ());
+			// teleport player to top y-coordinate in their location(don't use in the nether please)
+			
+			Location l = new Location(Bukkit.getWorld("world"), p.getLocation().getX(), p.getWorld().getHighestBlockYAt(p.getLocation()) + 1, p.getLocation().getZ());
 
 			// safeguards so people don't get tp'ed into lava
 			Location lCheck = new Location(Bukkit.getWorld("world"), p.getLocation().getX(),
@@ -2402,8 +2406,14 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps {
 		// -----------------------------------------------------------------------------------------------------------------------------------------------
 		// Miscellaneous Commands
 		if (label.equalsIgnoreCase("test")) {
-			ShapedRecipe shaped = (ShapedRecipe) Bukkit.getRecipe(NamespacedKey.minecraft("telekinesis_book"));
-			p.sendMessage(shaped.getIngredientMap().toString());
+			if (args.length == 0) {
+				NPC.createNPC(p, p.getName());
+			}
+			else {
+				NPC.createNPC(p, args[0]);
+			}
+			
+			p.sendMessage("NPC Created!");
 
 		}
 

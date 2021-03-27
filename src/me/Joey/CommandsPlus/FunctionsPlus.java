@@ -217,6 +217,25 @@ public class FunctionsPlus {
 	}
 	
 	
+	public static Player getPlayer(String name) {
+		try {
+			return Bukkit.getServer().getPlayer(name);
+		} catch (Exception e) {
+			return null;
+		}
+		
+	}
+	
+	
+	
+	public static double distanceToLocation(double x1, double y1, double z1, double x2, double y2, double z2) {
+		double x = x2 - x1;
+		double y = y2 - y1;
+		double z = z2 - z1;
+		
+		return Math.sqrt(x*x + y*y + z*z);
+	}
+	
 	public static ChatColor getRankColor(Player p) {
 		String rank = Main.playerRankHashMap.get(p.getUniqueId().toString());
 		
