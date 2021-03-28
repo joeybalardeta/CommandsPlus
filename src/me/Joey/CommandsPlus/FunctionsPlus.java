@@ -7,12 +7,16 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Color;
+import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Particle;
 import org.bukkit.Server;
 import org.bukkit.Sound;
 import org.bukkit.World;
@@ -20,21 +24,25 @@ import org.bukkit.World.Environment;
 import org.bukkit.block.Block;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.FallingBlock;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Phantom;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.TNTPrimed;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionType;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scoreboard.DisplaySlot;
 import org.bukkit.scoreboard.Objective;
 import org.bukkit.scoreboard.Score;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.ScoreboardManager;
+import org.bukkit.util.Vector;
 
 import me.Joey.CommandsPlus.CustomEnchantments.EnchantmentsPlus;
 import me.Joey.CommandsPlus.CustomItems.ItemsPlus;
@@ -226,6 +234,18 @@ public class FunctionsPlus {
 		
 	}
 	
+	
+	public static List<Block> getNearbyBlocks(Location loc, int radius){
+		List<Block> blocks = new ArrayList<Block>();
+		
+		for (int x = loc.getBlockX() - radius; x <= loc.getBlockX() + radius; x++) {
+			for (int z = loc.getBlockZ() - radius; z <= loc.getBlockZ() + radius; z++) {
+				blocks.add(loc.getWorld().getHighestBlockAt(x, z).getLocation().subtract(0, 0, 0).getBlock());
+			}
+		}
+		
+		return blocks;
+	}
 	
 	
 	public static double distanceToLocation(double x1, double y1, double z1, double x2, double y2, double z2) {
@@ -1102,5 +1122,149 @@ public class FunctionsPlus {
 		Main.scoreboardHashMap.put(online.getUniqueId().toString(), Main.playerDataConfig.getBoolean("Users." + online.getUniqueId() + ".preferences" + ".scoreboard"));
 		
 	
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	// talent functions
+	
+	public static void gravityWell(Player p) {
+		new BukkitRunnable() {
+			int count = 0;
+			Location origin = p.getLocation();
+			List<Block> blocks = getNearbyBlocks(origin, 20);
+			List<FallingBlock> fBlocks = new ArrayList<>();
+			
+			
+			public void run() {
+				if (count == 200) {
+					cancel();
+					
+					for (FallingBlock b : fBlocks) {
+						b.setGravity(true);
+						b.remove();
+						TNTPrimed tnt = b.getWorld().spawn(b.getLocation(), TNTPrimed.class);
+						tnt.setFuseTicks(100);
+					}
+					
+					return;
+				}
+				
+				for (int i = 0; i < 1; i++) {
+					Random rand = new Random();
+					Block block = blocks.get(rand.nextInt(blocks.size()) + 0);
+					FallingBlock fBlock = p.getWorld().spawnFallingBlock(block.getLocation(), block.getBlockData());
+					fBlock.setVelocity((fBlock.getLocation().toVector().subtract(origin.toVector()).multiply(-10).normalize()));
+					fBlock.setGravity(false);
+					fBlock.setDropItem(false);
+					fBlock.setHurtEntities(true);
+					block.setType(Material.AIR);
+					fBlocks.add(fBlock);
+				}
+
+				
+				
+				count++;
+			}
+		}.runTaskTimer(Bukkit.getPluginManager().getPlugin("Commands_Plus"), 0, 0);
+	}
+	
+	
+	public static void hollowPurple(Player p) {
+		
+		
+		new BukkitRunnable() {
+
+			public void run() {
+				p.sendMessage(ChatColor.LIGHT_PURPLE + "Oh, well.");
+			}
+			
+		}.runTaskLater(Bukkit.getPluginManager().getPlugin("Commands_Plus"), 20);
+		
+		
+		new BukkitRunnable() {
+
+			public void run() {
+				p.sendMessage(ChatColor.DARK_PURPLE + "Guess I'll be a little rough.");
+			}
+			
+		}.runTaskLater(Bukkit.getPluginManager().getPlugin("Commands_Plus"), 60);
+		
+		
+		new BukkitRunnable() {
+
+			public void run() {
+				new BukkitRunnable() {
+					int count = 0;
+					Location origin = p.getLocation();
+					Vector lookVec = origin.getDirection();
+					
+					
+					public void run() {
+						if (count == 200) {
+							cancel();
+							return;
+						}
+						
+						Vector finalLocVec = origin.toVector();
+						Vector vec = new Vector(lookVec.getX(), lookVec.getY(), lookVec.getZ()).multiply(count);
+						finalLocVec.add(vec).add(lookVec.clone().multiply(10));
+						
+						Location finalLoc = finalLocVec.toLocation(origin.getWorld());
+								
+						int radius = 3;
+						//p.getWorld().createExplosion(finalLoc, radius);
+						p.getWorld().spawnParticle(Particle.EXPLOSION_HUGE, finalLoc, 0);
+						p.getWorld().playSound(finalLoc, Sound.ENTITY_GENERIC_EXPLODE, 1.0f, 1.0f);
+						Particle.DustOptions dust = new Particle.DustOptions(Color.fromRGB(157, 0, 255), 1);
+						for (int x = -radius; x < radius; x++) {
+							for (int y = -radius; y < radius; y++) {
+								for (int z = -radius; z < radius; z++) {
+									Location blockLoc = new Location(origin.getWorld(), finalLoc.getX() + x, finalLoc.getY() + y, finalLoc.getZ() + z);
+									origin.getWorld().getBlockAt(blockLoc).breakNaturally();
+					            	
+									new BukkitRunnable() {
+										Location blockLocOld = blockLoc.clone(); 
+										
+										int particleTime = 0;
+										public void run() {
+											if (particleTime == 30) {
+												cancel();
+												return;
+											}
+											origin.getWorld().spawnParticle(Particle.REDSTONE, blockLocOld, 0, 0, 0, 0, dust);
+											
+											particleTime++;
+										}
+									}.runTaskTimer(Bukkit.getPluginManager().getPlugin("Commands_Plus"), 0, 1);
+					            	
+								}
+							}
+						}
+
+						
+						
+						count++;
+					}
+				}.runTaskTimer(Bukkit.getPluginManager().getPlugin("Commands_Plus"), 0, 0);
+			}
+			
+		}.runTaskLater(Bukkit.getPluginManager().getPlugin("Commands_Plus"), 80);
+		
+		
 	}
 }

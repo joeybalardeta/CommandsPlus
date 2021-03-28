@@ -359,12 +359,12 @@ public class ParticleEffects {
 				}, 0, 1L);
 	}
 	
-	public void weakeningArcaneBurst() {
+	public void weakeningArcaneBurst(Player p) {
 		// check every 250ms for potion effects
 		taskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(Main.getPlugin(Main.class), new Runnable() {
 			double var = 0;
 			Location loc, first;
-			int i = 0;
+			int i = 1;
 			int ringDensity = 32;
 			ParticleData particle = new ParticleData(p.getUniqueId());
 			
@@ -377,7 +377,7 @@ public class ParticleEffects {
             	loc = p.getLocation();
             	
             	for (int j = 0; j < ringDensity; j++) {
-            		var += Math.PI / ringDensity;
+            		var += (Math.PI / ringDensity) * 2;
 	            	first = loc.clone().add(Math.sin(var) * i, 0.1, Math.cos(var) * i);
 	            	p.getWorld().spawnParticle(Particle.ENCHANTMENT_TABLE, first, 0);
             	}
@@ -386,7 +386,21 @@ public class ParticleEffects {
             	i++;
             	
             	for (Entity entity : p.getWorld().getEntities()) {
-            		if (entity instanceof LivingEntity && entity.getLocation().distance(loc) < i + 1) {
+            		if (entity instanceof Player && entity.getLocation().distance(loc) < i + 1) {
+            			Player e = (Player) entity;
+            			String faction = Main.factionHashMap.get(e.getUniqueId().toString());
+            			if (faction != null && !faction.equals("")) {
+            				if (!e.equals(e) && !Main.factionHashMap.get(e.getUniqueId().toString()).equals(Main.factionHashMap.get(p.getUniqueId().toString()))) {
+                				e.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 200, 0));
+                			}
+            			}
+            			else if (!e.equals(e)) {
+            				e.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 200, 0));
+            			}
+            			
+            			
+            		}
+            		else if (entity instanceof LivingEntity && entity.getLocation().distance(loc) < i + 1) {
             			LivingEntity e = (LivingEntity) entity;
             			if (!e.equals(p)) {
             				e.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 200, 0));

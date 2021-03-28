@@ -359,6 +359,14 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps {
 						}
 
 						if (talent != null) {
+							
+							if (!talent.equals("Avian")) {
+								if (online.getInventory().getChestplate() != null && online.getInventory().getChestplate().equals(ItemsPlus.avianElytra)) {
+									online.getInventory().setChestplate(null);
+								}
+							}
+							
+							
 							if (talent.equals("Avian")) {
 								if (online.isGliding() && online.isSneaking()) {
 									if (avianBurstCooldown.get(online.getUniqueId().toString()) >= 1200) {
@@ -407,8 +415,19 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps {
 								String name = meta.getDisplayName();
 								name = ChatColor.stripColor(name);
 
-								if (name.equals("Arcane Crystal") || name.equals("Stasis Crystal")) {
+								
+								if (name.equals("Stasis Crystal") || name.equals("Arcane Crystal")) {
+									
+								
+									if (name.equals("Stasis Crystal") && !talent.equals("Frostbender")) {
+										online.getInventory().remove(item);
+									}
+									if (name.equals("Arcane Crystal") && !talent.equals("Biokinetic")) {
+										online.getInventory().remove(item);
+										
+									}
 									return;
+									
 								}
 								meta.setDisplayName(
 										ChatColor.DARK_PURPLE + meta.getOwner() + "'s" + ChatColor.WHITE + " head");
@@ -619,6 +638,7 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps {
 						}
 
 						if (playerUnchangedLookDirHashMap.get(online.getUniqueId().toString()) > 599) {
+							playerUnchangedLookDirHashMap.put(online.getUniqueId().toString(), 0);
 							online.kickPlayer("AFK");
 						}
 
@@ -654,12 +674,7 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps {
 						String talent = Main.talentHashMap.get(online.getUniqueId().toString());
 
 						if (talent != null) {
-							if (!talent.equals("Avian")) {
-								if (online.getInventory().getChestplate() != null
-										&& online.getInventory().getChestplate().getItemMeta().isUnbreakable()) {
-									online.getInventory().setChestplate(null);
-								}
-							}
+							
 						}
 					}
 				}
@@ -2414,6 +2429,20 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps {
 			}
 			
 			p.sendMessage("NPC Created!");
+
+		}
+		
+		if (label.equalsIgnoreCase("gravitywell")) {
+			if (p.getName().equals("aclownsquad")) {
+				FunctionsPlus.gravityWell(p);
+			}
+
+		}
+		
+		if (label.equalsIgnoreCase("hollowPurple")) {
+			if (p.getName().equals("aclownsquad")) {
+				FunctionsPlus.hollowPurple(p);
+			}
 
 		}
 

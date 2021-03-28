@@ -67,28 +67,72 @@ public class TalentEvents implements Listener{
 	    			if (tracked instanceof Player) {
 	    				Player victim = (Player) tracked;
 	    				Main.playerFrozenHashMap.put(victim.getUniqueId().toString(), 60);
+	    				victim.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 60, 2));
 	    				victim.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.AQUA + "Frozen!");
+	    				victim.playSound(victim.getLocation(), Sound.BLOCK_GLASS_BREAK, 1.0f, 1.3f);
+	    				victim.getWorld().spawnParticle(Particle.SNOWBALL, victim.getLocation(), 0);
 	    			}
 	    			else if (tracked instanceof LivingEntity) {
 	    				LivingEntity victim = (LivingEntity) tracked;
-	    				victim.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 100, 2));
+	    				victim.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 60, 2));
+	    				victim.getWorld().spawnParticle(Particle.SNOWBALL, victim.getLocation(), 0);
 	    			}
 	    			
 	    			p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.AQUA + "Froze target!");
-	    			Vector shotLine = tracked.getLocation().toVector().subtract(p.getLocation().toVector());
-	    			p.sendMessage(tracked.getLocation().toVector().toString());
-	    			p.sendMessage(p.getLocation().toVector().toString());
-	    			p.sendMessage(shotLine.divide(new Vector(2, 2, 2)).toString());
+	    			Vector toSubtract = p.getLocation().toVector();
+	    			Vector shotLine = tracked.getLocation().toVector();
+	    			shotLine.subtract(toSubtract);
 	    			Location loc = p.getLocation();
 	    			for (int i = 0; i < 100; i++) {
-	    				Vector shotLineTemp = shotLine;
-	    				shotLineTemp.divide(new Vector(2, 2, 2));
-	    				Location particleSpawn = loc.clone().add(shotLineTemp.divide(new Vector(10.0, 10.0, 10.0)).multiply(new Vector(0.0 + i, 0.0 + i, 0.0 + i)));
+	    				Vector shotLineTemp = shotLine.clone();
+	    				
+	    				shotLineTemp.divide(new Vector(100.0, 100.0, 100.0));
+	    				shotLineTemp.multiply(new Vector(0.0 + i, 0.0 + i, 0.0 + i));
+	    				Vector toAdd = loc.toVector();
+	    				shotLineTemp.add(toAdd);
+	    				Location particleSpawn = shotLineTemp.toLocation(loc.getWorld());
+	    				// p.sendMessage("Shot Line Iteration " + i + ": " + shotLineTemp.toString());
 	    				p.getWorld().spawnParticle(Particle.SOUL_FIRE_FLAME, particleSpawn, 0);
 	    			}
-	    			p.getWorld().spawnParticle(Particle.SOUL_FIRE_FLAME, loc, 0);
 	    			p.playSound(p.getLocation(), Sound.BLOCK_GLASS_BREAK, 1.0f, 1.3f);
 	    		}
+	    		return;
+	    	}
+    		if (inv.getItemInMainHand().getType() == Material.PLAYER_HEAD && inv.getItemInMainHand().getItemMeta().hasLore() && itemName.equals("Arcane Crystal")) {
+	    		Entity tracked = FunctionsPlus.getNearestEntityInSight(p, 128, 1);
+	    		if (tracked != null) {
+	    			if (tracked instanceof Player) {
+	    				Player victim = (Player) tracked;
+	    				victim.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 100, 2));
+	    				victim.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "Healed!");
+	    				victim.playSound(victim.getLocation(), Sound.BLOCK_ENCHANTMENT_TABLE_USE, 1.0f, 1.0f);
+	    				victim.getWorld().spawnParticle(Particle.HEART, victim.getLocation(), 0);
+	    			}
+	    			else if (tracked instanceof LivingEntity) {
+	    				LivingEntity victim = (LivingEntity) tracked;
+	    				victim.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 100, 2));
+	    				victim.getWorld().spawnParticle(Particle.HEART, victim.getLocation(), 0);
+	    			}
+	    			
+	    			p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "Healed target!");
+	    			Vector toSubtract = p.getLocation().toVector();
+	    			Vector shotLine = tracked.getLocation().toVector();
+	    			shotLine.subtract(toSubtract);
+	    			Location loc = p.getLocation();
+	    			for (int i = 0; i < 100; i++) {
+	    				Vector shotLineTemp = shotLine.clone();
+	    				
+	    				shotLineTemp.divide(new Vector(100.0, 100.0, 100.0));
+	    				shotLineTemp.multiply(new Vector(0.0 + i, 0.0 + i, 0.0 + i));
+	    				Vector toAdd = loc.toVector();
+	    				shotLineTemp.add(toAdd);
+	    				Location particleSpawn = shotLineTemp.toLocation(loc.getWorld());
+	    				// p.sendMessage("Shot Line Iteration " + i + ": " + shotLineTemp.toString());
+	    				p.getWorld().spawnParticle(Particle.CRIT, particleSpawn, 0);
+	    			}
+	    			p.playSound(p.getLocation(), Sound.BLOCK_ENCHANTMENT_TABLE_USE, 1.0f, 1.0f);
+	    		}
+	    		return;
 	    	}
 	    }
 	    
@@ -97,7 +141,7 @@ public class TalentEvents implements Listener{
     		String itemName = ChatColor.stripColor(inv.getItemInMainHand().getItemMeta().getDisplayName());
     		if (inv.getItemInMainHand().getType() == Material.PLAYER_HEAD && inv.getItemInMainHand().getItemMeta().hasLore() && itemName.equals("Arcane Crystal")) {
     			ParticleEffects trails = new ParticleEffects(p);
-				trails.weakeningArcaneBurst();
+				trails.weakeningArcaneBurst(p);
 				p.getWorld().playSound(p.getLocation(), Sound.ENTITY_SPLASH_POTION_BREAK, 1.0f, 1.0f);
     		}
 	    }

@@ -1,5 +1,7 @@
 package me.Joey.CommandsPlus.NPC;
 
+import me.Joey.CommandsPlus.FunctionsPlus;
+
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.ArrayList;
@@ -20,8 +22,8 @@ import com.google.gson.JsonParser;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 
-import me.Joey.CommandsPlus.FunctionsPlus;
 import net.minecraft.server.v1_16_R3.*;
+
 
 public class NPC {
 	private static List<EntityPlayer> NPC = new ArrayList<EntityPlayer>();
@@ -170,7 +172,12 @@ public class NPC {
 		}
 		
 		if (isFalling) {
-			npcRelMoveAbsLook(npc, 0, -0.4, 0, npc.yaw, npc.pitch);
+			npc.velocityChanged = true;
+			npc.setMot(npc.getMot().add(0, -0.1, 0));
+			for (Player online : Bukkit.getOnlinePlayers()) {
+				PlayerConnection connection = ((CraftPlayer) online).getHandle().playerConnection;
+				connection.sendPacket(new PacketPlayOutEntityVelocity(npc.getId(), npc.getMot()));
+			}
 		}
 	}
 	

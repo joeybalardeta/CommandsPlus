@@ -290,6 +290,9 @@ public class InventoryEvents implements Listener {
 				
 				// equip Avian Elytra and lower max health
 				p.setMaxHealth(16);
+				if (p.getInventory().getChestplate() != null) {
+					p.getInventory().addItem(p.getInventory().getChestplate());
+				}
 				p.getInventory().setChestplate(ItemsPlus.avianElytra);
 			}
 			
