@@ -102,7 +102,7 @@ public class PlayerEvents implements Listener {
 		
 		
 		if (Main.scoreboardHashMap.get(online.getUniqueId().toString())) {
-			FunctionsPlus.createBoard(event.getPlayer());
+			//FunctionsPlus.createBoard(event.getPlayer());
 		}
 		
 		FunctionsPlus.restoreTalentEffects(online, Main.talentHashMap.get(online.getUniqueId().toString()));

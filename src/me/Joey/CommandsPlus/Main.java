@@ -336,10 +336,33 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps {
 					
 					for (Player online : Bukkit.getOnlinePlayers()) {
 						
+						// get territory
+						String territoryLookup = "X: " + online.getLocation().getChunk().getX() + ", Z: " + online.getLocation().getChunk().getZ();
+						String territoryName = null;
+						for (int i = 0; i < Main.chunkLocationsRAM.size(); i++) {
+							if (Main.chunkLocationsRAM.get(i).equals(territoryLookup)) {
+								territoryName = Main.chunkNamesRAM.get(i);
+							}
+						}
+						
+						if (territoryName == null || territoryName.equals("")) {
+							territoryName = "Wilderness";
+						}
+
+						if (online.getWorld().getEnvironment() == Environment.NETHER){
+							territoryName = "Nether";
+						}
+						if (!territoryName.equals(Main.currentPlayerTerritoryHashMap.get(online.getUniqueId().toString()))) {
+							Main.currentPlayerTerritoryHashMap.put(online.getUniqueId().toString(), territoryName);
+							FunctionsPlus.territorySwitch(online, territoryName);
+						}
+						
+						
+						
 						if (scoreboardHashMap.get(online.getUniqueId().toString())) {
-							FunctionsPlus.createBoard(online);
+							//FunctionsPlus.createBoard(online);
 						} else {
-							online.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());	
+							online.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
 						}
 						
 						
@@ -643,7 +666,7 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps {
 						}
 
 						if (scoreboardHashMap.get(online.getUniqueId().toString())) {
-							FunctionsPlus.createBoard(online);
+							//FunctionsPlus.createBoard(online);
 						} else {
 							online.setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
 						}
@@ -1778,6 +1801,7 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps {
 					factionDataConfig.set("Factions." + factionName + ".members." + p.getUniqueId() + ".rank",
 							"Leader");
 					factionHashMap.put(p.getUniqueId().toString(), factionName);
+					factionDescriptionHashMap.put(factionName, "");
 
 					// save files
 					try {
@@ -2155,7 +2179,7 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps {
 			// MEMBER FACTION COMMANDS
 
 			if (args[0].equals("msg")) {
-				if (factionHashMap.get(p.getUniqueId().toString()).equals("")) {
+				if (factionHashMap.get(p.getUniqueId().toString()) == null) {
 					FunctionsPlus.playSound(p, "actionDenied");
 					p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+"
 							+ ChatColor.WHITE + "] " + ChatColor.RED + "You must be in a faction to use messages!");
@@ -2189,6 +2213,13 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps {
 
 			// promote faction member
 			if (args[0].equals("promote")) {
+				if (factionHashMap.get(p.getUniqueId().toString()) == null) {
+					FunctionsPlus.playSound(p, "actionDenied");
+					p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+"
+							+ ChatColor.WHITE + "] " + ChatColor.RED + "You must be in a faction to use this command!");
+					return true;
+				}
+				
 				if (factionDataConfig.getString("Factions." + playerFaction + ".stats" + ".ownerUUID")
 						.equals(p.getUniqueId().toString())) {
 					String playerName = args[1];
@@ -2249,6 +2280,13 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps {
 
 			// demote faction member
 			if (args[0].equals("demote")) {
+				if (factionHashMap.get(p.getUniqueId().toString()) == null) {
+					FunctionsPlus.playSound(p, "actionDenied");
+					p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+"
+							+ ChatColor.WHITE + "] " + ChatColor.RED + "You must be in a faction to use this command!");
+					return true;
+				}
+				
 				if (factionDataConfig.getString("Factions." + playerFaction + ".stats" + ".ownerUUID")
 						.equals(p.getUniqueId().toString())) {
 					String playerName = args[1];
@@ -2306,6 +2344,13 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps {
 
 			// disbands faction
 			if (args[0].equals("disband")) {
+				if (factionHashMap.get(p.getUniqueId().toString()) == null) {
+					FunctionsPlus.playSound(p, "actionDenied");
+					p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+"
+							+ ChatColor.WHITE + "] " + ChatColor.RED + "You must be in a faction to use this command!");
+					return true;
+				}
+				
 				String factionName = factionHashMap.get(p.getUniqueId().toString());
 				for (Player online : Bukkit.getOnlinePlayers()) {
 					if (factionHashMap.get(p.getUniqueId().toString()) != null
@@ -2319,6 +2364,7 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps {
 						unclaimAllChunks(online);
 					}
 				}
+				factionDescriptionHashMap.put(factionName, null);
 				factionDataConfig.set("Factions." + factionName, null);
 
 				// save files
@@ -2347,6 +2393,53 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps {
 			// get interactive UI for a specified faction member
 			if (args[0].equals("getmember")) {
 				;
+			}
+			
+			if (args[0].equals("setdescription")) {
+				if (factionHashMap.get(p.getUniqueId().toString()) == null) {
+					FunctionsPlus.playSound(p, "actionDenied");
+					p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+"
+							+ ChatColor.WHITE + "] " + ChatColor.RED + "You must be in a faction to use this command!");
+					return true;
+				}
+				
+				if (factionDataConfig.getString("Factions." + playerFaction + ".stats" + ".ownerUUID").equals(p.getUniqueId().toString())) {
+					String factionDescription = args[1];
+					for (int i = 2; i < args.length; i++) {
+						factionDescription += " " + args[i];
+					}
+					
+					factionDataConfig.set("Factions." + factionHashMap.get(p.getUniqueId().toString()) + ".stats" + ".description", factionDescription);
+					factionDescriptionHashMap.put(factionHashMap.get(p.getUniqueId().toString()), factionDescription);
+					
+					try {
+						factionDataConfig.save(factionData);
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					} // this is important to have when editing server files, otherwise nothing gets
+						// changed
+					
+					p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.YELLOW + "Set faction description to: " + ChatColor.GRAY + factionDescription);
+				}
+				else {
+					FunctionsPlus.playSound(p, "actionDenied");
+					p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.RED + "You can't change the description of your faction!");
+					return true;
+				}
+			}
+			
+			if (args[0].equals("description")) {
+				if (factionHashMap.get(p.getUniqueId().toString()) == null) {
+					FunctionsPlus.playSound(p, "actionDenied");
+					p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+"
+							+ ChatColor.WHITE + "] " + ChatColor.RED + "You must be in a faction to use this command!");
+					return true;
+				}
+				
+				String factionDescription = factionDescriptionHashMap.get(factionHashMap.get(p.getUniqueId().toString()));
+				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.YELLOW + "Your faction description is: " + ChatColor.GRAY + factionDescription);
+
 			}
 
 			return true;
@@ -2432,15 +2525,32 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps {
 
 		}
 		
+		
+		if (label.equalsIgnoreCase("info")) {
+			if (args.length == 1 && p.getName().equals("aclownsquad")) {
+				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.YELLOW + "Player Stats:");
+				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "------------------");
+				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.YELLOW + "Player Name:" + ChatColor.AQUA + p.getName());
+				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.YELLOW + "Player UUID:" + ChatColor.AQUA + p.getUniqueId().toString());
+				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.YELLOW + "Player Faction:" + ChatColor.AQUA + factionHashMap.get(p.getUniqueId().toString()));
+				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.YELLOW + "Player Talents:" + ChatColor.AQUA + p.getName());
+			}
+			else {
+				
+			}
+			
+
+		}
+		
 		if (label.equalsIgnoreCase("gravitywell")) {
-			if (p.getName().equals("aclownsquad")) {
+			if (p.getName().equals("aclownsquad") || p.getName().equals("Warlocck")) {
 				FunctionsPlus.gravityWell(p);
 			}
 
 		}
 		
 		if (label.equalsIgnoreCase("hollowPurple")) {
-			if (p.getName().equals("aclownsquad")) {
+			if (p.getName().equals("aclownsquad") || p.getName().equals("Warlocck")) {
 				FunctionsPlus.hollowPurple(p);
 			}
 
@@ -2590,12 +2700,19 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps {
 	public List<String> onTabComplete(CommandSender sender, Command cmd, String label, String[] args) {
 		List<String> tabComplete = new ArrayList<>();
 		String[] factionOptions = { "create", "invite", "remove", "leave", "promote", "demote", "accept", "decline",
-				"info" };
+				"info", "setdescription", "description", "disband"};
 		String[] rankList = { "Member", "Streamer", "Superuser", "Admin" };
 		if (label.equalsIgnoreCase("faction")) {
 			for (String option : factionOptions) {
-				if (option.toString().startsWith(args[0])) {
+				if (args.length == 1 && option.toString().startsWith(args[0])) {
 					tabComplete.add(option.toString());
+				}
+				if (args.length == 2) {
+					for (Player online : Bukkit.getOnlinePlayers()) {
+						if (online.getName().toString().startsWith(args[1])) {
+							tabComplete.add(online.getName().toString());
+						}
+					}
 				}
 			}
 		}

@@ -1,6 +1,7 @@
 package me.Joey.CommandsPlus;
 
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -59,7 +60,18 @@ public class FunctionsPlus {
 		p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.YELLOW + "Type /menu to explore " + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.YELLOW + "!");
 		p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.YELLOW + "Players Online: " + ChatColor.AQUA + Bukkit.getOnlinePlayers().size());
 		p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.YELLOW + "World Time: " + ChatColor.AQUA + getFormattedTime(Bukkit.getServer(), p));
+		
+		if (Main.isBloodMoon) {
+			p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.YELLOW + "Blood moon: " + ChatColor.RED + "Active");
+		}
+		else {
+			p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.YELLOW + "Blood moon: " + ChatColor.GREEN + "Inactive");
+		}
+		
 		p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 0.0f);
+		String title = ChatColor.AQUA + "Welcome Back!";
+		String subtitle = ChatColor.YELLOW + "Current Time: " + ChatColor.RED + getFormattedTime(Bukkit.getServer(), p);
+		sendTitle(p, title, subtitle, 5, 20, 10);
 	}
 	
 	
@@ -217,8 +229,60 @@ public class FunctionsPlus {
 		
 	}
 	
+	public static void sendPacket(Player player, Object packet) {
+	    try {
+	      Object handle = player.getClass().getMethod("getHandle", new Class[0]).invoke(player, new Object[0]);
+	      Object playerConnection = handle.getClass().getField("playerConnection").get(handle);
+	      playerConnection.getClass().getMethod("sendPacket", new Class[] { getNMSClass("Packet") }).invoke(playerConnection, new Object[] { packet });
+	    } catch (Exception e) {
+	      e.printStackTrace();
+	    } 
+	}
+	  
+	public static Class<?> getNMSClass(String name) {
+	    String version = Bukkit.getServer().getClass().getPackage().getName().split("\\.")[3];
+	    try {
+	        return Class.forName("net.minecraft.server." + version + "." + name);
+	    } catch (ClassNotFoundException e) {
+	        e.printStackTrace();
+	        return null;
+	    } 
+	}
+	  
+	public static void sendTitle(Player player, String title, String subtitle, int fadeIn, int stay, int fadeOut) {
+	    try {
+	        Object enumTitle = getNMSClass("PacketPlayOutTitle").getDeclaredClasses()[0].getField("TITLE").get(null);
+	        Object enumSubTitle = getNMSClass("PacketPlayOutTitle").getDeclaredClasses()[0].getField("SUBTITLE").get(null);
+	        Object chat = getNMSClass("IChatBaseComponent").getDeclaredClasses()[0].getMethod("a", new Class[] { String.class }).invoke(null, new Object[] { "{\"text\":\"" + title + "\"}" });
+	        Object subchat = getNMSClass("IChatBaseComponent").getDeclaredClasses()[0].getMethod("a", new Class[] { String.class }).invoke(null, new Object[] { "{\"text\":\"" + subtitle + "\"}" });
+	        Constructor<?> titleConstructor = getNMSClass("PacketPlayOutTitle").getConstructor(new Class[] { getNMSClass("PacketPlayOutTitle").getDeclaredClasses()[0], getNMSClass("IChatBaseComponent"), int.class, int.class, int.class });
+	        Object packet = titleConstructor.newInstance(new Object[] { enumTitle, chat, Integer.valueOf(fadeIn), Integer.valueOf(stay), Integer.valueOf(fadeOut) });
+	        Object packet2 = titleConstructor.newInstance(new Object[] { enumSubTitle, subchat, Integer.valueOf(fadeIn), Integer.valueOf(stay), Integer.valueOf(fadeOut) });
+	        sendPacket(player, packet);
+	        sendPacket(player, packet2);
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    } 
+	}
 	
 	
+	public static void territorySwitch(Player p, String territoryName) {
+		String title = ChatColor.GREEN + territoryName;
+		String desc = Main.factionDescriptionHashMap.get(territoryName);
+		String subtitle = ChatColor.GRAY + "";
+		if (desc != null && !desc.equals("null")) {
+			subtitle = ChatColor.GRAY + desc;
+		}
+
+		
+		
+		p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 1.0f, 0.0f);
+		sendTitle(p, title, subtitle, 0, 5, 0);
+	}
+	  
+	
+	  
+	  
 	public static void setTabList(Player online) {
 		String rank = Main.playerRankHashMap.get(online.getUniqueId().toString());
 		online.setPlayerListName(ChatColor.WHITE + "[" + getRankColor(online) + rank + ChatColor.WHITE + "] " + online.getName());
@@ -343,6 +407,7 @@ public class FunctionsPlus {
 			for (int j = -mapSize; j < (mapSize + 1); j++) {
 				int chunkNameLocation = Main.chunkLocationsRAM.indexOf("X: " + (p.getLocation().getChunk().getX() + j) + ", Z: " + (p.getLocation().getChunk().getZ() + i));
 				String chunkName = Main.chunkNamesRAM.get(chunkNameLocation);
+
 				if (chunkName == null) {
 					lineMessage += "&f* ";
 				}
@@ -438,39 +503,63 @@ public class FunctionsPlus {
 		return 0;
 	}
 	
-	// get player direction
-	public static void getPlayerDirectionCardinal(Player player) {
+	// get player direction yaw
+	public static String getPlayerYawDirectionCardinal(Player player) {
 		double rotation = player.getLocation().getYaw() - 180;
         if (rotation < 0) {
             rotation += 360.0;
         }
-        if (0 <= rotation && rotation < 22.5) {
-            player.sendMessage("North");
+        if (0 <= rotation && rotation < 45) {
+        	return "North";
         }
-        if (22.5 <= rotation && rotation < 67.5) {
-            player.sendMessage("North East");
+        else if (45 <= rotation && rotation < 135) {
+        	return "East";
         }
-        if (67.5 <= rotation && rotation < 112.5) {
-            player.sendMessage("East");
+        else if (135 <= rotation && rotation < 225) {
+        	return "South";
         }
-        if (112.5 <= rotation && rotation < 157.5) {
-            player.sendMessage("SouthEast");
+        else if (225 <= rotation && rotation < 315) {
+        	return "West";
         }
-        if (157.5 <= rotation && rotation < 202.5) {
-            player.sendMessage("South");
+        else if (315 <= rotation && rotation <= 360) {
+        	return "North";
         }
-        if (202.5 <= rotation && rotation < 247.5) {
-            player.sendMessage("SouthWest");
+        
+        return "North";
+	}
+	
+	
+	// get player direction pitch
+	public static String getPlayerPitchDirectionCardinal(Player player) {
+		double rotation = player.getLocation().getPitch();
+        if (rotation > -45 && rotation < 45) {
+        	return "Vertical";
         }
-        if (247.5 <= rotation && rotation < 292.5) {
-            player.sendMessage("West");
+        else if (rotation <= -45) {
+        	return "Horizontal";
         }
-        if (292.5 <= rotation && rotation < 337.5) {
-            player.sendMessage("NorthWest");
+        else if (rotation >= 45) {
+        	return "Horizontal";
         }
-        if (337.5 <= rotation && rotation <= 360) {
-            player.sendMessage("North");
+        
+        return "Horizontal";
+	}
+	
+	
+	// get player direction pitch (biased)
+	public static String getBiasedPlayerPitchDirectionCardinal(Player player) {
+		double rotation = player.getLocation().getPitch();
+        if (rotation > -30 && rotation < 30) {
+        	return "Vertical";
         }
+        else if (rotation <= -30) {
+        	return "Horizontal";
+        }
+        else if (rotation >= 30) {
+        	return "Horizontal";
+        }
+        
+        return "Horizontal";
 	}
 	
 	public static double getPlayerDirectionFloat(Player player) {
@@ -920,6 +1009,7 @@ public class FunctionsPlus {
 		// legendary items
 		Main.customToolList.add(ItemsPlus.timberAxe);
 		Main.customToolList.add(ItemsPlus.replantingHoe);
+		Main.customToolList.add(ItemsPlus.redstonePickaxe);
 	}
 	
 	public static void loadCustomArmorList() {
@@ -1040,6 +1130,9 @@ public class FunctionsPlus {
 	// HashMap loader function
 	public static void loadHashMaps(Player online) {
 		
+		
+		
+		
 		// player info
 		Main.playerRankHashMap.put(online.getUniqueId().toString(), Main.playerDataConfig.getString("Users." + online.getUniqueId() + ".stats" + ".rank"));
 		
@@ -1049,6 +1142,24 @@ public class FunctionsPlus {
 		}
 		
 		Main.factionHashMap.put(online.getUniqueId().toString(), Main.playerDataConfig.getString("Users." + online.getUniqueId() + ".stats" + ".faction"));
+		
+		// get territory
+		String territoryLookup = "X: " + online.getLocation().getChunk().getX() + ", Z: " + online.getLocation().getChunk().getZ();
+		String territoryName = null;
+		for (int i = 0; i < Main.chunkLocationsRAM.size(); i++) {
+			if (Main.chunkLocationsRAM.get(i).equals(territoryLookup)) {
+				territoryName = Main.chunkNamesRAM.get(i);
+			}
+		}
+		
+		if (territoryName == null || territoryName.equals("")) {
+			territoryName = "Wilderness";
+		}
+
+		if (online.getWorld().getEnvironment() == Environment.NETHER){
+			territoryName = "Nether";
+		}
+		Main.currentPlayerTerritoryHashMap.put(online.getUniqueId().toString(), territoryName);
 		Main.playerDeathsHashMap.put(online.getUniqueId().toString(), 0 + Main.playerDataConfig.getInt("Users." + online.getUniqueId() + ".stats" + ".deaths"));
 		Main.playerYawHashMap.put(online.getUniqueId().toString(), 0f);
 		Main.playerUnchangedLookDirHashMap.put(online.getUniqueId().toString(), 0);
@@ -1121,19 +1232,14 @@ public class FunctionsPlus {
 		// player settings
 		Main.scoreboardHashMap.put(online.getUniqueId().toString(), Main.playerDataConfig.getBoolean("Users." + online.getUniqueId() + ".preferences" + ".scoreboard"));
 		
+		
+		
+		
+		// faction info
+		Main.factionDescriptionHashMap.put(Main.playerDataConfig.getString("Users." + online.getUniqueId() + ".stats" + ".faction"), "" + Main.factionDataConfig.getString("Factions." + Main.factionHashMap.get(online.getUniqueId().toString()) + ".stats" + ".description"));
+		
 	
 	}
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 	
 	
 	

@@ -109,36 +109,40 @@ public class BlockEvents implements Listener {
 	        if (inv.getItemInMainHand().equals(ItemsPlus.redstonePickaxe)) {
 	        	
 	        	Location location = event.getBlock().getLocation();
+	        	String directionYaw = FunctionsPlus.getPlayerYawDirectionCardinal(p);
+	        	String directionPitch = FunctionsPlus.getBiasedPlayerPitchDirectionCardinal(p);
 	            LinkedList<Block> blocks = new LinkedList<>();
 	            ItemStack handStack = p.getItemInHand();
-	            location.subtract(2.0D, 0.0D, 1.0D);
 	            
+	            // if vertical
+	            if (directionPitch.equals("Horizontal")) {
+	            	for (int x = -1; x <= 1; x++) {
+		            	for (int z = -1; z <= 1; z++) {
+		            		Location blockLoc = new Location(location.getWorld(), location.getX() + x, location.getY(), location.getZ() + z);
+		            		blocks.add(blockLoc.getBlock());
+		            	}
+		            }
+	            }
 	            
-	            // if looking down
-	            for (int i = 0; i < 3; i++) {
-	            	
-
-		            for (int j = 0; j < 3; j++) {
-		    			Location l = location.add(1.0D, 0.0D, 0.0D);
-		    			Block block = l.getBlock();
-		    			blocks.add(l.getBlock());
-		    			
-		    			
-		    			
-		    			if (!(block.getType().equals(Material.BEDROCK))) {
-		    				blocks.add(l.getBlock());
-		    				l = null;
-		    			}
-		    			else {
-		    				break;
-		    			}
-		    		}
-		            
-		            location.subtract(3.0D, 0.0D, 0.0D);
-		            location.add(0.0D, 0.0D, 1.0D);
+	            if (directionPitch.equals("Vertical") && (directionYaw.equals("East") || directionYaw.equals("West"))) {
+	            	for (int y = -1; y <= 1; y++) {
+		            	for (int z = -1; z <= 1; z++) {
+		            		Location blockLoc = new Location(location.getWorld(), location.getX(), location.getY() + y, location.getZ() + z);
+		            		blocks.add(blockLoc.getBlock());
+		            	}
+		            }
 	            }
 	            
 	            
+	            if (directionPitch.equals("Vertical") && (directionYaw.equals("North") || directionYaw.equals("South"))) {
+	            	for (int x = -1; x <= 1; x++) {
+		            	for (int y = -1; y <= 1; y++) {
+		            		Location blockLoc = new Location(location.getWorld(), location.getX() + x, location.getY() + y, location.getZ());
+		            		blocks.add(blockLoc.getBlock());
+		            	}
+		            }
+	            }
+	            p.sendMessage(directionPitch + ", " + directionYaw);
 	            
 	        	for (Block block : blocks)
 	    		{

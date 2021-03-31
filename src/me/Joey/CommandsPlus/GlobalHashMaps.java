@@ -8,11 +8,15 @@ import org.bukkit.entity.Entity;
 public interface GlobalHashMaps{
 	// creates global interface to hashmaps for player/plugin data tracking
 	
+	// ----------------------------------------------------------------------------------------
+	// faction info
+	HashMap<String, String> factionDescriptionHashMap = new HashMap<String, String>();
 	
 	// ----------------------------------------------------------------------------------------
 	// player info
 	HashMap<String, String> playerRankHashMap = new HashMap<String, String>();
 	HashMap<String, String> factionHashMap = new HashMap<String, String>();
+	HashMap<String, String> currentPlayerTerritoryHashMap = new HashMap<String, String>();
 	HashMap<String, Integer> playerDeathsHashMap = new HashMap<String, Integer>();
 	HashMap<String, Float> playerYawHashMap = new HashMap<String, Float>();
 	HashMap<String, Integer> playerUnchangedLookDirHashMap = new HashMap<String, Integer>();
