@@ -320,7 +320,7 @@ public class ParticleEffects {
 	
 	
 	// Interactive Particle Effects
-	public void damagingFireBurst() {
+	public void damagingFireBurst(Location startingLoc, int range) {
 		// check every 250ms for potion effects
 				taskID = Bukkit.getScheduler().scheduleSyncRepeatingTask(Main.getPlugin(Main.class), new Runnable() {
 					double var = 0;
@@ -335,7 +335,7 @@ public class ParticleEffects {
 		            	if (!particle.hasID()) {
 		            		particle.setID(taskID);
 		            	}
-		            	loc = p.getLocation();
+		            	loc = startingLoc;
 		            	
 		            	for (int j = 0; j < ringDensity; j++) {
 		            		var += Math.PI / ringDensity;
@@ -347,8 +347,28 @@ public class ParticleEffects {
 		            	i++;
 		            	
 		            	for (Entity entity : p.getWorld().getEntities()) {
-		            		if (entity.getLocation().distance(loc) < i + 1) {
-		            			entity.setFireTicks(50);
+		            		if (entity instanceof Player && entity.getLocation().distance(loc) < i + 1) {
+		            			Player e = (Player) entity;
+		            			String faction = Main.factionHashMap.get(e.getUniqueId().toString());
+		            			if (faction != null && !faction.equals("")) {
+		            				if (!e.equals(e) && !Main.factionHashMap.get(e.getUniqueId().toString()).equals(Main.factionHashMap.get(p.getUniqueId().toString()))) {
+		                				e.setFireTicks(50);
+		                				Main.fireWeaknessHashMap.put(e.getUniqueId().toString(), 100);
+		                			}
+		            			}
+		            			else if (!e.equals(e)) {
+		            				e.setFireTicks(50);
+		            				Main.fireWeaknessHashMap.put(e.getUniqueId().toString(), 100);
+		            			}
+		            			
+		            			
+		            		}
+		            		else if (entity instanceof LivingEntity && entity.getLocation().distance(loc) < i + 1) {
+		            			LivingEntity e = (LivingEntity) entity;
+		            			if (!e.equals(p)) {
+		            				e.setFireTicks(50);
+		            			}
+		            			
 		            		}
 		            	}
 		            	

@@ -6,7 +6,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
-import org.bukkit.World.Environment;
 import org.bukkit.block.Biome;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
@@ -191,7 +190,7 @@ public class PlayerEvents implements Listener {
 					
 					if (event.getDamage() >= 4.0) {
 						ParticleEffects trails = new ParticleEffects(p);
-						trails.damagingFireBurst();
+						trails.damagingFireBurst(p.getLocation(), 10);
 						p.getWorld().playSound(p.getLocation(), Sound.ENTITY_BLAZE_SHOOT, 1.0f, 0.6f);
 					}
 					
@@ -202,11 +201,6 @@ public class PlayerEvents implements Listener {
 			if (talent.equals("Hydrokinetic") || talent.equals("Frostbender")) {
 				if(event.getCause() == DamageCause.FIRE || event.getCause() == DamageCause.FIRE_TICK || event.getCause() == DamageCause.HOT_FLOOR || event.getCause() == DamageCause.LAVA || event.getCause() == DamageCause.MELTING) {
 					event.setDamage(event.getDamage() * 2);
-				}
-				else {
-					if (p.getWorld().getEnvironment() == Environment.NETHER) {
-						event.setDamage(event.getDamage() * 1.2);
-					}
 				}
 			}
 			
@@ -233,25 +227,79 @@ public class PlayerEvents implements Listener {
 						p.getWorld().getBlockAt(new Location(p.getWorld(), p.getLocation().getBlockX(), p.getLocation().getBlockY() - 1, p.getLocation().getBlockZ())).setType(Material.BLUE_ICE);
 					}
 					
-					p.getWorld().getBlockAt(new Location(p.getWorld(), p.getLocation().getBlockX(), p.getLocation().getBlockY() + 2, p.getLocation().getBlockZ())).setType(Material.BLUE_ICE);
+					m1 = p.getWorld().getBlockAt(new Location(p.getWorld(), p.getLocation().getBlockX(), p.getLocation().getBlockY() + 2, p.getLocation().getBlockZ())).getType();
+					if (m1 == Material.AIR || m1 == Material.CAVE_AIR || m1 == Material.WATER || m1 == Material.LAVA) {
+						p.getWorld().getBlockAt(new Location(p.getWorld(), p.getLocation().getBlockX(), p.getLocation().getBlockY() + 2, p.getLocation().getBlockZ())).setType(Material.BLUE_ICE);
+					}
 					p.getWorld().getBlockAt(new Location(p.getWorld(), p.getLocation().getBlockX(), p.getLocation().getBlockY(), p.getLocation().getBlockZ())).setType(Material.AIR);
 					p.getWorld().getBlockAt(new Location(p.getWorld(), p.getLocation().getBlockX(), p.getLocation().getBlockY() + 1, p.getLocation().getBlockZ())).setType(Material.AIR);
 					
-					p.getWorld().getBlockAt(new Location(p.getWorld(), p.getLocation().getBlockX() - 1, p.getLocation().getBlockY(), p.getLocation().getBlockZ())).setType(Material.BLUE_ICE);
-					p.getWorld().getBlockAt(new Location(p.getWorld(), p.getLocation().getBlockX() + 1, p.getLocation().getBlockY(), p.getLocation().getBlockZ())).setType(Material.BLUE_ICE);
-					p.getWorld().getBlockAt(new Location(p.getWorld(), p.getLocation().getBlockX(), p.getLocation().getBlockY(), p.getLocation().getBlockZ() - 1)).setType(Material.BLUE_ICE);
-					p.getWorld().getBlockAt(new Location(p.getWorld(), p.getLocation().getBlockX(), p.getLocation().getBlockY(), p.getLocation().getBlockZ() + 1)).setType(Material.BLUE_ICE);
 					
-					p.getWorld().getBlockAt(new Location(p.getWorld(), p.getLocation().getBlockX() - 1, p.getLocation().getBlockY() + 1, p.getLocation().getBlockZ())).setType(Material.BLUE_ICE);
-					p.getWorld().getBlockAt(new Location(p.getWorld(), p.getLocation().getBlockX() + 1, p.getLocation().getBlockY() + 1, p.getLocation().getBlockZ())).setType(Material.BLUE_ICE);
-					p.getWorld().getBlockAt(new Location(p.getWorld(), p.getLocation().getBlockX(), p.getLocation().getBlockY() + 1, p.getLocation().getBlockZ() - 1)).setType(Material.BLUE_ICE);
-					p.getWorld().getBlockAt(new Location(p.getWorld(), p.getLocation().getBlockX(), p.getLocation().getBlockY() + 1, p.getLocation().getBlockZ() + 1)).setType(Material.BLUE_ICE);
+					
+					m1 = p.getWorld().getBlockAt(new Location(p.getWorld(), p.getLocation().getBlockX() - 1, p.getLocation().getBlockY(), p.getLocation().getBlockZ())).getType();
+					if (m1 == Material.AIR || m1 == Material.CAVE_AIR || m1 == Material.WATER || m1 == Material.LAVA) {
+						p.getWorld().getBlockAt(new Location(p.getWorld(), p.getLocation().getBlockX() - 1, p.getLocation().getBlockY(), p.getLocation().getBlockZ())).setType(Material.BLUE_ICE);
+					}
+					
+					m1 = p.getWorld().getBlockAt(new Location(p.getWorld(), p.getLocation().getBlockX() + 1, p.getLocation().getBlockY(), p.getLocation().getBlockZ())).getType();
+					if (m1 == Material.AIR || m1 == Material.CAVE_AIR || m1 == Material.WATER || m1 == Material.LAVA) {
+						p.getWorld().getBlockAt(new Location(p.getWorld(), p.getLocation().getBlockX() + 1, p.getLocation().getBlockY(), p.getLocation().getBlockZ())).setType(Material.BLUE_ICE);
+					}
+					
+					m1 = p.getWorld().getBlockAt(new Location(p.getWorld(), p.getLocation().getBlockX(), p.getLocation().getBlockY(), p.getLocation().getBlockZ() - 1)).getType();
+					
+					if (m1 == Material.AIR || m1 == Material.CAVE_AIR || m1 == Material.WATER || m1 == Material.LAVA) {
+						p.getWorld().getBlockAt(new Location(p.getWorld(), p.getLocation().getBlockX(), p.getLocation().getBlockY(), p.getLocation().getBlockZ() - 1)).setType(Material.BLUE_ICE);
+					}
+					
+					m1 = p.getWorld().getBlockAt(new Location(p.getWorld(), p.getLocation().getBlockX(), p.getLocation().getBlockY(), p.getLocation().getBlockZ() + 1)).getType();
+					
+					if (m1 == Material.AIR || m1 == Material.CAVE_AIR || m1 == Material.WATER || m1 == Material.LAVA) {
+						p.getWorld().getBlockAt(new Location(p.getWorld(), p.getLocation().getBlockX(), p.getLocation().getBlockY(), p.getLocation().getBlockZ() + 1)).setType(Material.BLUE_ICE);
+					}
+					
+
+
+					
+					
+					
+					m1 = p.getWorld().getBlockAt(new Location(p.getWorld(), p.getLocation().getBlockX() - 1, p.getLocation().getBlockY() + 1, p.getLocation().getBlockZ())).getType();
+					if (m1 == Material.AIR || m1 == Material.CAVE_AIR || m1 == Material.WATER || m1 == Material.LAVA) {
+						p.getWorld().getBlockAt(new Location(p.getWorld(), p.getLocation().getBlockX() - 1, p.getLocation().getBlockY() + 1, p.getLocation().getBlockZ())).setType(Material.BLUE_ICE);
+					}
+					
+					m1 = p.getWorld().getBlockAt(new Location(p.getWorld(), p.getLocation().getBlockX() + 1, p.getLocation().getBlockY() + 1, p.getLocation().getBlockZ())).getType();
+					if (m1 == Material.AIR || m1 == Material.CAVE_AIR || m1 == Material.WATER || m1 == Material.LAVA) {
+						p.getWorld().getBlockAt(new Location(p.getWorld(), p.getLocation().getBlockX() + 1, p.getLocation().getBlockY() + 1, p.getLocation().getBlockZ())).setType(Material.BLUE_ICE);
+					}
+					
+					m1 = p.getWorld().getBlockAt(new Location(p.getWorld(), p.getLocation().getBlockX(), p.getLocation().getBlockY() + 1, p.getLocation().getBlockZ() - 1)).getType();
+					
+					if (m1 == Material.AIR || m1 == Material.CAVE_AIR || m1 == Material.WATER || m1 == Material.LAVA) {
+						p.getWorld().getBlockAt(new Location(p.getWorld(), p.getLocation().getBlockX(), p.getLocation().getBlockY() + 1, p.getLocation().getBlockZ() - 1)).setType(Material.BLUE_ICE);
+					}
+					
+					m1 = p.getWorld().getBlockAt(new Location(p.getWorld(), p.getLocation().getBlockX(), p.getLocation().getBlockY() + 1, p.getLocation().getBlockZ() + 1)).getType();
+					
+					if (m1 == Material.AIR || m1 == Material.CAVE_AIR || m1 == Material.WATER || m1 == Material.LAVA) {
+						p.getWorld().getBlockAt(new Location(p.getWorld(), p.getLocation().getBlockX(), p.getLocation().getBlockY() + 1, p.getLocation().getBlockZ() + 1)).setType(Material.BLUE_ICE);
+					}
+					
 					p.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 100, 4));
 					p.addPotionEffect(new PotionEffect(PotionEffectType.SATURATION, 20, 3));
 				}
 				
 			}
 			
+			
+			if (!talent.equals("Pyrokinetic")) {
+				if(event.getCause() == DamageCause.FIRE || event.getCause() == DamageCause.FIRE_TICK || event.getCause() == DamageCause.HOT_FLOOR || event.getCause() == DamageCause.LAVA || event.getCause() == DamageCause.MELTING) {
+					if (Main.fireWeaknessHashMap.get(p.getUniqueId().toString()) > 0) {
+						event.setDamage(event.getDamage() * 1.5);
+					}
+				}
+				
+			}
 			
 		}
 		
@@ -272,26 +320,15 @@ public class PlayerEvents implements Listener {
 				if (p.getFireTicks() !=  0 && !p.hasPotionEffect(PotionEffectType.INCREASE_DAMAGE)) {
 					event.setDamage(event.getDamage() * 1.3);
 				}
-				if (event.getEntity() instanceof Player) {
-					if (((int) (Math.random() * 20)) == 7) {
-						LivingEntity victim = (LivingEntity) event.getEntity();
-						victim.setFireTicks(100);
-					}
+		
+				LivingEntity victim = (LivingEntity) event.getEntity();
+				victim.setFireTicks(100);
+				if (((int) (Math.random() * 10)) == 7) {
+					ParticleEffects trails = new ParticleEffects(p);
+					trails.damagingFireBurst(p.getLocation(), 5);
 				}
-				else {
-					LivingEntity victim = (LivingEntity) event.getEntity();
-					victim.setFireTicks(100);
-				}
+
 				
-			}
-			
-			if (talent.equals("Hydrokinetic")) {
-				Material m1 = p.getLocation().getBlock().getType();
-				Material m2 = p.getLocation().add(0, 1, 0).getBlock().getType();
-				
-			    if (m1 == Material.WATER || m2 == Material.WATER) {
-			    	event.setDamage(event.getDamage() * 1.3);
-			    }
 			}
 			
 			
@@ -305,7 +342,7 @@ public class PlayerEvents implements Listener {
 				if (event.getDamager() instanceof Player) {
 					Player p = (Player) event.getDamager();
 					if (p.getInventory().getItemInMainHand().getType().toString().contains("PICKAXE")) {
-						event.setDamage(200);
+						event.setDamage(100);
 					}
 					else {
 						event.setCancelled(true);

@@ -374,12 +374,7 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps {
 						Location location = online.getLocation();
 
 						world = online.getWorld();
-						if (playerFrozenHashMap.get(online.getUniqueId().toString()) > 0) {
-							online.setVelocity(online.getVelocity().multiply(new Vector(0, 1, 0)));
-							online.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 2, 1));
-							playerFrozenHashMap.put(online.getUniqueId().toString(),
-									playerFrozenHashMap.get(online.getUniqueId().toString()) - 1);
-						}
+						
 
 						if (talent != null) {
 							
@@ -431,6 +426,24 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps {
 						if (arcaneCrystalEnergy.get(online.getUniqueId().toString()) < 12000) {
 							arcaneCrystalEnergy.put(online.getUniqueId().toString(), arcaneCrystalEnergy.get(online.getUniqueId().toString()) + 1);
 						}
+						
+						
+						
+						// custom status effects
+						
+						// fire weakness effect
+						if (fireWeaknessHashMap.get(online.getUniqueId().toString()) > 0) {
+							fireWeaknessHashMap.put(online.getUniqueId().toString(), arcaneCrystalEnergy.get(online.getUniqueId().toString()) - 1);
+						}
+						
+						// frozen effect
+						if (playerFrozenHashMap.get(online.getUniqueId().toString()) > 0) {
+							online.setVelocity(online.getVelocity().multiply(new Vector(0, 1, 0)));
+							online.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 2, 1));
+							playerFrozenHashMap.put(online.getUniqueId().toString(),
+									playerFrozenHashMap.get(online.getUniqueId().toString()) - 1);
+						}
+						
 
 						for (ItemStack item : online.getInventory().getContents()) {
 							if (item != null && item.getType() == Material.PLAYER_HEAD) {
@@ -530,8 +543,8 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps {
 										}
 									}
 									if (setDebuffed && location.getBlockY() < 128) {
-										online.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 30, 0));
-										online.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 30, 1));
+										online.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 30, 0, false, false, true));
+										online.addPotionEffect(new PotionEffect(PotionEffectType.SLOW, 30, 1, false, false, true));
 									}
 
 								}
@@ -543,73 +556,25 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps {
 											regenFound = true;
 											int duration = potionEffect.getDuration();
 											if (duration < 10) {
-												online.addPotionEffect(
-														new PotionEffect(PotionEffectType.REGENERATION, 100, 0));
+												online.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 100, 0, false, false, true));
 											}
 										}
 
 									}
 									if (!regenFound) {
-										online.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 100, 0));
+										online.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 100, 0, false, false, true));
 									}
 								}
 							}
 
 							if (talent.equals("Hydrokinetic")) {
-								online.addPotionEffect(new PotionEffect(PotionEffectType.CONDUIT_POWER, 100000, 0));
-								Material m1 = online.getLocation().getBlock().getType();
-								Material m2 = online.getLocation().add(0, 1, 0).getBlock().getType();
-								if (m1 == Material.WATER || m2 == Material.WATER || m1 == Material.SEAGRASS
-										|| m2 == Material.SEAGRASS || m1 == Material.TALL_SEAGRASS
-										|| m2 == Material.TALL_SEAGRASS || m1 == Material.KELP || m2 == Material.KELP) {
-									boolean regenFound = false;
-									for (PotionEffect potionEffect : online.getActivePotionEffects()) {
-										if (potionEffect.getType().equals(PotionEffectType.REGENERATION)) {
-											regenFound = true;
-											int duration = potionEffect.getDuration();
-											if (duration < 10) {
-												online.addPotionEffect(
-														new PotionEffect(PotionEffectType.REGENERATION, 100, 0));
-											}
-										}
-
-									}
-									if (!regenFound) {
-										online.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 100, 0));
-									}
-								}
-							}
-							if (talent.equals("Pyrokinetic")) {
-								if (online.getWorld().getEnvironment() == Environment.NETHER) {
-									boolean regenFound = false;
-									for (PotionEffect potionEffect : online.getActivePotionEffects()) {
-										if (potionEffect.getType().equals(PotionEffectType.REGENERATION)) {
-											regenFound = true;
-											int duration = potionEffect.getDuration();
-											if (duration < 10) {
-												online.addPotionEffect(
-														new PotionEffect(PotionEffectType.REGENERATION, 100, 0));
-											}
-										}
-
-									}
-									if (!regenFound) {
-										online.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 100, 0));
-									}
-								}
+								online.addPotionEffect(new PotionEffect(PotionEffectType.CONDUIT_POWER, 100000, 0, false, false, true));
+								online.addPotionEffect(new PotionEffect(PotionEffectType.DOLPHINS_GRACE, 100000, 0, false, false, true));
 							}
 
-							if (talent.equals("Frostbender")) {
-								Material m1 = online.getPlayer().getLocation().getBlock().getType();
-								Material m2 = online.getPlayer().getLocation().subtract(0, 1, 0).getBlock().getType();
-								if (m1 == Material.SNOW || m2 == Material.ICE || m2 == Material.PACKED_ICE
-										|| m2 == Material.BLUE_ICE || m2 == Material.SNOW_BLOCK) {
-									online.addPotionEffect(new PotionEffect(PotionEffectType.SPEED, 30, 1));
-								}
-							}
 
 							if (talent.equals("Terran")) {
-								online.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 100000, 0));
+								online.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 100000, 0, false, false, true));
 								if (location.getBlockY() < 33) {
 									boolean regenFound = false;
 									for (PotionEffect potionEffect : online.getActivePotionEffects()) {
@@ -618,13 +583,33 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps {
 											int duration = potionEffect.getDuration();
 											if (duration < 10) {
 												online.addPotionEffect(
-														new PotionEffect(PotionEffectType.REGENERATION, 100, 0));
+														new PotionEffect(PotionEffectType.REGENERATION, 100, 0, false, false, true));
 											}
 										}
 
 									}
 									if (!regenFound) {
-										online.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 100, 0));
+										online.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 100, 0, false, false, true));
+									}
+								}
+							}
+							
+							if (talent.equals("Enderian")) {
+								if (online.getWorld().getEnvironment() == Environment.THE_END) {
+									boolean regenFound = false;
+									for (PotionEffect potionEffect : online.getActivePotionEffects()) {
+										if (potionEffect.getType().equals(PotionEffectType.REGENERATION)) {
+											regenFound = true;
+											int duration = potionEffect.getDuration();
+											if (duration < 10) {
+												online.addPotionEffect(
+														new PotionEffect(PotionEffectType.REGENERATION, 100, 0, false, false, true));
+											}
+										}
+
+									}
+									if (!regenFound) {
+										online.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 100, 0, false, false, true));
 									}
 								}
 							}
@@ -2528,6 +2513,9 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps {
 		
 		if (label.equalsIgnoreCase("info")) {
 			if (args.length == 1 && p.getName().equals("aclownsquad")) {
+				
+			}
+			else {
 				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.YELLOW + "Player Stats:");
 				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + "------------------");
 				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.YELLOW + "Player Name:" + ChatColor.AQUA + p.getName());
@@ -2535,22 +2523,19 @@ public class Main extends JavaPlugin implements Listener, GlobalHashMaps {
 				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.YELLOW + "Player Faction:" + ChatColor.AQUA + factionHashMap.get(p.getUniqueId().toString()));
 				p.sendMessage(ChatColor.WHITE + "[" + ChatColor.RED + "Commands" + ChatColor.DARK_RED + "+" + ChatColor.WHITE + "] " + ChatColor.YELLOW + "Player Talents:" + ChatColor.AQUA + p.getName());
 			}
-			else {
-				
-			}
 			
 
 		}
 		
 		if (label.equalsIgnoreCase("gravitywell")) {
-			if (p.getName().equals("aclownsquad") || p.getName().equals("Warlocck")) {
+			if (p.getName().equals("aclownsquad")) {
 				FunctionsPlus.gravityWell(p);
 			}
 
 		}
 		
 		if (label.equalsIgnoreCase("hollowPurple")) {
-			if (p.getName().equals("aclownsquad") || p.getName().equals("Warlocck")) {
+			if (p.getName().equals("aclownsquad")) {
 				FunctionsPlus.hollowPurple(p);
 			}
 
